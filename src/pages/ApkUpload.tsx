@@ -579,7 +579,7 @@ export default function ApkUpload() {
           </div>
 
           <form onSubmit={onDirectUpload}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 16 }}>
+            <div className="form-row-2">
               <div>
                 <label htmlFor="version">Release Version *</label>
                 <input
@@ -861,7 +861,7 @@ export default function ApkUpload() {
                       <div style={{ fontWeight: 600, fontSize: 15, marginTop: 4 }}>{r.title}</div>
                     </div>
 
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <a
                         className="btn btn-primary"
                         href={r.downloadUrl}

@@ -5,6 +5,7 @@ import { fetchReleases, type Release } from "../api";
 export default function Home() {
   const [latest, setLatest] = useState<Release | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchReleases()
@@ -17,11 +18,11 @@ export default function Home() {
     <>
       <header className="nav">
         <div className="wrap nav-inner">
-          <a className="brand" href="#top">
+          <a className="brand" href="#top" onClick={() => setMobileMenuOpen(false)}>
             <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
             QuickBill POS
           </a>
-          <nav className="nav-links">
+          <nav className="nav-links desktop-only">
             <a href="#products">Products</a>
             <a href="#features">Features</a>
             <a href="#screens">Screens</a>
@@ -38,7 +39,57 @@ export default function Home() {
             <Link to="/apk-upload">Developer</Link>
             <a className="btn btn-primary" href="#download">Get App-POS</a>
           </nav>
+
+          {/* Mobile Navigation Toggle & Quick CTA */}
+          <div className="mobile-nav-toggle-wrap">
+            <a
+              className="btn btn-primary mobile-quick-cta"
+              href="https://posquickbill.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ padding: "8px 14px", fontSize: 13 }}
+            >
+              Web POS ↗
+            </a>
+            <button
+              type="button"
+              className="mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? "✕" : "☰"}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Drawer */}
+        {mobileMenuOpen && (
+          <nav className="mobile-nav-drawer">
+            <a href="#products" onClick={() => setMobileMenuOpen(false)}>Products</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
+            <a href="#screens" onClick={() => setMobileMenuOpen(false)}>Screens</a>
+            <a href="#download" onClick={() => setMobileMenuOpen(false)}>Download APK</a>
+            <a
+              href="https://posquickbill.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mobile-highlight-link"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              🌐 Launch Live Web POS App ↗
+            </a>
+            <Link to="/apk-upload" onClick={() => setMobileMenuOpen(false)}>Developer Console</Link>
+            <a
+              className="btn btn-primary"
+              href="#download"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ width: "100%", marginTop: 8 }}
+            >
+              Get App-POS (Download APK)
+            </a>
+          </nav>
+        )}
       </header>
 
       <main id="top">

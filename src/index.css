@@ -49,20 +49,34 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 8px 18px rgba(29, 78, 216, 0.35);
 }
 .nav-links { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
-.nav-links a, .ghost {
+.nav-links a:not(.btn), .ghost {
   padding: 8px 12px; border-radius: 999px; color: var(--muted); font-weight: 600; font-size: 14px;
+  transition: color .15s ease, background .15s ease;
 }
-.nav-links a:hover { color: var(--ink); background: #fff; }
+.nav-links a:not(.btn):hover { color: var(--ink); background: #fff; }
+.nav-links .btn { padding: 9px 18px; font-size: 14px; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border: 0; border-radius: 999px; padding: 12px 18px; font-weight: 700; cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  border: 0; border-radius: 999px; padding: 12px 20px; font-weight: 700; cursor: pointer;
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
 }
 .btn:hover { transform: translateY(-1px); }
-.btn-primary { background: var(--blue); color: #fff; box-shadow: 0 10px 22px rgba(29, 78, 216, 0.28); }
-.btn-dark { background: var(--navy); color: #fff; }
-.btn-outline { background: #fff; color: var(--navy); border: 1px solid var(--line); }
-.btn-danger { background: #fee2e2; color: #991b1b; }
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(29, 78, 216, 0.28);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.38);
+}
+.btn-dark { background: var(--navy); color: #fff !important; }
+.btn-outline { background: #fff; color: var(--navy) !important; border: 1px solid var(--line); }
+.btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+.btn-danger { background: #fee2e2; color: #991b1b !important; }
+.btn-danger:hover { background: #fecaca; }
 .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
 .hero { padding: 56px 0 24px; }

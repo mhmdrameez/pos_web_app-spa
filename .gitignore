@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+uploads/apks/*
+!uploads/apks/.gitkeep
+data/releases.json
+data/sessions.json
+*.log
+.DS_Store

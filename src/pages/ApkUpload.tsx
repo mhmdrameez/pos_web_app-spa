@@ -126,6 +126,13 @@ export default function ApkUpload() {
     setError("");
     setNotice("");
 
+    const curToken = getStoredToken();
+    if (!curToken || curToken.trim().length < 10) {
+      setError("To publish APKs in Incognito mode or a fresh browser session, please enter your GitHub Personal Access Token (with 'repo' scope) in 'Token Settings' below.");
+      setShowTokenConfig(true);
+      return;
+    }
+
     if (!file) {
       setError("Please select an APK file to upload.");
       return;
@@ -352,6 +359,15 @@ export default function ApkUpload() {
               {repo}
             </a>
             <span style={{ color: "#16a34a", fontWeight: 600 }}>• Active</span>
+            {hasConfiguredToken() ? (
+              <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>
+                ✓ Token Ready
+              </span>
+            ) : (
+              <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>
+                ⚠️ Token Needed for Upload
+              </span>
+            )}
           </div>
 
           <button
@@ -383,19 +399,22 @@ export default function ApkUpload() {
               marginBottom: 16,
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: 13, color: "#92400e", marginBottom: 6 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "#92400e", marginBottom: 4 }}>
               GitHub Token Configuration
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 12, color: "#78350f" }}>
+              Required to commit & publish APK releases directly to GitHub. In Incognito mode or a fresh session, paste your Personal Access Token (classic) with <code>repo</code> scope below:
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <input
                 type="password"
                 value={customToken}
                 onChange={(e) => setCustomToken(e.target.value)}
-                placeholder="Personal access token"
+                placeholder="Paste Personal Access Token"
                 style={{ flex: "1 1 200px" }}
               />
               <button className="btn btn-primary" type="submit" style={{ padding: "8px 14px", fontSize: 13 }}>
-                Save
+                Save Token
               </button>
               <button
                 className="btn btn-outline"
@@ -403,8 +422,16 @@ export default function ApkUpload() {
                 onClick={handleResetToken}
                 style={{ padding: "8px 12px", fontSize: 13 }}
               >
-                Reset Default
+                Clear
               </button>
+              <a
+                href="https://github.com/settings/tokens/new?scopes=repo&description=QuickBill+POS+APK+Upload"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 12, color: "var(--blue)", textDecoration: "underline", marginLeft: 4 }}
+              >
+                Generate Token on GitHub ↗
+              </a>
             </div>
           </form>
         )}

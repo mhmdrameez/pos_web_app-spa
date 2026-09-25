@@ -15,7 +15,7 @@ export type Release = {
 };
 
 export const DEFAULT_REPO = "mhmdrameez/pos_web_app-spa";
-export const DEFAULT_GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || "";
+export const DEFAULT_GITHUB_TOKEN = (import.meta.env.VITE_GITHUB_TOKEN || "").trim();
 
 // Static authentication check from environment
 export const STATIC_ADMIN_USER = import.meta.env.VITE_ADMIN_USER || "developer";
@@ -53,7 +53,7 @@ export function getStoredToken(): string {
   const local = localStorage.getItem("qb_gh_token");
   if (local && local.trim()) return local.trim();
 
-  const envToken = import.meta.env.VITE_GITHUB_TOKEN || "";
+  const envToken = import.meta.env.VITE_GITHUB_TOKEN;
   if (envToken && envToken.trim()) return envToken.trim();
 
   return DEFAULT_GITHUB_TOKEN;
@@ -73,7 +73,8 @@ export function resetToDefaultToken(): string {
 }
 
 export function hasConfiguredToken(): boolean {
-  return Boolean(getStoredToken());
+  const token = getStoredToken();
+  return Boolean(token && token.trim().length > 10);
 }
 
 export function formatBytes(bytes: number): string {
@@ -199,8 +200,8 @@ export async function fetchReleases(forceRefresh = false): Promise<{
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
   };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  if (token && token.trim().length > 10) {
+    headers.Authorization = `Bearer ${token.trim()}`;
   }
 
   // Fetch in parallel:
@@ -213,19 +214,40 @@ export async function fetchReleases(forceRefresh = false): Promise<{
     fetch(`/releases.json`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
   ]);
 
+  let relResSettled = relRes;
+  let contentsResSettled = contentsRes;
+
+  // If token caused a 401 Unauthorized on public repo, clear bad token and retry anonymously
+  if (
+    (relResSettled.status === "fulfilled" && relResSettled.value.status === 401) ||
+    (contentsResSettled.status === "fulfilled" && contentsResSettled.value.status === 401)
+  ) {
+    localStorage.removeItem("qb_gh_token");
+    const [retryRel, retryContents] = await Promise.allSettled([
+      fetch(`https://api.github.com/repos/${repo}/releases`, {
+        headers: { Accept: "application/vnd.github+json" },
+      }),
+      fetch(`https://api.github.com/repos/${repo}/contents/releases?ref=main`, {
+        headers: { Accept: "application/vnd.github+json" },
+      }),
+    ]);
+    relResSettled = retryRel;
+    contentsResSettled = retryContents;
+  }
+
   let ghReleases: any[] = [];
-  if (relRes.status === "fulfilled" && relRes.value.ok) {
+  if (relResSettled.status === "fulfilled" && relResSettled.value.ok) {
     try {
-      ghReleases = await relRes.value.json();
+      ghReleases = await relResSettled.value.json();
     } catch {
       // ignore
     }
   }
 
   let folderFiles: any[] = [];
-  if (contentsRes.status === "fulfilled" && contentsRes.value.ok) {
+  if (contentsResSettled.status === "fulfilled" && contentsResSettled.value.ok) {
     try {
-      folderFiles = await contentsRes.value.json();
+      folderFiles = await contentsResSettled.value.json();
     } catch {
       // ignore
     }
@@ -525,9 +547,8 @@ function putJsonWithProgress(
 
         // Add helpful operational guidance based on status
         if (xhr.status === 401) {
-          // If a custom token was stored in localStorage, remove it so it doesn't block future requests
           localStorage.removeItem("qb_gh_token");
-          fullError = `401 Unauthorized: Invalid or expired GitHub Personal Access Token.\n\n${fullError}\n\nThe custom token has been reset. Please click 'Publish APK' again to use the default repository token, or enter a valid GitHub Token with 'repo' scope in Token Settings.`;
+          fullError = `401 Unauthorized: Invalid or expired GitHub Personal Access Token.\n\n${fullError}\n\nThe invalid token has been reset. Please try publishing again, or configure a valid GitHub Token with 'repo' scope in Token Settings.`;
         } else if (xhr.status === 403) {
           fullError = `403 Forbidden: Permission denied or GitHub repository protection blocked the push.\n\n${fullError}\n\nEnsure your token has 'repo' or 'contents:write' scope and branch protection allows direct pushes.`;
         } else if (xhr.status === 404) {
@@ -565,9 +586,9 @@ export async function uploadApkToGitHubRepo(
 ): Promise<{ release: Release; rawUrl: string }> {
   const repo = getStoredRepo();
   const token = getStoredToken();
-  if (!token) {
+  if (!token || token.trim().length < 10) {
     throw new Error(
-      "GitHub Token is missing. Set VITE_GITHUB_TOKEN in .env/Vercel or enter it in the Developer Console settings."
+      "GitHub Token is missing. In Incognito mode or a fresh browser session, please click 'Token Settings' above and enter your GitHub Personal Access Token (with repo scope) to publish APKs."
     );
   }
 
@@ -595,16 +616,22 @@ export async function uploadApkToGitHubRepo(
       `https://api.github.com/repos/${repo}/contents/${filePath}`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token.trim()}`,
           Accept: "application/vnd.github+json",
         },
       }
     );
-    if (checkRes.ok) {
+    if (checkRes.status === 401) {
+      localStorage.removeItem("qb_gh_token");
+      throw new Error(
+        "401 Unauthorized: Invalid or expired GitHub Personal Access Token. Please enter a valid token with 'repo' scope under Token Settings."
+      );
+    } else if (checkRes.ok) {
       const data = await checkRes.json();
       existingSha = data.sha;
     }
-  } catch {
+  } catch (err: any) {
+    if (err.message?.includes("401")) throw err;
     // ignore
   }
 

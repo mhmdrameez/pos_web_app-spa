@@ -15,6 +15,29 @@ export type Release = {
 
 export const DEFAULT_REPO = "mhmdrameez/pos_web_app-spa";
 
+// Static authentication check from environment
+export const STATIC_ADMIN_USER = import.meta.env.VITE_ADMIN_USER || "developer";
+export const STATIC_ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "QuickBill@2026";
+
+export function checkStaticLogin(userId: string, password: string): boolean {
+  return (
+    userId.trim() === STATIC_ADMIN_USER.trim() &&
+    password === STATIC_ADMIN_PASSWORD
+  );
+}
+
+export function isSessionAuthed(): boolean {
+  return sessionStorage.getItem("qb_admin_session") === "true";
+}
+
+export function setSessionAuthed(value: boolean) {
+  if (value) {
+    sessionStorage.setItem("qb_admin_session", "true");
+  } else {
+    sessionStorage.removeItem("qb_admin_session");
+  }
+}
+
 export function getStoredRepo(): string {
   return localStorage.getItem("qb_gh_repo") || import.meta.env.VITE_GITHUB_REPO || DEFAULT_REPO;
 }
@@ -25,6 +48,9 @@ export function setStoredRepo(repo: string) {
 }
 
 export function getStoredToken(): string {
+  // Check env first, then localStorage
+  const envToken = import.meta.env.VITE_GITHUB_TOKEN || "";
+  if (envToken && envToken.trim()) return envToken.trim();
   return localStorage.getItem("qb_gh_token") || "";
 }
 
@@ -34,6 +60,10 @@ export function setStoredToken(token: string) {
 
 export function clearStoredToken() {
   localStorage.removeItem("qb_gh_token");
+}
+
+export function hasConfiguredToken(): boolean {
+  return Boolean(getStoredToken());
 }
 
 export function formatBytes(bytes: number): string {
@@ -49,11 +79,23 @@ export function formatBytes(bytes: number): string {
   return `${n.toFixed(n >= 10 || i === 0 ? 1 : 2)} ${units[i]}`;
 }
 
+export function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1] || "";
+      resolve(base64);
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function fetchReleases(forceRefresh = false): Promise<{
   releases: Release[];
   latest: Release | null;
   repo: string;
-  source: "github" | "cache" | "fallback";
 }> {
   const repo = getStoredRepo();
   const cacheKey = `qb_releases_cache_${repo}`;
@@ -63,17 +105,16 @@ export async function fetchReleases(forceRefresh = false): Promise<{
     if (cached) {
       try {
         const { timestamp, data } = JSON.parse(cached);
-        // Cache valid for 3 minutes
-        if (Date.now() - timestamp < 3 * 60 * 1000 && Array.isArray(data)) {
+        // Cache valid for 2 minutes
+        if (Date.now() - timestamp < 2 * 60 * 1000 && Array.isArray(data)) {
           return {
             releases: data,
             latest: data[0] || null,
             repo,
-            source: "cache",
           };
         }
       } catch {
-        // ignore parse error
+        // ignore
       }
     }
   }
@@ -95,7 +136,7 @@ export async function fetchReleases(forceRefresh = false): Promise<{
       if (res.status === 403) {
         const rateLimitRemaining = res.headers.get("x-ratelimit-remaining");
         if (rateLimitRemaining === "0") {
-          throw new Error("GitHub API rate limit exceeded. Please wait a few minutes or add a GitHub Personal Access Token.");
+          throw new Error("GitHub API rate limit reached. Please set VITE_GITHUB_TOKEN or wait a few minutes.");
         }
       }
       throw new Error(`GitHub API returned status ${res.status}`);
@@ -103,24 +144,39 @@ export async function fetchReleases(forceRefresh = false): Promise<{
 
     const ghReleases: any[] = await res.json();
     const releases: Release[] = ghReleases.map((r, index) => {
-      // Find .apk asset or first asset
       const apkAsset =
         r.assets?.find((a: any) => a.name?.toLowerCase().endsWith(".apk")) ||
         r.assets?.[0];
 
       const version = r.tag_name || r.name || "unknown";
-      const sizeBytes = apkAsset?.size || 0;
+      let sizeBytes = apkAsset?.size || 0;
+      let downloadUrl = apkAsset?.browser_download_url;
+      let fileName = apkAsset ? apkAsset.name : `${version}.apk`;
+
+      // If no direct asset attached, check if release body contains the raw GitHub download link
+      if (!downloadUrl && r.body) {
+        const rawMatch = r.body.match(/https:\/\/github\.com\/[^/]+\/[^/]+\/raw\/[^\s)]+\.apk/i);
+        if (rawMatch) {
+          downloadUrl = rawMatch[0];
+          const parts = downloadUrl.split("/");
+          fileName = decodeURIComponent(parts[parts.length - 1]);
+        }
+      }
+
+      if (!downloadUrl) {
+        downloadUrl = r.html_url;
+      }
 
       return {
         id: String(r.id),
         version: version.startsWith("v") ? version : `v${version}`,
         title: r.name || version,
         notes: r.body || "",
-        fileName: apkAsset ? apkAsset.name : `${version}.apk`,
+        fileName,
         sizeBytes,
-        sizeLabel: sizeBytes > 0 ? formatBytes(sizeBytes) : "GitHub build",
+        sizeLabel: sizeBytes > 0 ? formatBytes(sizeBytes) : "Android APK",
         uploadedAt: r.published_at || r.created_at,
-        downloadUrl: apkAsset?.browser_download_url || r.html_url,
+        downloadUrl,
         htmlUrl: r.html_url,
         author: r.author?.login || "",
         isLatest: index === 0,
@@ -136,10 +192,8 @@ export async function fetchReleases(forceRefresh = false): Promise<{
       releases,
       latest: releases[0] || null,
       repo,
-      source: "github",
     };
   } catch (err) {
-    // If request failed (e.g. rate limit / network error), try to return cached data
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
@@ -149,7 +203,6 @@ export async function fetchReleases(forceRefresh = false): Promise<{
             releases: data,
             latest: data[0] || null,
             repo,
-            source: "cache",
           };
         }
       } catch {
@@ -160,70 +213,126 @@ export async function fetchReleases(forceRefresh = false): Promise<{
   }
 }
 
-export async function fetchCurrentUser(token: string): Promise<{
-  username: string;
-  name: string;
-  avatarUrl: string;
-}> {
-  const res = await fetch("https://api.github.com/user", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-    },
-  });
-  if (!res.ok) {
-    throw new Error(
-      res.status === 401
-        ? "Invalid GitHub Personal Access Token. Please check token permissions."
-        : `GitHub authentication failed (${res.status})`
-    );
-  }
-  const data = await res.json();
-  return {
-    username: data.login,
-    name: data.name || data.login,
-    avatarUrl: data.avatar_url,
-  };
-}
-
-export async function createGitHubRelease(
+/**
+ * Uploads an APK file directly to the GitHub repository (into releases/)
+ * and creates the corresponding GitHub Release with fix notes.
+ * Works completely in the browser using the owner's GitHub Token.
+ */
+export async function uploadApkToGitHubRepo(
+  file: File,
   version: string,
   title: string,
   notes: string,
-  token: string,
-  repo: string = getStoredRepo()
-): Promise<{ id: string; htmlUrl: string; uploadUrl: string }> {
-  const cleanTag = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
-  const res = await fetch(`https://api.github.com/repos/${repo}/releases`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      tag_name: cleanTag,
-      name: title.trim() || `QuickBillPoss ${cleanTag}`,
-      body: notes.trim(),
-      draft: false,
-      prerelease: false,
-    }),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    if (res.status === 422) {
-      throw new Error(`Release or tag "${cleanTag}" already exists on GitHub.`);
-    }
-    throw new Error(errorData.message || `Failed to create release (status ${res.status})`);
+  onProgress?: (status: string) => void
+): Promise<{ release: Release; rawUrl: string }> {
+  const repo = getStoredRepo();
+  const token = getStoredToken();
+  if (!token) {
+    throw new Error(
+      "GitHub Token is missing. Set VITE_GITHUB_TOKEN in .env/Vercel or enter it in the Developer Console settings."
+    );
   }
 
-  const data = await res.json();
-  return {
-    id: String(data.id),
-    htmlUrl: data.html_url,
-    uploadUrl: data.upload_url,
+  const cleanVer = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const filePath = `releases/${safeName}`;
+
+  onProgress?.("Checking existing releases on GitHub...");
+
+  let existingSha: string | undefined;
+  try {
+    const checkRes = await fetch(
+      `https://api.github.com/repos/${repo}/contents/${filePath}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+        },
+      }
+    );
+    if (checkRes.ok) {
+      const data = await checkRes.json();
+      existingSha = data.sha;
+    }
+  } catch {
+    // ignore
+  }
+
+  onProgress?.(`Encoding ${file.name} (${formatBytes(file.size)})...`);
+  const base64Content = await fileToBase64(file);
+
+  onProgress?.("Uploading APK to GitHub repository...");
+  const putRes = await fetch(
+    `https://api.github.com/repos/${repo}/contents/${filePath}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: `Release ${cleanVer}: ${title || cleanVer}`,
+        content: base64Content,
+        sha: existingSha,
+      }),
+    }
+  );
+
+  if (!putRes.ok) {
+    const err = await putRes.json().catch(() => ({}));
+    throw new Error(
+      err.message || `Failed to commit APK to repository (status ${putRes.status})`
+    );
+  }
+
+  const rawDownloadUrl = `https://github.com/${repo}/raw/main/${filePath}`;
+
+  onProgress?.("Creating GitHub Release tag and publishing fixes...");
+  const releaseBody = `## What's Changed & Fixed:\n${notes.trim()}\n\n---\n📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS Developer Console*`;
+
+  let ghReleaseData: any = {};
+  try {
+    const relRes = await fetch(`https://api.github.com/repos/${repo}/releases`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tag_name: cleanVer,
+        name: title.trim() || `QuickBillPoss ${cleanVer}`,
+        body: releaseBody,
+        draft: false,
+        prerelease: false,
+      }),
+    });
+    if (relRes.ok) {
+      ghReleaseData = await relRes.json();
+    }
+  } catch {
+    // File is already in repo, release metadata is optional
+  }
+
+  onProgress?.("Done! APK uploaded and published to GitHub.");
+
+  const createdRelease: Release = {
+    id: String(ghReleaseData.id || Date.now()),
+    version: cleanVer,
+    title: title || `QuickBillPoss ${cleanVer}`,
+    notes,
+    fileName: safeName,
+    sizeBytes: file.size,
+    sizeLabel: formatBytes(file.size),
+    uploadedAt: new Date().toISOString(),
+    downloadUrl: rawDownloadUrl,
+    htmlUrl: ghReleaseData.html_url || `https://github.com/${repo}/releases`,
+    author: ghReleaseData.author?.login || "developer",
+    isLatest: true,
   };
+
+  return { release: createdRelease, rawUrl: rawDownloadUrl };
 }
 
 export async function deleteGitHubRelease(id: string, token: string, repo: string = getStoredRepo()) {

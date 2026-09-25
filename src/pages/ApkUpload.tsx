@@ -1,21 +1,28 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  checkStaticLogin,
   clearStoredToken,
-  createGitHubRelease,
   deleteGitHubRelease,
-  fetchCurrentUser,
   fetchReleases,
   formatBytes,
   getGithubNewReleaseUrl,
   getStoredRepo,
   getStoredToken,
+  hasConfiguredToken,
+  isSessionAuthed,
+  setSessionAuthed,
   setStoredRepo,
   setStoredToken,
+  uploadApkToGitHubRepo,
   type Release,
 } from "../api";
 
 export default function ApkUpload() {
+  const [authed, setAuthed] = useState(isSessionAuthed());
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [releases, setReleases] = useState<Release[]>([]);
@@ -23,11 +30,10 @@ export default function ApkUpload() {
   const [isEditingRepo, setIsEditingRepo] = useState(false);
   const [tempRepo, setTempRepo] = useState(repo);
 
-  // Auth state (GitHub Personal Access Token)
+  // GitHub token state
   const [token, setTokenState] = useState(getStoredToken());
-  const [user, setUser] = useState<{ username: string; name: string; avatarUrl: string } | null>(null);
-  const [showTokenModal, setShowTokenModal] = useState(false);
-  const [tokenInput, setTokenInput] = useState("");
+  const [showTokenConfig, setShowTokenConfig] = useState(false);
+  const [customToken, setCustomToken] = useState("");
 
   // Release form state
   const [version, setVersion] = useState("");
@@ -35,6 +41,7 @@ export default function ApkUpload() {
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progressStatus, setProgressStatus] = useState("");
 
   // Status messages
   const [error, setError] = useState("");
@@ -56,18 +63,33 @@ export default function ApkUpload() {
     }
   }
 
-  // Load releases on mount
   useEffect(() => {
-    loadData();
-    if (token) {
-      fetchCurrentUser(token)
-        .then(setUser)
-        .catch(() => {
-          // Token expired or invalid
-          setUser(null);
-        });
+    if (authed) {
+      loadData();
     }
-  }, []);
+  }, [authed]);
+
+  // Static Login Handler
+  function onLogin(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (checkStaticLogin(userId, password)) {
+      setSessionAuthed(true);
+      setAuthed(true);
+      setPassword("");
+    } else {
+      setError("Invalid User ID or Password. Check your environment settings.");
+    }
+  }
+
+  function onLogout() {
+    setSessionAuthed(false);
+    setAuthed(false);
+    setUserId("");
+    setPassword("");
+    setNotice("");
+    setError("");
+  }
 
   function handleSaveRepo(e: FormEvent) {
     e.preventDefault();
@@ -77,49 +99,76 @@ export default function ApkUpload() {
     loadData(true);
   }
 
-  async function handleSaveToken(e: FormEvent) {
+  function handleSaveToken(e: FormEvent) {
+    e.preventDefault();
+    if (customToken.trim()) {
+      setStoredToken(customToken.trim());
+      setTokenState(customToken.trim());
+      setNotice("GitHub Personal Access Token saved!");
+    } else {
+      clearStoredToken();
+      setTokenState("");
+      setNotice("Token cleared.");
+    }
+    setShowTokenConfig(false);
+    setCustomToken("");
+  }
+
+  // Upload APK directly to GitHub Repo + Publish Release
+  async function onDirectUpload(e: FormEvent) {
     e.preventDefault();
     setError("");
     setNotice("");
-    if (!tokenInput.trim()) {
-      clearStoredToken();
-      setTokenState("");
-      setUser(null);
-      setShowTokenModal(false);
+
+    if (!file) {
+      setError("Please select an APK file to upload.");
       return;
     }
 
+    if (!version.trim()) {
+      setError("Please specify a release version (e.g. 1.0.4).");
+      return;
+    }
+
+    if (!hasConfiguredToken()) {
+      setError("GitHub Personal Access Token is required to commit files to the repository. Please configure it below.");
+      setShowTokenConfig(true);
+      return;
+    }
+
+    setBusy(true);
     try {
-      const u = await fetchCurrentUser(tokenInput.trim());
-      setStoredToken(tokenInput.trim());
-      setTokenState(tokenInput.trim());
-      setUser(u);
-      setShowTokenModal(false);
-      setNotice(`Signed in as GitHub user @${u.username}`);
-      loadData(true);
+      const result = await uploadApkToGitHubRepo(
+        file,
+        version,
+        title,
+        notes,
+        (status) => setProgressStatus(status)
+      );
+
+      setNotice(`✓ Release ${result.release.version} (${result.release.sizeLabel}) successfully sent to GitHub repository!`);
+      setVersion("");
+      setTitle("");
+      setNotes("");
+      setFile(null);
+      setProgressStatus("");
+      await loadData(true);
     } catch (err: any) {
-      setError(err.message || "Invalid GitHub token");
+      setError(err.message || "Failed to upload APK to GitHub");
+    } finally {
+      setBusy(false);
+      setProgressStatus("");
     }
   }
 
-  function handleSignOut() {
-    clearStoredToken();
-    setTokenState("");
-    setUser(null);
-    setNotice("Signed out of GitHub");
-  }
-
-  // 1-Click GitHub Web Publisher
-  function handleOneClickPublish(e: FormEvent) {
-    e.preventDefault();
+  // Fallback 1-Click GitHub Web Publisher
+  function onOneClickWebPublish() {
     setError("");
     setNotice("");
-
     if (!version.trim()) {
       setError("Please specify a release version (e.g. 1.0.4)");
       return;
     }
-
     const cleanVer = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
     const releaseTitle = title.trim() || `QuickBillPoss ${cleanVer}`;
     const fullNotes = notes.trim()
@@ -128,61 +177,21 @@ export default function ApkUpload() {
 
     const ghUrl = getGithubNewReleaseUrl(cleanVer, releaseTitle, fullNotes);
     window.open(ghUrl, "_blank");
-
-    setNotice(
-      `GitHub release page opened! Drag & drop "${file ? file.name : "your .apk"}" into the release assets area on GitHub and click "Publish release". Then click "Refresh from GitHub" here.`
-    );
+    setNotice(`GitHub release page opened! Drop your APK file into GitHub and click "Publish release".`);
   }
 
-  // Direct API Release creation (if user provided a GitHub PAT)
-  async function handleApiCreateRelease() {
-    if (!token) {
-      setShowTokenModal(true);
-      return;
-    }
-
-    if (!version.trim()) {
-      setError("Please enter a release version (e.g. 1.0.4)");
-      return;
-    }
-
-    setError("");
-    setNotice("");
-    setBusy(true);
-
-    try {
-      const cleanVer = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
-      const releaseTitle = title.trim() || `QuickBillPoss ${cleanVer}`;
-      const fullNotes = notes.trim()
-        ? `## What's Changed & Fixed:\n${notes.trim()}\n\n---\n*Build released via QuickBill POS Developer Console*`
-        : `*Build released via QuickBill POS Developer Console*`;
-
-      const rel = await createGitHubRelease(cleanVer, releaseTitle, fullNotes, token, repo);
-      setNotice(`Release ${cleanVer} created on GitHub! Opening release to attach APK file...`);
-      window.open(rel.htmlUrl, "_blank");
-      setVersion("");
-      setTitle("");
-      setNotes("");
-      setFile(null);
-      await loadData(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to create release on GitHub");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleDeleteRelease(id: string, ver: string) {
-    if (!token) {
-      alert("Sign in with your GitHub Personal Access Token to delete releases.");
-      setShowTokenModal(true);
+  async function onDelete(id: string, ver: string) {
+    const curToken = getStoredToken();
+    if (!curToken) {
+      alert("GitHub Token is required to delete releases.");
+      setShowTokenConfig(true);
       return;
     }
     if (!confirm(`Delete release ${ver} from GitHub? This cannot be undone.`)) return;
 
     setError("");
     try {
-      await deleteGitHubRelease(id, token, repo);
+      await deleteGitHubRelease(id, curToken, repo);
       setNotice(`Deleted release ${ver} from GitHub.`);
       await loadData(true);
     } catch (err: any) {
@@ -190,6 +199,56 @@ export default function ApkUpload() {
     }
   }
 
+  // 1. Static Login View
+  if (!authed) {
+    return (
+      <div className="login-page">
+        <form className="login-card" onSubmit={onLogin}>
+          <Link to="/" className="brand" style={{ marginBottom: 18 }}>
+            <span className="logo">Q</span>
+            QuickBill POS
+          </Link>
+          <h2 style={{ margin: "8px 0 6px" }}>Developer Sign In</h2>
+          <p className="lede" style={{ fontSize: 14, margin: "0 0 12px" }}>
+            Upload App-POS APK releases directly to GitHub repository without needing GitHub owner permission.
+          </p>
+
+          {error ? <div className="err" style={{ marginBottom: 14 }}>{error}</div> : null}
+
+          <label htmlFor="userId">User ID</label>
+          <input
+            id="userId"
+            autoComplete="username"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            placeholder="developer"
+            required
+          />
+
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••••••"
+            required
+          />
+
+          <button className="btn btn-primary" style={{ width: "100%", marginTop: 20 }}>
+            Sign In to Release Console
+          </button>
+
+          <p className="lede" style={{ fontSize: 13, marginTop: 16 }}>
+            <Link to="/">← Back to marketing site</Link>
+          </p>
+        </form>
+      </div>
+    );
+  }
+
+  // 2. Authenticated Release Console
   return (
     <div className="login-page" style={{ alignItems: "start", paddingTop: 32, paddingBottom: 60 }}>
       <div className="console" style={{ width: "min(1080px, 100%)" }}>
@@ -202,7 +261,7 @@ export default function ApkUpload() {
             </Link>
             <h2 style={{ margin: "10px 0 4px", fontSize: 26 }}>APK Release Console</h2>
             <p className="lede" style={{ fontSize: 14, margin: 0 }}>
-              Releases are hosted directly on <strong>GitHub Releases</strong>. 100% frontend SPA — no offline server needed.
+              Direct GitHub Repository Publisher · 100% Frontend SPA (Vercel-ready)
             </p>
           </div>
 
@@ -211,46 +270,22 @@ export default function ApkUpload() {
               className="btn btn-outline"
               type="button"
               onClick={() => loadData(true)}
-              disabled={refreshing}
+              disabled={refreshing || busy}
               title="Fetch latest releases from GitHub"
             >
               {refreshing ? "Refreshing…" : "↻ Refresh from GitHub"}
             </button>
-
-            {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.username}
-                    style={{ width: 32, height: 32, borderRadius: "50%", border: "1px solid #bfdbfe" }}
-                  />
-                ) : null}
-                <span style={{ fontSize: 13, fontWeight: 700 }}>@{user.username}</span>
-                <button className="btn btn-outline" type="button" onClick={handleSignOut} style={{ padding: "6px 12px", fontSize: 13 }}>
-                  Sign out
-                </button>
-              </div>
-            ) : (
-              <button
-                className="btn btn-outline"
-                type="button"
-                onClick={() => {
-                  setTokenInput(token);
-                  setShowTokenModal(true);
-                }}
-              >
-                Sign in with GitHub Token
-              </button>
-            )}
+            <button className="btn btn-outline" type="button" onClick={onLogout}>
+              Sign Out
+            </button>
           </div>
         </div>
 
-        {/* GitHub Repository Bar */}
+        {/* Status / Repo Bar */}
         <div
           style={{
-            margin: "18px 0 12px",
-            padding: "10px 16px",
+            margin: "18px 0 14px",
+            padding: "12px 18px",
             background: "#f0f6ff",
             border: "1px solid #bfdbfe",
             borderRadius: 14,
@@ -258,11 +293,11 @@ export default function ApkUpload() {
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 10,
+            gap: 12,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-            <span style={{ fontWeight: 700, color: "var(--navy)" }}>Target Repository:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, flexWrap: "wrap" }}>
+            <span style={{ fontWeight: 700, color: "var(--navy)" }}>Repository:</span>
             {isEditingRepo ? (
               <form onSubmit={handleSaveRepo} style={{ display: "inline-flex", gap: 6 }}>
                 <input
@@ -308,24 +343,120 @@ export default function ApkUpload() {
                     textDecoration: "underline",
                   }}
                 >
-                  (change repo)
+                  (change)
                 </button>
               </>
             )}
+
+            <span style={{ color: "#94a3b8" }}>|</span>
+
+            {/* Token Status Badge */}
+            {hasConfiguredToken() ? (
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#15803d",
+                  background: "#dcfce7",
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                ✓ GitHub Token Connected (Owner permissions active)
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowTokenConfig(true)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#b45309",
+                  background: "#fef3c7",
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                ⚠ GitHub Token Not Set (Click to configure)
+              </button>
+            )}
           </div>
 
-          <a
-            href={`https://github.com/${repo}/releases`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: 13, color: "var(--navy)", fontWeight: 600 }}
-          >
-            View on GitHub Releases ↗
-          </a>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => setShowTokenConfig(!showTokenConfig)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--navy)",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              {showTokenConfig ? "Hide Token Settings" : "Configure GitHub Token"}
+            </button>
+            <a
+              href={`https://github.com/${repo}/releases`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 13, color: "var(--navy)", fontWeight: 600 }}
+            >
+              View on GitHub ↗
+            </a>
+          </div>
         </div>
 
-        {error ? <div className="err" style={{ marginTop: 14 }}>{error}</div> : null}
-        {notice ? <div className="ok" style={{ marginTop: 14 }}>{notice}</div> : null}
+        {/* Optional Token Config Panel */}
+        {showTokenConfig ? (
+          <form
+            onSubmit={handleSaveToken}
+            style={{
+              background: "#fffbeb",
+              border: "1px solid #fde68a",
+              borderRadius: 14,
+              padding: "16px 20px",
+              marginBottom: 16,
+            }}
+          >
+            <h4 style={{ margin: "0 0 6px", fontSize: 15, color: "#92400e" }}>
+              Configure GitHub Personal Access Token (PAT)
+            </h4>
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: "#78350f" }}>
+              When set in <code>.env</code> (as <code>VITE_GITHUB_TOKEN</code>) or here, anyone with the developer login can upload APKs directly to the repository without needing owner permission.
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <input
+                type="password"
+                value={customToken}
+                onChange={(e) => setCustomToken(e.target.value)}
+                placeholder={hasConfiguredToken() ? "•••••••••••••••••••••••• (Token currently set)" : "ghp_xxxxxxxxxxxxxxxxxxxx"}
+                style={{ flex: 1, minWidth: 260 }}
+              />
+              <button className="btn btn-primary" type="submit" style={{ padding: "8px 18px", fontSize: 13 }}>
+                Save Token
+              </button>
+              <button
+                className="btn btn-outline"
+                type="button"
+                onClick={() => setShowTokenConfig(false)}
+                style={{ padding: "8px 14px", fontSize: 13 }}
+              >
+                Close
+              </button>
+            </div>
+          </form>
+        ) : null}
+
+        {error ? <div className="err" style={{ marginBottom: 14 }}>{error}</div> : null}
+        {notice ? <div className="ok" style={{ marginBottom: 14 }}>{notice}</div> : null}
 
         {/* Release Publisher Form */}
         <div
@@ -333,28 +464,28 @@ export default function ApkUpload() {
             background: "#ffffff",
             border: "1px solid var(--line)",
             borderRadius: 20,
-            padding: "22px",
-            marginTop: 18,
+            padding: "24px",
+            marginTop: 10,
             boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 19 }}>Publish New APK Release</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 20 }}>Upload APK &amp; Publish Release</h3>
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 700,
                 background: "#e0f2fe",
                 color: "#0369a1",
-                padding: "4px 10px",
+                padding: "4px 12px",
                 borderRadius: 999,
               }}
             >
-              Includes Fix Notes &amp; APK
+              Direct to GitHub Repository
             </span>
           </div>
 
-          <form onSubmit={handleOneClickPublish}>
+          <form onSubmit={onDirectUpload}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 16 }}>
               <div>
                 <label htmlFor="version">Release Version *</label>
@@ -372,7 +503,7 @@ export default function ApkUpload() {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. QuickBillPoss 1.0.4 — Thermal Print & Offline Fixes"
+                  placeholder="e.g. QuickBillPoss 1.0.4 — Thermal Receipt & Offline Fixes"
                 />
               </div>
             </div>
@@ -390,11 +521,11 @@ export default function ApkUpload() {
               required
             />
             <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 12px" }}>
-              These fix notes will appear prominently on the homepage so users know what changed in this build.
+              These fix notes will be published with the release and displayed on the public homepage.
             </p>
 
-            <label>Select Android APK File (Local Check)</label>
-            <div className="drop" style={{ padding: "18px" }}>
+            <label>Select Android APK File *</label>
+            <div className="drop" style={{ padding: "20px" }}>
               <input
                 type="file"
                 accept=".apk,application/vnd.android.package-archive"
@@ -402,7 +533,6 @@ export default function ApkUpload() {
                   const f = e.target.files?.[0] || null;
                   setFile(f);
                   if (f && !version) {
-                    // Try to infer version from filename like QuickBillPoss-1.0.4.apk
                     const m = f.name.match(/(\d+\.\d+(\.\d+)?)/);
                     if (m) setVersion(m[1]);
                   }
@@ -410,39 +540,52 @@ export default function ApkUpload() {
               />
               <div className="size-preview" style={{ marginTop: 8 }}>
                 {file
-                  ? `✓ Selected: ${file.name} (${sizeLabel}) · Ready to publish`
-                  : "Choose an APK to verify file size and build name before publishing."}
+                  ? `✓ Selected: ${file.name} (${sizeLabel}) · Ready to upload to GitHub`
+                  : "Choose an APK to upload. File will be sent directly to GitHub repository releases."}
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+            {/* Progress indicator */}
+            {busy && progressStatus ? (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "12px 16px",
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: 12,
+                  color: "var(--navy)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span className="dot" style={{ animation: "pulse 1s infinite" }} />
+                {progressStatus}
+              </div>
+            ) : null}
+
+            <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
               <button
                 type="submit"
                 className="btn btn-primary"
-                style={{ padding: "12px 24px" }}
+                style={{ padding: "12px 26px" }}
                 disabled={busy}
               >
-                🚀 1-Click Publish to GitHub Releases
+                {busy ? "Uploading to GitHub…" : "🚀 Upload APK & Publish to GitHub"}
               </button>
 
-              {token ? (
-                <button
-                  type="button"
-                  className="btn btn-dark"
-                  onClick={handleApiCreateRelease}
-                  disabled={busy}
-                >
-                  {busy ? "Creating Release…" : "Publish via GitHub Token"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => setShowTokenModal(true)}
-                >
-                  🔑 Add GitHub Token for Direct API Publish
-                </button>
-              )}
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={onOneClickWebPublish}
+                disabled={busy}
+                title="Open GitHub Release Creator"
+              >
+                Open in GitHub Web
+              </button>
             </div>
           </form>
         </div>
@@ -451,13 +594,13 @@ export default function ApkUpload() {
         <div style={{ marginTop: 36 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <h3 style={{ margin: 0, fontSize: 20 }}>
-              Published Releases on GitHub ({releases.length})
+              Live Releases on GitHub ({releases.length})
             </h3>
             <button
               className="btn btn-outline"
               type="button"
               onClick={() => loadData(true)}
-              disabled={refreshing}
+              disabled={refreshing || busy}
               style={{ fontSize: 13, padding: "6px 12px" }}
             >
               ↻ Sync Now
@@ -480,16 +623,8 @@ export default function ApkUpload() {
             >
               <h4 style={{ margin: "0 0 6px" }}>No Releases Found on GitHub</h4>
               <p className="lede" style={{ fontSize: 14, margin: "0 0 16px" }}>
-                Repository <code>{repo}</code> does not have any published releases yet. Use the form above to publish your first APK release!
+                Repository <code>{repo}</code> does not have any published releases yet. Upload your first APK build using the form above!
               </p>
-              <a
-                className="btn btn-primary"
-                href={`https://github.com/${repo}/releases/new`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Create First Release on GitHub
-              </a>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -550,11 +685,11 @@ export default function ApkUpload() {
                       >
                         View on GitHub ↗
                       </a>
-                      {token ? (
+                      {hasConfiguredToken() ? (
                         <button
                           type="button"
                           className="btn btn-danger"
-                          onClick={() => handleDeleteRelease(r.id, r.version)}
+                          onClick={() => onDelete(r.id, r.version)}
                           style={{ padding: "8px 12px", fontSize: 13 }}
                         >
                           Delete
@@ -604,72 +739,6 @@ export default function ApkUpload() {
           )}
         </div>
       </div>
-
-      {/* GitHub Token Modal */}
-      {showTokenModal ? (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            display: "grid",
-            placeItems: "center",
-            padding: 20,
-            zIndex: 100,
-          }}
-        >
-          <form
-            onSubmit={handleSaveToken}
-            style={{
-              width: "min(480px, 100%)",
-              background: "#fff",
-              borderRadius: 20,
-              padding: 26,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-            }}
-          >
-            <h3 style={{ margin: "0 0 8px" }}>GitHub Authentication</h3>
-            <p className="lede" style={{ fontSize: 13.5, margin: "0 0 16px" }}>
-              Enter a GitHub Personal Access Token (PAT) with <code>repo</code> or <code>contents:write</code> scope to publish or delete releases directly from this console.
-            </p>
-
-            <label htmlFor="tokenInput">GitHub Personal Access Token</label>
-            <input
-              id="tokenInput"
-              type="password"
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-              autoComplete="off"
-            />
-
-            <p style={{ fontSize: 12, marginTop: 8, color: "var(--muted)" }}>
-              Need a token?{" "}
-              <a
-                href="https://github.com/settings/tokens/new?scopes=repo&description=QuickBill+POS+Releases"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "var(--blue)", textDecoration: "underline" }}
-              >
-                Generate one on GitHub (1-click)
-              </a>
-            </p>
-
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => setShowTokenModal(false)}
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Save &amp; Verify
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
     </div>
   );
 }

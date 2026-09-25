@@ -7,3 +7,6 @@ data/releases.json
 data/sessions.json
 *.log
 .DS_Store
+.env
+.env.*
+!.env.example

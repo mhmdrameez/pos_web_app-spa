@@ -14,21 +14,28 @@ npm run dev
 - Marketing site: http://localhost:5173
 - Developer APK Console: http://localhost:5173/apk-upload
 
-## Deploy to Vercel
+## Environment Variables (`.env`)
 
-1. Push your changes to GitHub.
-2. In Vercel, import the repository (`mhmdrameez/pos_web_app-spa`).
-3. Click **Deploy**.
-4. That's it! Because it is a 100% frontend SPA, it runs directly on Vercel without any backend server.
+Set these in your local `.env` or in your **Vercel Project Settings → Environment Variables**:
+
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_ADMIN_USER` | `developer` | Static login username |
+| `VITE_ADMIN_PASSWORD` | `QuickBill@2026` | Static login password |
+| `VITE_GITHUB_REPO` | `mhmdrameez/pos_web_app-spa` | GitHub repository (`owner/repo`) |
+| `VITE_GITHUB_TOKEN` | *(optional)* | Owner's GitHub Personal Access Token (PAT) |
+
+> **Direct Upload Without Owner Permission**:
+> When you set `VITE_GITHUB_TOKEN` in your Vercel environment variables, anyone with the static login credentials can upload an APK directly from `/apk-upload` — the app will push the APK and publish the release directly to your GitHub repository automatically!
 
 ## Publishing APK Releases
 
-Navigate to `/apk-upload`:
-
-1. **Enter the Version** (e.g. `1.0.4` or `v1.0.4`).
-2. **Enter the Fixes / Changelog** (e.g., thermal receipt print fixes, offline SQLite fixes).
-3. **Select your APK file** to verify the filename and file size.
-4. Click **🚀 1-Click Publish to GitHub Releases**:
-   - Opens GitHub's release creator with the version tag, title, and fix notes already filled in.
-   - Drag and drop your `.apk` file into GitHub and click **Publish release**.
-5. Once published, your new build appears immediately on both `/apk-upload` and the homepage download banner!
+1. Navigate to `/apk-upload`.
+2. Sign in with the static username & password (`developer` / `QuickBill@2026`).
+3. Enter the **Release Version** (e.g. `1.0.4` or `v1.0.4`).
+4. Enter the **Fixes / Changelog** (e.g., thermal receipt print fixes, offline SQLite fixes).
+5. Select your `.apk` file.
+6. Click **🚀 Upload APK & Publish to GitHub**:
+   - The APK is committed directly to the GitHub repository.
+   - The release is published with your fix notes and download link.
+   - The new build appears immediately on both `/apk-upload` and the homepage download banner!

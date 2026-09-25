@@ -18,7 +18,7 @@ export default function Home() {
       <header className="nav">
         <div className="wrap nav-inner">
           <a className="brand" href="#top">
-            <span className="logo">Q</span>
+            <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
             QuickBill POS
           </a>
           <nav className="nav-links">
@@ -26,6 +26,15 @@ export default function Home() {
             <a href="#features">Features</a>
             <a href="#screens">Screens</a>
             <a href="#download">Download</a>
+            <a
+              href="https://posquickbill.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--blue)", fontWeight: 700 }}
+              title="Visit the live Point of Sale web application"
+            >
+              Web POS App ↗
+            </a>
             <Link to="/apk-upload">Developer</Link>
             <a className="btn btn-primary" href="#download">Get App-POS</a>
           </nav>
@@ -47,18 +56,33 @@ export default function Home() {
                 App-POS (QuickBillPoss) for Android.
               </p>
               <div className="hero-actions">
-                <a className="btn btn-primary" href="#download">Download latest APK</a>
+                <a
+                  className="btn btn-primary"
+                  href="https://posquickbill.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🌐 Launch Web POS Desk ↗
+                </a>
+                <a className="btn btn-outline" href="#download">Download APK</a>
                 <a className="btn btn-outline" href="#products">Compare web &amp; mobile</a>
               </div>
               <div className="product-pills">
-                <div className="pill">
-                  <strong>Web app</strong>
-                  <span>Browser POS. Local history. Thermal print.</span>
-                </div>
-                <div className="pill">
+                <a
+                  href="https://posquickbill.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pill"
+                  style={{ textDecoration: "none", cursor: "pointer" }}
+                  title="Launch live Point of Sale web app"
+                >
+                  <strong>Web app ↗</strong>
+                  <span>Browser POS · Local history · Thermal print · Click to open</span>
+                </a>
+                <a href="#download" className="pill" style={{ textDecoration: "none" }}>
                   <strong>App-POS · QuickBillPoss</strong>
                   <span>React Native, SQLite, Firestore, ESC/POS.</span>
-                </div>
+                </a>
               </div>
             </div>
             <div className="card">
@@ -87,6 +111,17 @@ export default function Home() {
                   <span className="chip">Park / hold orders</span>
                   <span className="chip">Local history</span>
                   <span className="chip">No required backend</span>
+                </div>
+                <div style={{ marginTop: 20 }}>
+                  <a
+                    className="btn btn-primary"
+                    href="https://posquickbill.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "10px 18px", fontSize: 14 }}
+                  >
+                    Open Web POS Desk ↗
+                  </a>
                 </div>
               </article>
               <article className="card" style={{ padding: 22 }}>
@@ -260,7 +295,17 @@ export default function Home() {
       <footer>
         <div className="wrap foot">
           <span>QuickBill POS · Web app and App-POS (QuickBillPoss)</span>
-          <Link to="/apk-upload">APK upload for developers</Link>
+          <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
+            <a
+              href="https://posquickbill.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontWeight: 600, color: "var(--blue)" }}
+            >
+              🌐 Visit Web POS App ↗
+            </a>
+            <Link to="/apk-upload">APK upload for developers</Link>
+          </div>
         </div>
       </footer>
     </>

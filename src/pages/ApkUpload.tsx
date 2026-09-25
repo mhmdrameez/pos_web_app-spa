@@ -223,7 +223,7 @@ export default function ApkUpload() {
       <div className="login-page">
         <form className="login-card" onSubmit={onLogin}>
           <Link to="/" className="brand" style={{ marginBottom: 18 }}>
-            <span className="logo">Q</span>
+            <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
             QuickBill POS
           </Link>
           <h2 style={{ margin: "8px 0 6px" }}>Developer Sign In</h2>
@@ -286,13 +286,22 @@ export default function ApkUpload() {
         <div className="row" style={{ flexWrap: "wrap", gap: 14 }}>
           <div>
             <Link to="/" className="brand">
-              <span className="logo">Q</span>
+              <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
               QuickBill POS
             </Link>
             <h2 style={{ margin: "10px 0 4px", fontSize: 26 }}>APK Release Console</h2>
           </div>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <a
+              className="btn btn-outline"
+              href="https://posquickbill.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Visit live Point of Sale web application"
+            >
+              🌐 Visit Web App ↗
+            </a>
             <button
               className="btn btn-outline"
               type="button"

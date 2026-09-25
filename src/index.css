@@ -44,9 +44,13 @@ img { max-width: 100%; display: block; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -0.03em; }
 .logo {
   width: 36px; height: 36px; border-radius: 11px;
-  background: linear-gradient(180deg, #3b82f6, #1d4ed8);
-  color: #fff; display: grid; place-items: center; font-size: 15px;
-  box-shadow: 0 8px 18px rgba(29, 78, 216, 0.35);
+  display: block; object-fit: contain;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.brand:hover .logo {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.38);
 }
 .nav-links { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
 .nav-links a:not(.btn), .ghost {

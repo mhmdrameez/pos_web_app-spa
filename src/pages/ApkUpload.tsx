@@ -16,6 +16,7 @@ import {
   setStoredToken,
   uploadApkToGitHubRepo,
   type Release,
+  type UploadProgress,
 } from "../api";
 
 export default function ApkUpload() {
@@ -42,6 +43,7 @@ export default function ApkUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [progressStatus, setProgressStatus] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
 
   // Status messages
   const [error, setError] = useState("");
@@ -137,27 +139,43 @@ export default function ApkUpload() {
     }
 
     setBusy(true);
+    setUploadProgress({
+      percent: 0,
+      loadedBytes: 0,
+      totalBytes: file.size,
+      status: `Connecting to GitHub repository ${repo}...`,
+      stage: "preparing",
+    });
+
     try {
       const result = await uploadApkToGitHubRepo(
         file,
         version,
         title,
         notes,
-        (status) => setProgressStatus(status)
+        (progressInfo) => {
+          setUploadProgress(progressInfo);
+          setProgressStatus(progressInfo.status);
+        }
       );
 
-      setNotice(`✓ Release ${result.release.version} (${result.release.sizeLabel}) successfully sent to GitHub repository!`);
+      setNotice(`✓ Release ${result.release.version} (${result.release.sizeLabel}) successfully published to GitHub!`);
       setVersion("");
       setTitle("");
       setNotes("");
       setFile(null);
-      setProgressStatus("");
+      // Show complete 100% status for 4 seconds then gracefully clear
+      setTimeout(() => {
+        setUploadProgress(null);
+        setProgressStatus("");
+      }, 4000);
       await loadData(true);
     } catch (err: any) {
       setError(err.message || "Failed to upload APK to GitHub");
+      setUploadProgress(null);
+      setProgressStatus("");
     } finally {
       setBusy(false);
-      setProgressStatus("");
     }
   }
 
@@ -545,27 +563,129 @@ export default function ApkUpload() {
               </div>
             </div>
 
-            {/* Progress indicator */}
-            {busy && progressStatus ? (
+            {/* Real-time Upload Progress Indicator */}
+            {(busy || uploadProgress) && (
               <div
                 style={{
-                  marginTop: 16,
-                  padding: "12px 16px",
-                  background: "#eff6ff",
-                  border: "1px solid #bfdbfe",
-                  borderRadius: 12,
-                  color: "var(--navy)",
-                  fontSize: 14,
-                  fontWeight: 600,
+                  marginTop: 18,
+                  padding: "16px 20px",
+                  background: uploadProgress?.percent === 100 ? "#f0fdf4" : "#f8fafc",
+                  border: uploadProgress?.percent === 100 ? "1px solid #86efac" : "1px solid #bfdbfe",
+                  borderRadius: 16,
+                  boxShadow: "0 6px 20px rgba(15, 23, 42, 0.05)",
                   display: "flex",
-                  alignItems: "center",
-                  gap: 10,
+                  flexDirection: "column",
+                  gap: 12,
+                  transition: "all 0.3s ease",
                 }}
               >
-                <span className="dot" style={{ animation: "pulse 1s infinite" }} />
-                {progressStatus}
+                {/* Header row with status & percentage badge */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                    <span
+                      className="dot"
+                      style={{
+                        background: uploadProgress?.percent === 100 ? "#16a34a" : "#2563eb",
+                        boxShadow:
+                          uploadProgress?.percent === 100
+                            ? "0 0 0 4px #bbf7d0"
+                            : "0 0 0 4px #dbeafe",
+                        animation: uploadProgress?.percent === 100 ? "none" : "pulse 1s infinite",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: uploadProgress?.percent === 100 ? "#15803d" : "var(--ink)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {uploadProgress?.status || progressStatus || "Uploading APK to GitHub..."}
+                    </span>
+                  </div>
+
+                  {/* Percentage badge */}
+                  <span
+                    style={{
+                      padding: "4px 14px",
+                      borderRadius: 999,
+                      fontSize: 13,
+                      fontWeight: 800,
+                      letterSpacing: "0.02em",
+                      background: uploadProgress?.percent === 100 ? "#dcfce7" : "#dbeafe",
+                      color: uploadProgress?.percent === 100 ? "#15803d" : "#1d4ed8",
+                      border: uploadProgress?.percent === 100 ? "1px solid #bbf7d0" : "1px solid #bfdbfe",
+                      flexShrink: 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    {uploadProgress?.percent ?? 0}%
+                    {uploadProgress?.percent === 100 ? " ✓" : ""}
+                  </span>
+                </div>
+
+                {/* Progress Bar Track & Fill */}
+                <div
+                  style={{
+                    width: "100%",
+                    height: 12,
+                    background: "#e2e8f0",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${uploadProgress?.percent ?? 0}%`,
+                      height: "100%",
+                      background:
+                        uploadProgress?.percent === 100
+                          ? "linear-gradient(90deg, #22c55e, #16a34a)"
+                          : "linear-gradient(90deg, #3b82f6, #1d4ed8)",
+                      borderRadius: 999,
+                      transition: "width 0.22s ease-out",
+                      boxShadow:
+                        uploadProgress?.percent === 100
+                          ? "0 0 12px rgba(34, 197, 94, 0.45)"
+                          : "0 0 12px rgba(29, 78, 216, 0.45)",
+                    }}
+                  />
+                </div>
+
+                {/* Bottom row: Bytes progress & real-time badge */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: 12.5,
+                    color: "var(--muted)",
+                  }}
+                >
+                  <span>
+                    {uploadProgress?.loadedBytes && uploadProgress?.totalBytes
+                      ? `${formatBytes(uploadProgress.loadedBytes)} / ${formatBytes(uploadProgress.totalBytes)} uploaded`
+                      : file
+                      ? `${formatBytes(file.size)} total`
+                      : ""}
+                  </span>
+                  <span style={{ fontWeight: 600 }}>
+                    {uploadProgress?.percent === 100
+                      ? "✨ 100% Ready on GitHub"
+                      : uploadProgress?.stage === "uploading"
+                      ? "📡 Real-time Uploading…"
+                      : "⚡ Syncing to GitHub Releases"}
+                  </span>
+                </div>
               </div>
-            ) : null}
+            )}
 
             <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
               <button

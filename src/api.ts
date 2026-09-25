@@ -213,6 +213,83 @@ export async function fetchReleases(forceRefresh = false): Promise<{
   }
 }
 
+export interface UploadProgress {
+  percent: number; // 0 to 100
+  loadedBytes: number;
+  totalBytes: number;
+  status: string;
+  stage: "preparing" | "uploading" | "committing" | "releasing" | "done";
+}
+
+function putJsonWithProgress(
+  url: string,
+  token: string,
+  payload: any,
+  fileSize: number,
+  onProgress?: (info: UploadProgress) => void
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("Accept", "application/vnd.github+json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && e.total > 0) {
+        const ratio = e.loaded / e.total;
+        const currentFileLoaded = Math.min(fileSize, Math.round(ratio * fileSize));
+        const rawPct = Math.round(ratio * 100);
+        // During active network upload, keep percent within 1% - 99% until all bytes are sent
+        const percent = Math.min(99, Math.max(1, rawPct));
+        onProgress?.({
+          percent,
+          loadedBytes: currentFileLoaded,
+          totalBytes: fileSize,
+          status: `Uploading APK to GitHub... ${percent}% (${formatBytes(currentFileLoaded)} of ${formatBytes(fileSize)})`,
+          stage: "uploading",
+        });
+      }
+    };
+
+    xhr.upload.onload = () => {
+      // 100% of bytes sent to GitHub
+      onProgress?.({
+        percent: 100,
+        loadedBytes: fileSize,
+        totalBytes: fileSize,
+        status: "100% Uploaded! GitHub is writing and verifying build commit...",
+        stage: "committing",
+      });
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText || "{}");
+          resolve(data);
+        } catch {
+          resolve({});
+        }
+      } else {
+        let errMessage = `Failed to commit APK to repository (status ${xhr.status})`;
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          if (errData.message) errMessage = errData.message;
+        } catch {
+          // ignore
+        }
+        reject(new Error(errMessage));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Network connection error during APK upload to GitHub."));
+    xhr.ontimeout = () => reject(new Error("Upload timed out. Please try again."));
+
+    xhr.send(JSON.stringify(payload));
+  });
+}
+
 /**
  * Uploads an APK file directly to the GitHub repository (into releases/)
  * and creates the corresponding GitHub Release with fix notes.
@@ -223,7 +300,7 @@ export async function uploadApkToGitHubRepo(
   version: string,
   title: string,
   notes: string,
-  onProgress?: (status: string) => void
+  onProgress?: (info: UploadProgress) => void
 ): Promise<{ release: Release; rawUrl: string }> {
   const repo = getStoredRepo();
   const token = getStoredToken();
@@ -233,11 +310,23 @@ export async function uploadApkToGitHubRepo(
     );
   }
 
+  if (file.size > 100 * 1024 * 1024) {
+    throw new Error(
+      `File size is ${formatBytes(file.size)}. GitHub API limits single file uploads via contents API to 100 MB.`
+    );
+  }
+
   const cleanVer = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const filePath = `releases/${safeName}`;
 
-  onProgress?.("Checking existing releases on GitHub...");
+  onProgress?.({
+    percent: 0,
+    loadedBytes: 0,
+    totalBytes: file.size,
+    status: "Checking existing releases on GitHub...",
+    stage: "preparing",
+  });
 
   let existingSha: string | undefined;
   try {
@@ -258,37 +347,46 @@ export async function uploadApkToGitHubRepo(
     // ignore
   }
 
-  onProgress?.(`Encoding ${file.name} (${formatBytes(file.size)})...`);
+  onProgress?.({
+    percent: 0,
+    loadedBytes: 0,
+    totalBytes: file.size,
+    status: `Preparing ${file.name} (${formatBytes(file.size)})...`,
+    stage: "preparing",
+  });
+
   const base64Content = await fileToBase64(file);
 
-  onProgress?.("Uploading APK to GitHub repository...");
-  const putRes = await fetch(
-    `https://api.github.com/repos/${repo}/contents/${filePath}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: `Release ${cleanVer}: ${title || cleanVer}`,
-        content: base64Content,
-        sha: existingSha,
-      }),
-    }
-  );
+  onProgress?.({
+    percent: 1,
+    loadedBytes: 0,
+    totalBytes: file.size,
+    status: `Uploading APK to GitHub... 0% (0 B of ${formatBytes(file.size)})`,
+    stage: "uploading",
+  });
 
-  if (!putRes.ok) {
-    const err = await putRes.json().catch(() => ({}));
-    throw new Error(
-      err.message || `Failed to commit APK to repository (status ${putRes.status})`
-    );
-  }
+  await putJsonWithProgress(
+    `https://api.github.com/repos/${repo}/contents/${filePath}`,
+    token,
+    {
+      message: `Release ${cleanVer}: ${title || cleanVer}`,
+      content: base64Content,
+      sha: existingSha,
+    },
+    file.size,
+    onProgress
+  );
 
   const rawDownloadUrl = `https://github.com/${repo}/raw/main/${filePath}`;
 
-  onProgress?.("Creating GitHub Release tag and publishing fixes...");
+  onProgress?.({
+    percent: 100,
+    loadedBytes: file.size,
+    totalBytes: file.size,
+    status: "100% - Creating GitHub Release tag and publishing download links...",
+    stage: "releasing",
+  });
+
   const releaseBody = `## What's Changed & Fixed:\n${notes.trim()}\n\n---\n📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS Developer Console*`;
 
   let ghReleaseData: any = {};
@@ -315,7 +413,13 @@ export async function uploadApkToGitHubRepo(
     // File is already in repo, release metadata is optional
   }
 
-  onProgress?.("Done! APK uploaded and published to GitHub.");
+  onProgress?.({
+    percent: 100,
+    loadedBytes: file.size,
+    totalBytes: file.size,
+    status: `✓ Done! 100% - Release ${cleanVer} successfully published to GitHub.`,
+    stage: "done",
+  });
 
   const createdRelease: Release = {
     id: String(ghReleaseData.id || Date.now()),

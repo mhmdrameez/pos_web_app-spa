@@ -1,27 +1,34 @@
-# QuickBill POS — marketing SPA + APK releases
+# QuickBill POS — Marketing SPA + GitHub APK Releases
 
-Single-page marketing site for **QuickBill POS** (web, offline-first billing desk) and **App-POS (QuickBillPoss)** (React Native, SQLite, Cloud Firestore, ESC/POS). Developers publish Android APKs at `/apk-upload`; the homepage always shows the latest release and its download size.
+100% Frontend Single-Page Application (SPA) for **QuickBill POS** and **App-POS (QuickBillPoss)**. Designed to deploy effortlessly to **Vercel** with **zero backend server or database needed**.
 
-## Run locally
+APKs are hosted and distributed worldwide via **GitHub Releases** (`mhmdrameez/pos_web_app-spa`), providing unlimited storage, fast CDN downloads, and automatic changelog / fix notes.
+
+## Run Locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-- Marketing site: http://127.0.0.1:5173
-- Developer upload: http://127.0.0.1:5173/apk-upload
-- API: http://127.0.0.1:8787
+- Marketing site: http://localhost:5173
+- Developer APK Console: http://localhost:5173/apk-upload
 
-Production (after `npm run build`): `npm start` serves the SPA and APIs on port 8787.
+## Deploy to Vercel
 
-## Developer login
+1. Push your changes to GitHub.
+2. In Vercel, import the repository (`mhmdrameez/pos_web_app-spa`).
+3. Click **Deploy**.
+4. That's it! Because it is a 100% frontend SPA, it runs directly on Vercel without any backend server.
 
-Set in `.env` (see `.env.example`):
+## Publishing APK Releases
 
-- User ID: `ADMIN_USER` (default `developer`)
-- Password: `ADMIN_PASSWORD`
+Navigate to `/apk-upload`:
 
-Sign in at `/apk-upload`, choose an APK, enter a version (for example `1.0.4`). File size is measured from the upload and listed with each release. The newest upload is the **latest** APK on the public page.
-
-APKs are stored in `uploads/apks`. Metadata is in `data/releases.json`.
+1. **Enter the Version** (e.g. `1.0.4` or `v1.0.4`).
+2. **Enter the Fixes / Changelog** (e.g., thermal receipt print fixes, offline SQLite fixes).
+3. **Select your APK file** to verify the filename and file size.
+4. Click **🚀 1-Click Publish to GitHub Releases**:
+   - Opens GitHub's release creator with the version tag, title, and fix notes already filled in.
+   - Drag and drop your `.apk` file into GitHub and click **Publish release**.
+5. Once published, your new build appears immediately on both `/apk-upload` and the homepage download banner!

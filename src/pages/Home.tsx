@@ -171,19 +171,72 @@ export default function Home() {
         <section className="section" id="download">
           <div className="wrap">
             {loaded && latest ? (
-              <div className="release-banner">
-                <div>
-                  <div className="meta">Latest App-POS release</div>
-                  <h3>QuickBillPoss {latest.version}</h3>
+              <div className="release-banner" style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 280 }}>
+                  <div className="meta" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span>Latest App-POS release</span>
+                    <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
+                      GitHub Release
+                    </span>
+                  </div>
+                  <h3 style={{ margin: "6px 0 8px" }}>QuickBillPoss {latest.version}</h3>
                   <div className="meta">
                     {latest.sizeLabel} · {latest.fileName} ·{" "}
-                    {new Date(latest.uploadedAt).toLocaleString()}
-                    {latest.notes ? ` · ${latest.notes}` : ""}
+                    {new Date(latest.uploadedAt).toLocaleDateString()}
                   </div>
+
+                  {latest.notes ? (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        background: "rgba(255, 255, 255, 0.12)",
+                        borderRadius: 12,
+                        padding: "12px 16px",
+                        maxWidth: 620,
+                        border: "1px solid rgba(255, 255, 255, 0.15)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          color: "#93c5fd",
+                          marginBottom: 4,
+                        }}
+                      >
+                        What's Fixed in this Build:
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13.5,
+                          lineHeight: 1.5,
+                          whiteSpace: "pre-line",
+                          color: "#f1f5f9",
+                        }}
+                      >
+                        {latest.notes}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-                <a className="btn btn-dark" href={latest.downloadUrl}>
-                  Download APK
-                </a>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+                  <a className="btn btn-dark" href={latest.downloadUrl} target="_blank" rel="noopener noreferrer">
+                    Download APK ({latest.sizeLabel})
+                  </a>
+                  {latest.htmlUrl ? (
+                    <a
+                      href={latest.htmlUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 13, color: "#bfdbfe", textDecoration: "underline" }}
+                    >
+                      View release on GitHub ↗
+                    </a>
+                  ) : null}
+                </div>
               </div>
             ) : (
               <div className="release-banner release-empty">
@@ -191,7 +244,7 @@ export default function Home() {
                   <div className="kicker">ANDROID APK</div>
                   <h3 style={{ margin: "10px 0 6px" }}>No public release yet</h3>
                   <p className="lede" style={{ margin: 0, fontSize: 15 }}>
-                    The latest App-POS APK will appear here after a developer uploads it at{" "}
+                    The latest App-POS APK will appear here after a developer publishes it to GitHub at{" "}
                     <Link to="/apk-upload">/apk-upload</Link>.
                   </p>
                 </div>

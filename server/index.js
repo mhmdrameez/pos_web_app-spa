@@ -159,10 +159,12 @@ app.post("/api/login", (req, res) => {
     return res.status(401).json({ error: "Invalid user ID or password" });
   }
   const token = createSession();
+  const isProd = process.env.NODE_ENV === "production";
+  const crossOrigin = process.env.CROSS_ORIGIN_COOKIE === "true";
   res.cookie("qb_session", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    sameSite: crossOrigin ? "none" : (isProd ? "none" : "lax"),
+    secure: crossOrigin || isProd,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/",
   });
@@ -172,7 +174,13 @@ app.post("/api/login", (req, res) => {
 app.post("/api/logout", (req, res) => {
   const sid = readSession(req.cookies.qb_session);
   if (sid) sessions.delete(sid);
-  res.clearCookie("qb_session", { path: "/" });
+  const isProd = process.env.NODE_ENV === "production";
+  const crossOrigin = process.env.CROSS_ORIGIN_COOKIE === "true";
+  res.clearCookie("qb_session", {
+    path: "/",
+    sameSite: crossOrigin ? "none" : (isProd ? "none" : "lax"),
+    secure: crossOrigin || isProd,
+  });
   res.json({ ok: true });
 });
 

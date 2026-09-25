@@ -101,11 +101,6 @@ export default function Home() {
                 Offline-first Point of Sale
               </div>
               <h1>A fast, modern POS for retail and billing desks.</h1>
-              <p className="lede">
-                Record sales, print thermal receipts, park orders, and review local history — all
-                in the browser, with no required backend. The same billing desk now ships as
-                App-POS (QuickBillPoss) for Android.
-              </p>
               <div className="hero-actions">
                 <a
                   className="btn btn-primary"

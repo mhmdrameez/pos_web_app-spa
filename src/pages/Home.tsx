@@ -4,14 +4,30 @@ import { fetchReleases, type Release } from "../api";
 
 export default function Home() {
   const [latest, setLatest] = useState<Release | null>(null);
+  const [allReleases, setAllReleases] = useState<Release[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchReleases()
-      .then((data) => setLatest(data.latest))
-      .catch(() => setLatest(null))
+      .then((data) => {
+        setLatest(data.latest);
+        setAllReleases(data.releases || []);
+      })
+      .catch(() => {
+        setLatest(null);
+        setAllReleases([]);
+      })
       .finally(() => setLoaded(true));
+
+    function handleUpdate(e: any) {
+      if (e.detail && Array.isArray(e.detail) && e.detail.length > 0) {
+        setLatest(e.detail[0]);
+        setAllReleases(e.detail);
+      }
+    }
+    window.addEventListener("qb:releases_updated", handleUpdate);
+    return () => window.removeEventListener("qb:releases_updated", handleUpdate);
   }, []);
 
   return (
@@ -36,7 +52,7 @@ export default function Home() {
             >
               Web POS App ↗
             </a>
-            <Link to="/apk-upload">Developer</Link>
+            <Link to="/apk-upload" style={{ fontWeight: 600, color: "var(--navy)", cursor: "pointer" }}>Admin</Link>
             <a className="btn btn-primary" href="#download">Get App-POS</a>
           </nav>
 
@@ -79,7 +95,7 @@ export default function Home() {
             >
               🌐 Launch Live Web POS App ↗
             </a>
-            <Link to="/apk-upload" onClick={() => setMobileMenuOpen(false)}>Developer Console</Link>
+            <Link to="/apk-upload" onClick={() => setMobileMenuOpen(false)} style={{ fontWeight: 600, color: "var(--blue)" }}>Admin</Link>
             <a
               className="btn btn-primary"
               href="#download"
@@ -252,85 +268,106 @@ export default function Home() {
         <section className="section" id="download">
           <div className="wrap">
             {loaded && latest ? (
-              <div className="release-banner" style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: 280 }}>
-                  <div className="meta" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span>Latest App-POS release</span>
-                    <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                      GitHub Release
-                    </span>
-                  </div>
-                  <h3 style={{ margin: "6px 0 8px" }}>QuickBillPoss {latest.version}</h3>
-                  <div className="meta">
-                    {latest.sizeLabel} · {latest.fileName} ·{" "}
-                    {new Date(latest.uploadedAt).toLocaleDateString()}
-                  </div>
-
-                  {latest.notes ? (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        background: "rgba(255, 255, 255, 0.12)",
-                        borderRadius: 12,
-                        padding: "12px 16px",
-                        maxWidth: 620,
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 800,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          color: "#93c5fd",
-                          marginBottom: 4,
-                        }}
-                      >
-                        What's Fixed in this Build:
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 13.5,
-                          lineHeight: 1.5,
-                          whiteSpace: "pre-line",
-                          color: "#f1f5f9",
-                        }}
-                      >
-                        {latest.notes}
-                      </div>
+              <>
+                <div className="release-banner" style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 280 }}>
+                    <div className="meta" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span>Latest App-POS release</span>
+                      <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
+                        {latest.source === "repo-folder" ? "📁 Releases Folder APK" : "🏷️ GitHub Release"}
+                      </span>
                     </div>
-                  ) : null}
+                    <h3 style={{ margin: "6px 0 8px" }}>QuickBillPoss {latest.version}</h3>
+                    <div className="meta">
+                      {latest.sizeLabel} · {latest.fileName} ·{" "}
+                      {new Date(latest.uploadedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+                    <a className="btn btn-dark" href={latest.downloadUrl} target="_blank" rel="noopener noreferrer">
+                      Download APK ({latest.sizeLabel})
+                    </a>
+                    {latest.htmlUrl ? (
+                      <a
+                        href={latest.htmlUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 13, color: "#bfdbfe", textDecoration: "underline" }}
+                      >
+                        View release on GitHub ↗
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                  <a className="btn btn-dark" href={latest.downloadUrl} target="_blank" rel="noopener noreferrer">
-                    Download APK ({latest.sizeLabel})
-                  </a>
-                  {latest.htmlUrl ? (
-                    <a
-                      href={latest.htmlUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 13, color: "#bfdbfe", textDecoration: "underline" }}
-                    >
-                      View release on GitHub ↗
-                    </a>
-                  ) : null}
-                </div>
-              </div>
+                {allReleases.length > 1 ? (
+                  <div style={{ marginTop: 24 }}>
+                    <h4 style={{ margin: "0 0 12px", fontSize: 16, color: "var(--navy)" }}>
+                      All Available Builds ({allReleases.length})
+                    </h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {allReleases.slice(1).map((rel) => (
+                        <div
+                          key={rel.id}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid var(--line)",
+                            borderRadius: 12,
+                            padding: "12px 18px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 12,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--navy)" }}>
+                              {rel.title || rel.version}
+                            </div>
+                            <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 2 }}>
+                              {rel.fileName} · {rel.sizeLabel} · {new Date(rel.uploadedAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <a
+                              className="btn btn-primary"
+                              href={rel.downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ padding: "6px 12px", fontSize: 13 }}
+                            >
+                              Download ({rel.sizeLabel})
+                            </a>
+                            <a
+                              className="btn btn-outline"
+                              href={rel.htmlUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ padding: "6px 12px", fontSize: 13 }}
+                            >
+                              View ↗
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
             ) : (
               <div className="release-banner release-empty">
                 <div>
                   <div className="kicker">ANDROID APK</div>
                   <h3 style={{ margin: "10px 0 6px" }}>No public release yet</h3>
                   <p className="lede" style={{ margin: 0, fontSize: 15 }}>
-                    The latest App-POS APK will appear here after a developer publishes it to GitHub at{" "}
+                    The latest App-POS APK will appear here after an admin publishes it at{" "}
                     <Link to="/apk-upload">/apk-upload</Link>.
                   </p>
                 </div>
                 <Link className="btn btn-primary" to="/apk-upload">
-                  Open upload console
+                  Admin Panel
                 </Link>
               </div>
             )}
@@ -350,7 +387,7 @@ export default function Home() {
             >
               🌐 Visit Web POS App ↗
             </a>
-            <Link to="/apk-upload">APK upload for developers</Link>
+            <Link to="/apk-upload" style={{ fontWeight: 600 }}>Admin</Link>
           </div>
         </div>
       </footer>

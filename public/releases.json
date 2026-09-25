@@ -1,0 +1,44 @@
+[
+  {
+    "id": "gh-rel-396506112",
+    "version": "v1.0.1",
+    "title": "QuickBillPoss v1.0.1",
+    "notes": "Updated counter Point of Sale build",
+    "fileName": "app-arm64-v8a-release.apk",
+    "sizeBytes": 30872860,
+    "sizeLabel": "29.4 MB",
+    "uploadedAt": "2026-09-25T10:14:00Z",
+    "downloadUrl": "https://raw.githubusercontent.com/mhmdrameez/pos_web_app-spa/main/releases/app-arm64-v8a-release.apk",
+    "htmlUrl": "https://github.com/mhmdrameez/pos_web_app-spa/releases/tag/v1.0.1",
+    "author": "mhmdrameez",
+    "isLatest": true
+  },
+  {
+    "id": "gh-rel-396473799",
+    "version": "v1.0.0",
+    "title": "QuickBillPoss 1.0.0 (Build 8)",
+    "notes": "Fixed the Filter\nOptimized billing keypad and local SQLite receipt generation",
+    "fileName": "app-arm64-v8a-release__8_.apk",
+    "sizeBytes": 30872860,
+    "sizeLabel": "29.4 MB",
+    "uploadedAt": "2026-09-25T09:26:06Z",
+    "downloadUrl": "https://raw.githubusercontent.com/mhmdrameez/pos_web_app-spa/main/releases/app-arm64-v8a-release__8_.apk",
+    "htmlUrl": "https://github.com/mhmdrameez/pos_web_app-spa/releases/tag/v1.0.0",
+    "author": "mhmdrameez",
+    "isLatest": false
+  },
+  {
+    "id": "file-app-arm64-v8a-release__7_",
+    "version": "v1.0.0-build7",
+    "title": "QuickBillPoss Build 7",
+    "notes": "Initial retail and counter Point of Sale counter build",
+    "fileName": "app-arm64-v8a-release__7_.apk",
+    "sizeBytes": 30847392,
+    "sizeLabel": "29.4 MB",
+    "uploadedAt": "2026-09-25T08:20:00Z",
+    "downloadUrl": "https://raw.githubusercontent.com/mhmdrameez/pos_web_app-spa/main/releases/app-arm64-v8a-release__7_.apk",
+    "htmlUrl": "https://github.com/mhmdrameez/pos_web_app-spa/blob/main/releases/app-arm64-v8a-release__7_.apk",
+    "author": "mhmdrameez",
+    "isLatest": false
+  }
+]

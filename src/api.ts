@@ -11,9 +11,11 @@ export type Release = {
   htmlUrl: string;
   author: string;
   isLatest?: boolean;
+  source?: "github-release" | "repo-folder" | "local-cache" | "manifest";
 };
 
 export const DEFAULT_REPO = "mhmdrameez/pos_web_app-spa";
+export const DEFAULT_GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || "";
 
 // Static authentication check from environment
 export const STATIC_ADMIN_USER = import.meta.env.VITE_ADMIN_USER || "developer";
@@ -48,10 +50,13 @@ export function setStoredRepo(repo: string) {
 }
 
 export function getStoredToken(): string {
-  // Check env first, then localStorage
+  const local = localStorage.getItem("qb_gh_token");
+  if (local && local.trim()) return local.trim();
+
   const envToken = import.meta.env.VITE_GITHUB_TOKEN || "";
   if (envToken && envToken.trim()) return envToken.trim();
-  return localStorage.getItem("qb_gh_token") || "";
+
+  return DEFAULT_GITHUB_TOKEN;
 }
 
 export function setStoredToken(token: string) {
@@ -60,6 +65,11 @@ export function setStoredToken(token: string) {
 
 export function clearStoredToken() {
   localStorage.removeItem("qb_gh_token");
+}
+
+export function resetToDefaultToken(): string {
+  localStorage.removeItem("qb_gh_token");
+  return DEFAULT_GITHUB_TOKEN;
 }
 
 export function hasConfiguredToken(): boolean {
@@ -92,6 +102,66 @@ export function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/**
+ * Optimistically saves an uploaded release to local cache and broadcasts an event
+ * so that it is IMMEDIATELY visible without waiting for GitHub API propagation.
+ */
+export function saveOptimisticRelease(release: Release, repo: string = getStoredRepo()): Release[] {
+  const cacheKey = `qb_releases_cache_${repo}`;
+  let existing: Release[] = [];
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.data)) existing = parsed.data;
+    }
+  } catch {
+    // ignore
+  }
+
+  const filtered = existing.filter(
+    (r) => r.id !== release.id && r.fileName !== release.fileName && r.version !== release.version
+  );
+  const updated: Release[] = [
+    { ...release, isLatest: true },
+    ...filtered.map((r) => ({ ...r, isLatest: false })),
+  ];
+
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({ timestamp: Date.now(), data: updated })
+    );
+  } catch {
+    // ignore
+  }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("qb:releases_updated", { detail: updated }));
+  }
+  return updated;
+}
+
+export function removeCachedRelease(id: string, repo: string = getStoredRepo()) {
+  const cacheKey = `qb_releases_cache_${repo}`;
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.data)) {
+        const remaining = parsed.data.filter((r: Release) => r.id !== id);
+        if (remaining.length > 0) remaining[0].isLatest = true;
+        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: remaining }));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("qb:releases_updated", { detail: remaining }));
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export async function fetchReleases(forceRefresh = false): Promise<{
   releases: Release[];
   latest: Release | null;
@@ -100,13 +170,19 @@ export async function fetchReleases(forceRefresh = false): Promise<{
   const repo = getStoredRepo();
   const cacheKey = `qb_releases_cache_${repo}`;
 
-  if (!forceRefresh) {
+  if (forceRefresh) {
+    try {
+      localStorage.removeItem(cacheKey);
+    } catch {
+      // ignore
+    }
+  } else {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
         const { timestamp, data } = JSON.parse(cached);
-        // Cache valid for 2 minutes
-        if (Date.now() - timestamp < 2 * 60 * 1000 && Array.isArray(data)) {
+        // Only return if cache has non-empty releases and is less than 2 minutes old
+        if (Date.now() - timestamp < 2 * 60 * 1000 && Array.isArray(data) && data.length > 0) {
           return {
             releases: data,
             latest: data[0] || null,
@@ -127,31 +203,54 @@ export async function fetchReleases(forceRefresh = false): Promise<{
     headers.Authorization = `Bearer ${token}`;
   }
 
-  try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/releases`, { headers });
-    if (!res.ok) {
-      let ghError = "";
-      try {
-        const errJson = await res.json();
-        ghError = errJson.message || "";
-      } catch {
-        // ignore
-      }
-      if (res.status === 404) {
-        throw new Error(`GitHub repository "${repo}" not found or private.${ghError ? ` (${ghError})` : ""}`);
-      }
-      if (res.status === 403) {
-        const rateLimitRemaining = res.headers.get("x-ratelimit-remaining");
-        if (rateLimitRemaining === "0") {
-          throw new Error("GitHub API rate limit reached. Please set VITE_GITHUB_TOKEN or wait a few minutes.");
-        }
-        throw new Error(`GitHub Access Forbidden (403): ${ghError || "Token does not have permission to view releases."}`);
-      }
-      throw new Error(`GitHub API error (${res.status}): ${ghError || res.statusText}`);
-    }
+  // Fetch in parallel:
+  // 1. Formal GitHub releases (/releases)
+  // 2. Repository contents of releases/ folder (/contents/releases)
+  // 3. Fallback static manifest (/releases.json)
+  const [relRes, contentsRes, manifestRes] = await Promise.allSettled([
+    fetch(`https://api.github.com/repos/${repo}/releases`, { headers }),
+    fetch(`https://api.github.com/repos/${repo}/contents/releases?ref=main`, { headers }),
+    fetch(`/releases.json`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+  ]);
 
-    const ghReleases: any[] = await res.json();
-    const releases: Release[] = ghReleases.map((r, index) => {
+  let ghReleases: any[] = [];
+  if (relRes.status === "fulfilled" && relRes.value.ok) {
+    try {
+      ghReleases = await relRes.value.json();
+    } catch {
+      // ignore
+    }
+  }
+
+  let folderFiles: any[] = [];
+  if (contentsRes.status === "fulfilled" && contentsRes.value.ok) {
+    try {
+      folderFiles = await contentsRes.value.json();
+    } catch {
+      // ignore
+    }
+  }
+
+  let staticManifest: Release[] = [];
+  if (manifestRes.status === "fulfilled" && Array.isArray(manifestRes.value)) {
+    staticManifest = manifestRes.value;
+  }
+
+  const fileMap = new Map<string, any>();
+  if (Array.isArray(folderFiles)) {
+    for (const f of folderFiles) {
+      if (f.name && f.name.toLowerCase().endsWith(".apk")) {
+        fileMap.set(f.name, f);
+      }
+    }
+  }
+
+  const releases: Release[] = [];
+  const processedFiles = new Set<string>();
+
+  // 1. Process GitHub releases
+  if (Array.isArray(ghReleases)) {
+    for (const r of ghReleases) {
       const apkAsset =
         r.assets?.find((a: any) => a.name?.toLowerCase().endsWith(".apk")) ||
         r.assets?.[0];
@@ -159,11 +258,26 @@ export async function fetchReleases(forceRefresh = false): Promise<{
       const version = r.tag_name || r.name || "unknown";
       let sizeBytes = apkAsset?.size || 0;
       let downloadUrl = apkAsset?.browser_download_url;
-      let fileName = apkAsset ? apkAsset.name : `${version}.apk`;
+      let fileName = apkAsset ? apkAsset.name : "";
 
-      // If no direct asset attached, check if release body contains the raw GitHub download link
-      if (!downloadUrl && r.body) {
-        const rawMatch = r.body.match(/https:\/\/github\.com\/[^/]+\/[^/]+\/raw\/[^\s)]+\.apk/i);
+      // Check if release body has markdown APK link
+      if (!fileName && r.body) {
+        const match =
+          r.body.match(/\[([a-zA-Z0-9._-]+\.apk)\]\((https:\/\/github\.com\/[^/]+\/[^/]+\/raw\/[^\s)]+\.apk)\)/i) ||
+          r.body.match(/(https:\/\/github\.com\/[^/]+\/[^/]+\/raw\/[^\s)]+\/([a-zA-Z0-9._-]+\.apk))/i);
+        if (match) {
+          if (match[2] && match[2].endsWith(".apk")) {
+            downloadUrl = match[2];
+            fileName = match[1];
+          } else if (match[1] && match[2]) {
+            downloadUrl = match[1];
+            fileName = match[2];
+          }
+        }
+      }
+
+      if (!fileName && r.body) {
+        const rawMatch = r.body.match(/https:\/\/(raw\.githubusercontent\.com|github\.com)\/[^\s)]+\.apk/i);
         if (rawMatch) {
           downloadUrl = rawMatch[0];
           const parts = downloadUrl.split("/");
@@ -171,11 +285,28 @@ export async function fetchReleases(forceRefresh = false): Promise<{
         }
       }
 
-      if (!downloadUrl) {
-        downloadUrl = r.html_url;
+      // If fileName matches a file in the releases/ directory, link exact file size
+      if (fileName && fileMap.has(fileName)) {
+        const folderFile = fileMap.get(fileName);
+        if (!sizeBytes && folderFile.size) sizeBytes = folderFile.size;
+        processedFiles.add(fileName);
       }
 
-      return {
+      // Parse approximate size from body if still missing
+      if (!sizeBytes && r.body) {
+        const sizeMatch = r.body.match(/\(([\d.]+)\s*(MB|KB|GB|B)\)/i);
+        if (sizeMatch) {
+          const val = parseFloat(sizeMatch[1]);
+          const unit = sizeMatch[2].toUpperCase();
+          if (unit === "MB") sizeBytes = Math.round(val * 1024 * 1024);
+          else if (unit === "KB") sizeBytes = Math.round(val * 1024);
+        }
+      }
+
+      if (!downloadUrl) downloadUrl = r.html_url;
+      if (!fileName) fileName = `${version}.apk`;
+
+      releases.push({
         id: String(r.id),
         version: version.startsWith("v") ? version : `v${version}`,
         title: r.name || version,
@@ -187,38 +318,122 @@ export async function fetchReleases(forceRefresh = false): Promise<{
         downloadUrl,
         htmlUrl: r.html_url,
         author: r.author?.login || "",
-        isLatest: index === 0,
-      };
-    });
+        isLatest: releases.length === 0,
+        source: "github-release",
+      });
+    }
+  }
 
-    localStorage.setItem(
-      cacheKey,
-      JSON.stringify({ timestamp: Date.now(), data: releases })
-    );
+  // 2. Add any APK files found in repo releases/ folder that weren't in a formal GitHub release
+  for (const [name, f] of fileMap.entries()) {
+    if (!processedFiles.has(name)) {
+      const buildMatch = name.match(/release__(\d+)_/i) || name.match(/build[_-]?(\d+)/i);
+      const verMatch = name.match(/v?(\d+\.\d+(\.\d+)?)/i);
+      let ver = "v1.0.0";
+      let title = `QuickBill POS ${name.replace(/\.apk$/i, "")}`;
+      if (buildMatch) {
+        ver = `v1.0.0 (Build ${buildMatch[1]})`;
+        title = `QuickBill POS Build ${buildMatch[1]}`;
+      } else if (verMatch) {
+        ver = verMatch[1].startsWith("v") ? verMatch[1] : `v${verMatch[1]}`;
+        title = `QuickBill POS ${ver}`;
+      }
+
+      releases.push({
+        id: `folder-${name.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+        version: ver,
+        title,
+        notes: `Build available directly in repository releases/ folder (${name})`,
+        fileName: name,
+        sizeBytes: f.size || 0,
+        sizeLabel: formatBytes(f.size || 0),
+        uploadedAt: new Date().toISOString(),
+        downloadUrl: `https://raw.githubusercontent.com/${repo}/main/releases/${name}`,
+        htmlUrl: `https://github.com/${repo}/blob/main/releases/${name}`,
+        author: repo.split("/")[0] || "developer",
+        isLatest: releases.length === 0,
+        source: "repo-folder",
+      });
+    }
+  }
+
+  // 3. If releases is still empty or GitHub API failed/rate-limited, merge static manifest
+  if (releases.length === 0 && staticManifest.length > 0) {
+    for (const item of staticManifest) {
+      releases.push({
+        ...item,
+        source: "manifest",
+      });
+    }
+  }
+
+  // Also retain any recently optimistic releases in cache if not yet returned by GitHub
+  const cachedRaw = localStorage.getItem(cacheKey);
+  if (cachedRaw) {
+    try {
+      const { data } = JSON.parse(cachedRaw);
+      if (Array.isArray(data)) {
+        for (const localRel of data) {
+          const exists = releases.some(
+            (r) => r.fileName === localRel.fileName || r.id === localRel.id
+          );
+          if (!exists) {
+            releases.unshift(localRel);
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Deduplicate releases by unique fileName and id
+  const seenIds = new Set<string>();
+  const seenFiles = new Set<string>();
+  const uniqueReleases: Release[] = [];
+
+  for (const rel of releases) {
+    if (seenIds.has(rel.id) || seenFiles.has(rel.fileName)) continue;
+    seenIds.add(rel.id);
+    seenFiles.add(rel.fileName);
+    uniqueReleases.push(rel);
+  }
+
+  // If we found any releases, update cache and latest flag
+  if (uniqueReleases.length > 0) {
+    uniqueReleases[0].isLatest = true;
+    for (let i = 1; i < uniqueReleases.length; i++) uniqueReleases[i].isLatest = false;
+
+    try {
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({ timestamp: Date.now(), data: uniqueReleases })
+      );
+    } catch {
+      // ignore
+    }
 
     return {
-      releases,
-      latest: releases[0] || null,
+      releases: uniqueReleases,
+      latest: uniqueReleases[0] || null,
       repo,
     };
-  } catch (err) {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      try {
-        const { data } = JSON.parse(cached);
-        if (Array.isArray(data) && data.length > 0) {
-          return {
-            releases: data,
-            latest: data[0] || null,
-            repo,
-          };
-        }
-      } catch {
-        // ignore
-      }
-    }
-    throw err;
   }
+
+  // If both GitHub requests had errors and no releases were found:
+  if (relRes.status === "rejected" || (relRes.status === "fulfilled" && !relRes.value.ok)) {
+    const errorText =
+      relRes.status === "rejected"
+        ? relRes.reason?.message
+        : `GitHub API status ${relRes.value?.status}`;
+    throw new Error(`Failed to load releases: ${errorText || "Network error"}`);
+  }
+
+  return {
+    releases: [],
+    latest: null,
+    repo,
+  };
 }
 
 export interface UploadProgress {
@@ -310,7 +525,9 @@ function putJsonWithProgress(
 
         // Add helpful operational guidance based on status
         if (xhr.status === 401) {
-          fullError = `401 Unauthorized: Invalid or expired GitHub Personal Access Token.\n\n${fullError}\n\nPlease check or re-configure your token under 'GitHub Token Settings'.`;
+          // If a custom token was stored in localStorage, remove it so it doesn't block future requests
+          localStorage.removeItem("qb_gh_token");
+          fullError = `401 Unauthorized: Invalid or expired GitHub Personal Access Token.\n\n${fullError}\n\nThe custom token has been reset. Please click 'Publish APK' again to use the default repository token, or enter a valid GitHub Token with 'repo' scope in Token Settings.`;
         } else if (xhr.status === 403) {
           fullError = `403 Forbidden: Permission denied or GitHub repository protection blocked the push.\n\n${fullError}\n\nEnsure your token has 'repo' or 'contents:write' scope and branch protection allows direct pushes.`;
         } else if (xhr.status === 404) {
@@ -343,7 +560,7 @@ export async function uploadApkToGitHubRepo(
   file: File,
   version: string,
   title: string,
-  notes: string,
+  notes: string = "",
   onProgress?: (info: UploadProgress) => void
 ): Promise<{ release: Release; rawUrl: string }> {
   const repo = getStoredRepo();
@@ -431,7 +648,9 @@ export async function uploadApkToGitHubRepo(
     stage: "releasing",
   });
 
-  const releaseBody = `## What's Changed & Fixed:\n${notes.trim()}\n\n---\n📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS Developer Console*`;
+  const releaseBody = notes?.trim()
+    ? `${notes.trim()}\n\n---\n📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS*`
+    : `📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS*`;
 
   let ghReleaseData: any = {};
   try {
@@ -478,29 +697,36 @@ export async function uploadApkToGitHubRepo(
     htmlUrl: ghReleaseData.html_url || `https://github.com/${repo}/releases`,
     author: ghReleaseData.author?.login || "developer",
     isLatest: true,
+    source: "github-release",
   };
+
+  // Optimistically persist in cache so it shows IMMEDIATELY everywhere
+  saveOptimisticRelease(createdRelease, repo);
 
   return { release: createdRelease, rawUrl: rawDownloadUrl };
 }
 
 export async function deleteGitHubRelease(id: string, token: string, repo: string = getStoredRepo()) {
-  const res = await fetch(`https://api.github.com/repos/${repo}/releases/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-    },
-  });
-  if (!res.ok && res.status !== 204) {
-    let detail = "";
-    try {
-      const errJson = await res.json();
-      detail = errJson.message || "";
-    } catch {
-      // ignore
+  if (!id.startsWith("folder-") && !id.startsWith("file-")) {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+      },
+    });
+    if (!res.ok && res.status !== 204 && res.status !== 404) {
+      let detail = "";
+      try {
+        const errJson = await res.json();
+        detail = errJson.message || "";
+      } catch {
+        // ignore
+      }
+      throw new Error(`Failed to delete release on GitHub (${res.status}): ${detail || res.statusText}`);
     }
-    throw new Error(`Failed to delete release on GitHub (${res.status}): ${detail || res.statusText}`);
   }
+  removeCachedRelease(id, repo);
   return true;
 }
 

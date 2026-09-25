@@ -130,16 +130,24 @@ export async function fetchReleases(forceRefresh = false): Promise<{
   try {
     const res = await fetch(`https://api.github.com/repos/${repo}/releases`, { headers });
     if (!res.ok) {
+      let ghError = "";
+      try {
+        const errJson = await res.json();
+        ghError = errJson.message || "";
+      } catch {
+        // ignore
+      }
       if (res.status === 404) {
-        throw new Error(`GitHub repository "${repo}" not found or private.`);
+        throw new Error(`GitHub repository "${repo}" not found or private.${ghError ? ` (${ghError})` : ""}`);
       }
       if (res.status === 403) {
         const rateLimitRemaining = res.headers.get("x-ratelimit-remaining");
         if (rateLimitRemaining === "0") {
           throw new Error("GitHub API rate limit reached. Please set VITE_GITHUB_TOKEN or wait a few minutes.");
         }
+        throw new Error(`GitHub Access Forbidden (403): ${ghError || "Token does not have permission to view releases."}`);
       }
-      throw new Error(`GitHub API returned status ${res.status}`);
+      throw new Error(`GitHub API error (${res.status}): ${ghError || res.statusText}`);
     }
 
     const ghReleases: any[] = await res.json();
@@ -272,19 +280,55 @@ function putJsonWithProgress(
           resolve({});
         }
       } else {
-        let errMessage = `Failed to commit APK to repository (status ${xhr.status})`;
+        let errMessage = `GitHub API error (${xhr.status})`;
+        let detailParts: string[] = [];
+
         try {
           const errData = JSON.parse(xhr.responseText);
-          if (errData.message) errMessage = errData.message;
+          if (errData.message) {
+            errMessage = errData.message;
+          }
+          if (Array.isArray(errData.errors) && errData.errors.length > 0) {
+            const list = errData.errors
+              .map((e: any) => (typeof e === "string" ? e : (e.message || e.code || JSON.stringify(e))))
+              .join("\n• ");
+            detailParts.push(`Details:\n• ${list}`);
+          }
+          if (errData.documentation_url) {
+            detailParts.push(`Documentation: ${errData.documentation_url}`);
+          }
         } catch {
-          // ignore
+          if (xhr.responseText) {
+            detailParts.push(xhr.responseText.slice(0, 500));
+          }
         }
-        reject(new Error(errMessage));
+
+        let fullError = errMessage;
+        if (detailParts.length > 0) {
+          fullError += `\n\n${detailParts.join("\n\n")}`;
+        }
+
+        // Add helpful operational guidance based on status
+        if (xhr.status === 401) {
+          fullError = `401 Unauthorized: Invalid or expired GitHub Personal Access Token.\n\n${fullError}\n\nPlease check or re-configure your token under 'GitHub Token Settings'.`;
+        } else if (xhr.status === 403) {
+          fullError = `403 Forbidden: Permission denied or GitHub repository protection blocked the push.\n\n${fullError}\n\nEnsure your token has 'repo' or 'contents:write' scope and branch protection allows direct pushes.`;
+        } else if (xhr.status === 404) {
+          fullError = `404 Not Found: Repository was not found or your token cannot access it. Check that the repository name is correct.`;
+        } else if (xhr.status === 409) {
+          fullError = `409 Conflict: Commit SHA mismatch or concurrent update on GitHub.\n\n${fullError}`;
+        } else if (xhr.status === 413) {
+          fullError = `413 Payload Too Large: This APK file exceeds the GitHub Contents API single-file limit (100 MB).`;
+        } else if (xhr.status === 422) {
+          fullError = `422 Unprocessable Entity / Push Rejected:\n\n${fullError}`;
+        }
+
+        reject(new Error(fullError));
       }
     };
 
-    xhr.onerror = () => reject(new Error("Network connection error during APK upload to GitHub."));
-    xhr.ontimeout = () => reject(new Error("Upload timed out. Please try again."));
+    xhr.onerror = () => reject(new Error("Network connection error: Failed to communicate with api.github.com. Check your internet connection or browser security filters."));
+    xhr.ontimeout = () => reject(new Error("Upload timed out: GitHub API took too long to respond. Please try again."));
 
     xhr.send(JSON.stringify(payload));
   });
@@ -448,7 +492,14 @@ export async function deleteGitHubRelease(id: string, token: string, repo: strin
     },
   });
   if (!res.ok && res.status !== 204) {
-    throw new Error(`Failed to delete release on GitHub (status ${res.status})`);
+    let detail = "";
+    try {
+      const errJson = await res.json();
+      detail = errJson.message || "";
+    } catch {
+      // ignore
+    }
+    throw new Error(`Failed to delete release on GitHub (${res.status}): ${detail || res.statusText}`);
   }
   return true;
 }

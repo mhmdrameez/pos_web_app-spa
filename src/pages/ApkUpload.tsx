@@ -231,7 +231,19 @@ export default function ApkUpload() {
             Upload App-POS APK releases directly to GitHub repository without needing GitHub owner permission.
           </p>
 
-          {error ? <div className="err" style={{ marginBottom: 14 }}>{error}</div> : null}
+          {error ? (
+            <div
+              className="err"
+              style={{
+                marginBottom: 14,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                lineHeight: 1.5,
+              }}
+            >
+              ⚠️ {error}
+            </div>
+          ) : null}
 
           <label htmlFor="userId">User ID</label>
           <input
@@ -278,9 +290,6 @@ export default function ApkUpload() {
               QuickBill POS
             </Link>
             <h2 style={{ margin: "10px 0 4px", fontSize: 26 }}>APK Release Console</h2>
-            <p className="lede" style={{ fontSize: 14, margin: 0 }}>
-              Direct GitHub Repository Publisher · 100% Frontend SPA (Vercel-ready)
-            </p>
           </div>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -473,7 +482,64 @@ export default function ApkUpload() {
           </form>
         ) : null}
 
-        {error ? <div className="err" style={{ marginBottom: 14 }}>{error}</div> : null}
+        {error ? (
+          <div
+            className="err"
+            style={{
+              marginBottom: 16,
+              padding: "16px 18px",
+              background: "#fef2f2",
+              border: "1px solid #fca5a5",
+              borderRadius: 14,
+              boxShadow: "0 6px 18px rgba(220, 38, 38, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong style={{ color: "#991b1b", fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                ⚠️ Error Details:
+              </strong>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(error)}
+                  className="btn btn-outline"
+                  style={{ padding: "3px 10px", fontSize: 12, borderColor: "#fca5a5", color: "#991b1b" }}
+                  title="Copy full error to clipboard"
+                >
+                  📋 Copy Error
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setError("")}
+                  className="btn btn-outline"
+                  style={{ padding: "3px 10px", fontSize: 12, borderColor: "#fca5a5", color: "#991b1b" }}
+                  title="Dismiss this error"
+                >
+                  ✕ Dismiss
+                </button>
+              </div>
+            </div>
+            <div
+              style={{
+                color: "#7f1d1d",
+                fontSize: 13,
+                lineHeight: 1.55,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                background: "rgba(254, 226, 226, 0.5)",
+                padding: "10px 14px",
+                borderRadius: 10,
+                border: "1px solid #fecaca",
+                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+              }}
+            >
+              {error}
+            </div>
+          </div>
+        ) : null}
         {notice ? <div className="ok" style={{ marginBottom: 14 }}>{notice}</div> : null}
 
         {/* Release Publisher Form */}

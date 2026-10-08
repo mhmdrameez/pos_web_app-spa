@@ -1,0 +1,46 @@
+{
+  "name": "QuickBill POS — Offline Retail Billing Desk",
+  "short_name": "QuickBill POS",
+  "description": "High-speed offline-first Point of Sale for Indian Kirana, Cafes, Bakeries & Retail Desks. GST compliant, UPI QR payment ready, and Bluetooth thermal printing.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["business", "finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Launch Web POS Desk",
+      "short_name": "Web POS",
+      "description": "Open full billing counter desk",
+      "url": "https://posquickbill.vercel.app/",
+      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Pricing Plans",
+      "short_name": "Plans",
+      "description": "View Monthly ₹99 & Annual ₹999 plans",
+      "url": "/#pricing",
+      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

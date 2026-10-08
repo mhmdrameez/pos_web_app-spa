@@ -5,6 +5,7 @@ import SEO from "../components/SEO";
 import LiveWebPosEmbed from "../components/LiveWebPosEmbed";
 import DownloadQrCard from "../components/DownloadQrCard";
 import PricingSection from "../components/PricingSection";
+import PwaInstallCard from "../components/PwaInstallCard";
 
 export default function Home() {
   const [latest, setLatest] = useState<Release | null>(null);
@@ -99,7 +100,9 @@ export default function Home() {
             <a href="#webpos">Live Web POS</a>
             <a href="#screens">Screens</a>
             <a href="#features">Features</a>
-            <a href="#printers">Mobile Printers</a>
+            <a href="#pwa" style={{ color: "#0284c7", fontWeight: 750 }}>
+              📲 Install PWA
+            </a>
             <a href="#pricing" style={{ color: "var(--primary)", fontWeight: 750 }}>
               Plans (₹99)
             </a>
@@ -181,8 +184,8 @@ export default function Home() {
             <a href="#features" onClick={() => setMobileMenuOpen(false)}>
               ⚡ UPI, GST & Features
             </a>
-            <a href="#printers" onClick={() => setMobileMenuOpen(false)}>
-              🖨️ Supports All Mobile Printers
+            <a href="#pwa" onClick={() => setMobileMenuOpen(false)} style={{ color: "#0284c7", fontWeight: 800 }}>
+              📲 Install Web App (PWA)
             </a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: "var(--primary)", fontWeight: 800 }}>
               💰 Plans (₹99 / mo & ₹999 / yr)
@@ -486,111 +489,12 @@ export default function Home() {
           <div id="compatibility" style={{ position: "relative", top: "-80px" }} />
           <div className="wrap">
             <div className="section-head">
-              <span className="kicker">OFFICIAL HARDWARE & COMPATIBILITY</span>
-              <h2>Supports All Mobile Printers</h2>
+              <span className="kicker">PRINTER COMPATIBILITY</span>
+              <h2>Supports All Mobile Thermal Printers</h2>
               <p className="sub">
-                Pair directly via Bluetooth or USB with any portable 58mm or 80mm mobile thermal receipt printer.
-                You can bring your own printer or order our official wireless mobile printer below.
+                Pair directly via Bluetooth SPP or USB with any portable 58mm (2-inch) or 80mm (3-inch) mobile thermal receipt printer.
+                QuickBill POS speaks standard ESC/POS protocol across all brands with zero driver hassle.
               </p>
-            </div>
-
-            {/* Featured Hardware Hero Card (₹2,500 Standalone Hardware) */}
-            <div className="printer-product-hero">
-              <div className="printer-hero-icon-box">
-                <div className="printer-hero-avatar">🖨️</div>
-                <div style={{ textAlign: "center" }}>
-                  <span className="printer-chip-tag">WIRELESS HARDWARE</span>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)", marginTop: 4 }}>
-                    58mm Portable Thermal Printer
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
-                    Rechargeable Battery Powered · ESC/POS
-                  </div>
-                </div>
-              </div>
-
-              <div className="printer-hero-details">
-                <span className="kicker" style={{ fontSize: 11.5 }}>
-                  OFFICIAL HARDWARE
-                </span>
-                <h3>Wireless Mobile Thermal Printer</h3>
-                <p className="printer-hero-sub">
-                  Built for retail work shifts, doorstep delivery, van sales, and counter desks.
-                  Rechargeable battery power, wireless Bluetooth pairing, and high-speed thermal printing with zero ink.
-                </p>
-
-                {/* Price Box */}
-                <div className="printer-price-box">
-                  <div>
-                    <div className="printer-price-amount">
-                      <span className="curr">₹</span>
-                      <span className="val">2,500</span>
-                    </div>
-                    <span className="printer-price-tag-sub">
-                      Individual Printer Price · Zero Monthly Rent
-                    </span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 12, fontWeight: 800, padding: "3px 9px", borderRadius: 999 }}>
-                      🚚 Free Delivery in India
-                    </span>
-                  </div>
-                </div>
-
-                {/* Specs Checklist */}
-                <ul className="printer-specs-checklist">
-                  <li>
-                    <span className="check-icon highlight">✓</span>
-                    <strong>Rechargeable Battery Powered</strong>
-                  </li>
-                  <li>
-                    <span className="check-icon highlight">✓</span>
-                    <strong>Built for Daily Retail Work Shifts</strong>
-                  </li>
-                  <li>
-                    <span className="check-icon highlight">✓</span>
-                    <strong>Bluetooth + USB Dual Mode</strong>
-                  </li>
-                  <li>
-                    <span className="check-icon highlight">✓</span>
-                    <strong>Standard 58mm Thermal Rolls</strong>
-                  </li>
-                  <li>
-                    <span className="check-icon highlight">✓</span>
-                    <strong>Zero Ink / No Ribbon Required</strong>
-                  </li>
-                  <li>
-                    <span className="check-icon highlight">✓</span>
-                    <strong>1 Year Hardware Replacement</strong>
-                  </li>
-                </ul>
-
-                <div className="printer-cta-row">
-                  <a
-                    href="#pricing"
-                    className="btn btn-primary"
-                    style={{ padding: "10px 20px", fontSize: 14 }}
-                  >
-                    View Combos (₹3,199) →
-                  </a>
-                  <a
-                    href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20want%20to%20order%20the%20Mobile%20Thermal%20Printer%20(Rs%202500)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline"
-                    style={{ padding: "10px 18px", fontSize: 14, borderColor: "#22c55e", color: "#15803d" }}
-                  >
-                    💬 Order on WhatsApp (+91 9446960834)
-                  </a>
-                  <a
-                    href="#pricing"
-                    className="btn btn-outline"
-                    style={{ padding: "10px 18px", fontSize: 14 }}
-                  >
-                    Buy Printer (₹2,500)
-                  </a>
-                </div>
-              </div>
             </div>
 
             {/* Universal Feature Grid */}
@@ -712,6 +616,11 @@ export default function Home() {
             POCKET-FRIENDLY INDIAN PRICING (MONTHLY ₹99 & YEARLY ₹999)
             ================================================================= */}
         <PricingSection />
+
+        {/* =================================================================
+            PROGRESSIVE WEB APP (PWA) INSTALL CARD FOR ALL DEVICES
+            ================================================================= */}
+        <PwaInstallCard />
 
         {/* =================================================================
             DOWNLOAD AND RELEASE CENTER WITH QR SCAN
@@ -892,7 +801,7 @@ export default function Home() {
             </div>
             <span>Sub-second retail counter point of sale. 100% offline-ready · Made for Bharat.</span>
             <div style={{ marginTop: 6, fontSize: 13, color: "var(--navy)" }}>
-              📞 <strong>Direct Helpline & WhatsApp:</strong>{" "}
+              💬 <strong>WhatsApp Support:</strong>{" "}
               <a
                 href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20an%20inquiry"
                 target="_blank"
@@ -901,7 +810,7 @@ export default function Home() {
               >
                 +91 9446960834
               </a>{" "}
-              <span style={{ color: "var(--muted)" }}>(Call or WhatsApp anytime)</span>
+              <span style={{ color: "var(--muted)" }}>(WhatsApp Chat Only · No Calls)</span>
             </div>
           </div>
 

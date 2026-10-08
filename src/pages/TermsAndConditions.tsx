@@ -219,10 +219,11 @@ export default function TermsAndConditions() {
                   We reserve the right to amend these terms as new builds and capabilities roll out. For commercial software support, licensing queries, or hardware assistance, contact our team:
                 </p>
                 <p>
-                  <strong>Merchant Helpline & WhatsApp:</strong>{" "}
-                  <a href="https://wa.me/919446960834" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", fontWeight: 700 }}>
+                  💬 <strong>Merchant WhatsApp Support:</strong>{" "}
+                  <a href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20an%20inquiry%20regarding%20Terms%20and%20Conditions" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", fontWeight: 750 }}>
                     +91 9446960834
-                  </a>
+                  </a>{" "}
+                  <span style={{ color: "var(--muted)" }}>(WhatsApp Chat Only · No Calls)</span>
                 </p>
               </section>
             </div>
@@ -250,6 +251,19 @@ export default function TermsAndConditions() {
           </div>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Quick Action Button */}
+      <a
+        href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20a%20query%20regarding%20Terms%20and%20Conditions"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="floating-whatsapp-btn"
+        aria-label="Chat on WhatsApp"
+        title="WhatsApp Support (Chat Only): +91 9446960834"
+      >
+        <span style={{ fontSize: 20 }}>💬</span>
+        <span className="floating-whatsapp-text">WhatsApp Support: +91 9446960834</span>
+      </a>
     </div>
   );
 }

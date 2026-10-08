@@ -49,11 +49,11 @@ export default function PricingSection() {
     <section className="section" id="pricing" style={{ background: "linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%)" }}>
       <div className="wrap">
         <div className="section-head" style={{ textAlign: "center", margin: "0 auto 32px" }}>
-          <span className="kicker">TRANSPARENT INDIAN PRICING & HARDWARE PACKAGES</span>
-          <h2>Software Plans, Mobile Printer & All-in-One Kits</h2>
+          <span className="kicker">TRANSPARENT PRICING FOR INDIAN MERCHANTS</span>
+          <h2>Software Plans & Complete POS Setup Kits</h2>
           <p className="sub" style={{ maxWidth: 700, margin: "0 auto" }}>
-            Choose software-only licenses, order the wireless mobile thermal printer standalone for ₹2,500,
-            or save more with complete all-in-one hardware + software combo kits.
+            Choose affordable software-only licenses (₹99/mo or ₹999/yr),
+            or get the complete ready-to-bill Annual Setup Kit with a wireless mobile thermal printer for ₹3,199.
           </p>
 
           {/* Category Filter Pills */}
@@ -63,21 +63,21 @@ export default function PricingSection() {
               className={`pricing-toggle-btn ${filterCategory === "all" ? "active" : ""}`}
               onClick={() => setFilterCategory("all")}
             >
-              All Plans & Combos
+              All Plans
             </button>
             <button
               type="button"
               className={`pricing-toggle-btn ${filterCategory === "software" ? "active" : ""}`}
               onClick={() => setFilterCategory("software")}
             >
-              Software Only (₹99 / ₹999)
+              Software Plans (₹99 / ₹999)
             </button>
             <button
               type="button"
               className={`pricing-toggle-btn ${filterCategory === "combos" ? "active" : ""}`}
               onClick={() => setFilterCategory("combos")}
             >
-              <span>Printer & Combos (₹2,500+)</span>
+              <span>Annual POS Kit (₹3,199)</span>
               <span className="pricing-save-badge">Save ₹300 🔥</span>
             </button>
           </div>
@@ -245,85 +245,7 @@ export default function PricingSection() {
             </div>
           )}
 
-          {/* ==============================================================
-              CARD 3: INDIVIDUAL MOBILE PRINTER (₹2,500)
-              ============================================================== */}
-          {(filterCategory === "all" || filterCategory === "combos") && (
-            <div className="pricing-card">
-              <div className="pricing-card-header">
-                <span className="pricing-plan-badge" style={{ background: "#fef3c7", color: "#92400e" }}>
-                  HARDWARE ONLY
-                </span>
-                <h3 className="pricing-plan-title">Mobile Thermal Printer</h3>
-                <p className="pricing-plan-desc">
-                  Heavy-duty portable Bluetooth thermal printer with rechargeable battery backup.
-                </p>
-              </div>
 
-              <div className="pricing-price-wrap">
-                <div className="pricing-amount">
-                  <span className="pricing-currency">₹</span>
-                  <span className="pricing-num">2,500</span>
-                  <span className="pricing-period">one-time</span>
-                </div>
-                <div className="pricing-daily-cost">
-                  <strong>Zero Monthly Rental</strong> · Free delivery across India 🚚
-                </div>
-              </div>
-
-              <ul className="pricing-features-list">
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>Rechargeable Battery Powered</strong> — Long-lasting backup
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>High-Speed 58mm Thermal Output</strong>
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>Bluetooth + USB Dual Connectivity</strong>
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>Zero Ink / No Ribbon Required</strong>
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  Includes Charger, Cable & 2 Free Sample Paper Rolls
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  1 Year Hardware Warranty
-                </li>
-              </ul>
-
-              <button
-                type="button"
-                className="btn btn-outline pricing-cta-btn"
-                style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
-                onClick={() =>
-                  openCheckout(
-                    "Wireless Mobile Thermal Printer (Standalone)",
-                    2500,
-                    "one-time purchase",
-                    "hardware",
-                    "Free Shipping across India",
-                    [
-                      "1x Wireless Bluetooth 58mm Thermal Printer",
-                      "1x Rechargeable Battery Pack",
-                      "1x Fast Charger & USB Cable",
-                      "2x High-Grade Thermal Paper Rolls (Free)",
-                      "1 Year Warranty + Pan-India Courier Delivery",
-                    ]
-                  )
-                }
-              >
-                Buy Printer Only (₹2,500) →
-              </button>
-              <div className="pricing-guarantee-note">Cash on Delivery & UPI available</div>
-            </div>
-          )}
 
           {/* ==============================================================
               CARD 4: ALL-IN-ONE ANNUAL POS COMBO (₹3,199) — BEST VALUE
@@ -432,52 +354,7 @@ export default function PricingSection() {
           )}
         </div>
 
-        {/* Quick Starter Combo (Monthly + Printer) Note */}
-        <div
-          style={{
-            marginTop: 22,
-            background: "#ffffff",
-            border: "1px dashed var(--line)",
-            borderRadius: 14,
-            padding: "14px 20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <div>
-            <strong style={{ fontSize: 14, color: "var(--navy)" }}>
-              Looking for Printer + Monthly software trial?
-            </strong>
-            <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 8 }}>
-              Get the Mobile Printer + 1 Month Software License for just <strong>₹2,599</strong>!
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-outline"
-            style={{ padding: "6px 14px", fontSize: 13 }}
-            onClick={() =>
-              openCheckout(
-                "Starter Kit (Printer + 1 Month Software)",
-                2599,
-                "combo package",
-                "combo",
-                "Includes 1 Month License + Hardware",
-                [
-                  "1x Wireless Mobile Bluetooth Thermal Printer",
-                  "1x 1-Month QuickBill Software License",
-                  "2x Thermal Paper Rolls",
-                  "Free Delivery Across India",
-                ]
-              )
-            }
-          >
-            Get Monthly Combo (₹2,599) →
-          </button>
-        </div>
+
 
         {/* Trust Badges */}
         <div className="pricing-trust-bar">
@@ -538,7 +415,7 @@ export default function PricingSection() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div>
                 <span className="kicker" style={{ fontSize: 11, padding: "2px 8px" }}>
-                  {checkoutItem.type.toUpperCase()} ORDER / ACTIVATION
+                  {checkoutItem.type === "hardware" ? "MOBILE PRINTER" : checkoutItem.type.toUpperCase()} ORDER / ACTIVATION
                 </span>
                 <h3 style={{ margin: "4px 0 0", fontSize: 20 }}>{checkoutItem.name}</h3>
               </div>

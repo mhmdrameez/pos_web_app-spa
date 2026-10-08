@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchReleases, type Release } from "../api";
+import SEO from "../components/SEO";
 
 export default function Home() {
   const [latest, setLatest] = useState<Release | null>(null);
@@ -34,6 +35,13 @@ export default function Home() {
 
   return (
     <>
+      <SEO
+        title="QuickBill POS — Offline-First Billing for Retail Desks"
+        description="A fast, modern, offline-first Point of Sale for retail counters. Web app and App-POS Android APK with Bluetooth thermal printing and local history."
+        canonicalPath="/"
+        keywords={["QuickBill POS", "offline POS", "retail billing software", "Android POS APK", "Web POS desk"]}
+      />
+
       {/* Navigation Bar */}
       <header className="nav">
         <div className="wrap nav-inner">
@@ -379,8 +387,8 @@ export default function Home() {
         <div className="wrap foot">
           <span>QuickBill POS · Simple & Offline-First Point of Sale</span>
           <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-            <Link to="/terms-and-condition" style={{ fontWeight: 600 }}>Terms & Conditions</Link>
-            <Link to="/privacy-policy" style={{ fontWeight: 600 }}>Privacy Policy</Link>
+            <Link to="/terms_and_condition" style={{ fontWeight: 600 }}>Terms & Conditions</Link>
+            <Link to="/privacy_policy" style={{ fontWeight: 600 }}>Privacy Policy</Link>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"

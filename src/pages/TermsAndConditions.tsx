@@ -1,151 +1,204 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
+import SEO from "../components/SEO";
 
 export default function TermsAndConditions() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Terms and Conditions — QuickBill POS",
+    description:
+      "Official Terms and Conditions for QuickBill POS Point of Sale applications. Software license, offline responsibilities, and merchant operational terms.",
+    url: typeof window !== "undefined" ? `${window.location.origin}/terms_and_condition` : "https://posquickbill.vercel.app/terms_and_condition",
+    datePublished: "2026-09-01",
+    dateModified: "2026-10-08",
+    inLanguage: "en-US",
+    publisher: {
+      "@type": "Organization",
+      name: "QuickBill POS",
+      logo: {
+        "@type": "ImageObject",
+        url: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "https://posquickbill.vercel.app/logo.svg",
+      },
+    },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: typeof window !== "undefined" ? window.location.origin : "https://posquickbill.vercel.app",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Terms and Conditions",
+          item: typeof window !== "undefined" ? `${window.location.origin}/terms_and_condition` : "https://posquickbill.vercel.app/terms_and_condition",
+        },
+      ],
+    },
+  };
+
   return (
-    <div className="legal-page-wrap">
+    <div className="legal-page-wrap" id="terms-conditions-page">
+      <SEO
+        title="Terms and Conditions — QuickBill POS | Retail Billing Software"
+        description="Official Terms and Conditions for QuickBill POS (Web POS and Android App-POS). Read our software license terms, offline data disclaimers, and user guidelines."
+        canonicalPath="/terms_and_condition"
+        keywords={[
+          "QuickBill POS terms and conditions",
+          "POS software license terms",
+          "retail billing legal terms",
+          "offline POS terms of service",
+        ]}
+        type="article"
+        schemaData={schemaData}
+      />
+
       {/* Navigation Header */}
-      <header className="nav">
+      <header className="nav" id="top-nav">
         <div className="wrap nav-inner">
-          <Link to="/" className="brand">
-            <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
+          <Link to="/" className="brand" id="brand-logo-link">
+            <img src="/logo.svg" className="logo" alt="QuickBill POS Logo" width={36} height={36} />
             QuickBill POS
           </Link>
-          <nav className="nav-links">
-            <Link to="/" className="ghost">← Back to Home</Link>
+          <nav className="nav-links" aria-label="Page navigation">
+            <Link to="/" className="ghost" id="nav-back-home">← Back to Home</Link>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
+              id="nav-web-pos"
               style={{ color: "var(--blue)", fontWeight: 700 }}
             >
               Web POS App ↗
             </a>
-            <Link to="/apk-upload" style={{ fontWeight: 600, color: "var(--navy)" }}>Admin</Link>
+            <Link to="/apk-upload" id="nav-admin" style={{ fontWeight: 600, color: "var(--navy)" }}>Admin</Link>
           </nav>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="legal-main">
+      {/* Main Content Area */}
+      <main className="legal-main" id="main-content">
         <div className="wrap">
-          <article className="legal-card">
-            <div className="legal-header">
-              <span className="kicker">
-                <span className="dot" /> LEGAL & TERMS
+          <article className="legal-card" id="terms-document">
+            <header className="legal-header">
+              <span className="kicker" id="terms-badge">
+                <span className="dot" /> LEGAL & TERMS OF SERVICE
               </span>
-              <h1>Terms and Conditions</h1>
-              <p className="legal-date">Last updated: October 8, 2026</p>
+              <h1 id="page-heading">Terms and Conditions</h1>
+              <p className="legal-date" id="last-updated">Last updated: October 8, 2026</p>
 
-              {/* Quick Switcher */}
-              <div className="legal-nav-tabs">
-                <Link to="/terms-and-condition" className="legal-tab active">
+              {/* Quick Tab Switcher */}
+              <div className="legal-nav-tabs" aria-label="Legal documents">
+                <Link to="/terms_and_condition" className="legal-tab active" id="tab-terms-conditions">
                   Terms & Conditions
                 </Link>
-                <Link to="/privacy-policy" className="legal-tab">
+                <Link to="/privacy_policy" className="legal-tab" id="tab-privacy-policy">
                   Privacy Policy
                 </Link>
               </div>
-            </div>
+            </header>
 
             <div className="legal-body">
-              <div className="legal-callout">
-                <strong>Important Notice:</strong> By accessing or using QuickBill POS (Web POS and Android App-POS), you acknowledge that you have read, understood, and agreed to be bound by these Terms and Conditions.
+              <div className="legal-callout" id="terms-notice">
+                <strong>Important Notice:</strong> By accessing or using QuickBill POS (Web POS and Android App-POS), you agree to comply with and be bound by the following terms, conditions, and operational policies.
               </div>
 
-              <h2>1. Agreement to Terms</h2>
-              <p>
-                These Terms and Conditions (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User&quot;, &quot;Merchant&quot;, or &quot;you&quot;) and <strong>QuickBill POS</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), regarding your access to and use of our Point of Sale software, including the web application and Android mobile application.
-              </p>
-              <p>
-                If you do not agree with any part of these Terms, you must discontinue the use of our applications and services immediately.
-              </p>
+              <section id="section-acceptance">
+                <h2>1. Agreement & Acceptance</h2>
+                <p>
+                  These Terms and Conditions (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User&quot;, &quot;Merchant&quot;, or &quot;Customer&quot;) and <strong>QuickBill POS</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), governing your use of our retail billing software platforms.
+                </p>
+                <p>
+                  If you disagree with any part of these Terms, you must discontinue your use of our applications immediately.
+                </p>
+              </section>
 
-              <h2>2. License to Use</h2>
-              <p>
-                Subject to your compliance with these Terms, QuickBill POS grants you a limited, non-exclusive, non-transferable, revocable license to:
-              </p>
-              <ul>
-                <li>Install and run the QuickBill POS Android application on compatible devices.</li>
-                <li>Access and utilize the QuickBill POS web software through standard web browsers.</li>
-                <li>Generate and print receipts, bills, and reports solely for your legitimate business or personal operational purposes.</li>
-              </ul>
+              <section id="section-license">
+                <h2>2. Software License Grant</h2>
+                <p>
+                  We grant you a non-exclusive, non-transferable, revocable license to utilize QuickBill POS for your internal business operations, retail checkout, and customer receipt generation:
+                </p>
+                <ul>
+                  <li>Install and operate the Android App-POS APK on compatible hardware terminals and smartphones.</li>
+                  <li>Access and execute the Web POS application across desktop and tablet web browsers.</li>
+                  <li>Generate, print, and export receipt invoices for retail billing.</li>
+                </ul>
+              </section>
 
-              <h2>3. User Responsibilities & Tax Compliance</h2>
-              <p>As a merchant or user utilizing QuickBill POS, you are solely responsible for:</p>
-              <ul>
-                <li>
-                  <strong>Accuracy of Invoices:</strong> Ensuring that item names, rates, quantities, discounts, and totals calculated on customer receipts are accurate.
-                </li>
-                <li>
-                  <strong>Tax & Legal Compliance:</strong> Ensuring that tax rates (such as GST, VAT, or local sales taxes) applied within the app comply with the tax jurisdiction where your business operates.
-                </li>
-                <li>
-                  <strong>Customer Receipts:</strong> Providing valid and lawful receipts to your customers in accordance with consumer protection regulations.
-                </li>
-              </ul>
+              <section id="section-merchant-responsibilities">
+                <h2>3. Merchant Responsibilities & Invoicing Compliance</h2>
+                <p>Merchants utilizing QuickBill POS are solely responsible for:</p>
+                <ul>
+                  <li>
+                    <strong>Pricing & Calculation Accuracy:</strong> Verifying all product costs, retail taxes (such as GST or VAT), discounts, and final invoice calculations.
+                  </li>
+                  <li>
+                    <strong>Legal & Fiscal Compliance:</strong> Complying with all local tax authority regulations governing invoice generation, bill numbering, and record retention.
+                  </li>
+                  <li>
+                    <strong>Receipt Delivery:</strong> Issuing truthful and accurate bills to consumers for all commercial transactions.
+                  </li>
+                </ul>
+              </section>
 
-              <h2>4. Offline Storage & Backup Responsibility</h2>
-              <p>
-                QuickBill POS is designed as an offline-first solution. Your transaction history, inventory catalogs, and customer data are stored locally in your device&apos;s internal database.
-              </p>
-              <p>
-                <strong>Merchant Responsibility:</strong> You are solely responsible for regularly exporting, saving, or backing up your sales data and reports. QuickBill POS is not liable for data loss arising from device damage, clearing of browser cache, app uninstallation, or operating system resets.
-              </p>
+              <section id="section-offline-backups">
+                <h2>4. Offline Data Storage & Backup Disclaimer</h2>
+                <p>
+                  QuickBill POS functions primarily as an offline-first system. All transaction histories and product records are stored in the local memory of your terminal (SQLite / IndexedDB).
+                </p>
+                <p>
+                  <strong>Merchant Data Responsibility:</strong> QuickBill POS is not liable for data loss caused by hardware malfunction, operating system clearing, browser cache resets, or uninstallation. You are advised to perform regular exports and backups of your sales data.
+                </p>
+              </section>
 
-              <h2>5. Prohibited Activities</h2>
-              <p>You agree not to engage in any of the following activities:</p>
-              <ul>
-                <li>Attempting to reverse-engineer, decompile, or disassemble any part of the application software except as permitted by applicable law.</li>
-                <li>Using the software to generate fraudulent invoices, deceptive receipts, or facilitate illegal commerce.</li>
-                <li>Interfering with or disrupting the integrity or performance of the software or third-party release servers.</li>
-              </ul>
+              <section id="section-prohibited-uses">
+                <h2>5. Prohibited Uses</h2>
+                <p>You agree not to:</p>
+                <ul>
+                  <li>Decompile, reverse-engineer, or tamper with the proprietary logic of the application.</li>
+                  <li>Use the software to produce fraudulent, unlawful, or misleading invoices.</li>
+                  <li>Interfere with or circumvent the security mechanisms of our release distributions.</li>
+                </ul>
+              </section>
 
-              <h2>6. Intellectual Property Rights</h2>
-              <p>
-                All trademarks, logos, brand assets, source code, designs, and interface graphics associated with QuickBill POS are the intellectual property of QuickBill POS and its licensors. You may not copy, reproduce, or redistribute these assets without prior written consent.
-              </p>
+              <section id="section-liability">
+                <h2>6. Limitation of Liability</h2>
+                <p>
+                  QuickBill POS is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis without warranties of any kind. Under no circumstances shall the developers of QuickBill POS be liable for indirect, incidental, or consequential damages resulting from hardware incompatibility (including thermal printers) or operational interruptions.
+                </p>
+              </section>
 
-              <h2>7. Disclaimer of Warranties</h2>
-              <p>
-                QuickBill POS is provided on an <strong>&quot;AS IS&quot;</strong> and <strong>&quot;AS AVAILABLE&quot;</strong> basis, without warranties of any kind, whether express, implied, or statutory. We do not guarantee that the software will be uninterrupted, error-free, or compatible with every thermal printer model or hardware accessory.
-              </p>
-
-              <h2>8. Limitation of Liability</h2>
-              <p>
-                To the fullest extent permitted by law, QuickBill POS and its creators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, business revenue, data, or operational downtime arising out of your use or inability to use the software.
-              </p>
-
-              <h2>9. Changes to Terms</h2>
-              <p>
-                We reserve the right to modify or replace these Terms at any time. When modifications occur, we will update the &quot;Last updated&quot; date at the top of this document. Continued use of QuickBill POS after any changes constitutes acceptance of the new Terms.
-              </p>
-
-              <h2>10. Contact & Support</h2>
-              <p>
-                If you have questions, feedback, or need clarification regarding these Terms and Conditions, please contact the QuickBill POS administrative team or visit our official support channels.
-              </p>
+              <section id="section-changes">
+                <h2>7. Amendments & Updates</h2>
+                <p>
+                  We reserve the right to amend these Terms at any time. Updates become effective immediately upon being published on this page. Your continued use of the application signifies your acceptance of any amended terms.
+                </p>
+              </section>
             </div>
           </article>
         </div>
       </main>
 
       {/* Footer */}
-      <footer>
+      <footer id="footer">
         <div className="wrap foot">
-          <span>QuickBill POS · Web app and App-POS (QuickBillPoss)</span>
+          <span>QuickBill POS · Offline-first billing for retail desks</span>
           <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-            <Link to="/" style={{ fontWeight: 600 }}>Home</Link>
-            <Link to="/terms-and-condition" style={{ fontWeight: 600, color: "var(--blue)" }}>Terms & Conditions</Link>
-            <Link to="/privacy-policy" style={{ fontWeight: 600 }}>Privacy Policy</Link>
+            <Link to="/" id="footer-home" style={{ fontWeight: 600 }}>Home</Link>
+            <Link to="/terms_and_condition" id="footer-terms" style={{ fontWeight: 600, color: "var(--blue)" }}>Terms & Conditions</Link>
+            <Link to="/privacy_policy" id="footer-privacy" style={{ fontWeight: 600 }}>Privacy Policy</Link>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
+              id="footer-webpos"
               style={{ fontWeight: 600, color: "var(--blue)" }}
             >
               🌐 Web POS ↗

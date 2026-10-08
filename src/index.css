@@ -2945,6 +2945,9 @@ footer {
     max-width: 100%;
     width: 100%;
   }
+  .pwa-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* 3. MOBILE PHONES (<= 640px) */

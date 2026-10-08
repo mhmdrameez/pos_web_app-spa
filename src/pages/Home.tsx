@@ -7,6 +7,8 @@ export default function Home() {
   const [allReleases, setAllReleases] = useState<Release[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeScreen, setActiveScreen] = useState<"mobile" | "web" | "history">("mobile");
+  const [showOlderBuilds, setShowOlderBuilds] = useState(false);
 
   useEffect(() => {
     fetchReleases()
@@ -32,6 +34,7 @@ export default function Home() {
 
   return (
     <>
+      {/* Navigation Bar */}
       <header className="nav">
         <div className="wrap nav-inner">
           <a className="brand" href="#top" onClick={() => setMobileMenuOpen(false)}>
@@ -39,24 +42,22 @@ export default function Home() {
             QuickBill POS
           </a>
           <nav className="nav-links desktop-only">
-            <a href="#products">Products</a>
+            <a href="#screens">Preview</a>
             <a href="#features">Features</a>
-            <a href="#screens">Screens</a>
-            <a href="#download">Download</a>
+            <a href="#download">Download APK</a>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "var(--blue)", fontWeight: 700 }}
-              title="Visit the live Point of Sale web application"
+              title="Open Web POS"
             >
               Web POS App ↗
             </a>
-            <Link to="/apk-upload" style={{ fontWeight: 600, color: "var(--navy)", cursor: "pointer" }}>Admin</Link>
-            <a className="btn btn-primary" href="#download">Get App-POS</a>
+            <Link to="/apk-upload" style={{ fontWeight: 600, color: "var(--navy)" }}>Admin</Link>
           </nav>
 
-          {/* Mobile Navigation Toggle & Quick CTA */}
+          {/* Mobile Navigation Toggle */}
           <div className="mobile-nav-toggle-wrap">
             <a
               className="btn btn-primary mobile-quick-cta"
@@ -82,9 +83,8 @@ export default function Home() {
         {/* Mobile Dropdown Drawer */}
         {mobileMenuOpen && (
           <nav className="mobile-nav-drawer">
-            <a href="#products" onClick={() => setMobileMenuOpen(false)}>Products</a>
+            <a href="#screens" onClick={() => setMobileMenuOpen(false)}>Preview</a>
             <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
-            <a href="#screens" onClick={() => setMobileMenuOpen(false)}>Screens</a>
             <a href="#download" onClick={() => setMobileMenuOpen(false)}>Download APK</a>
             <a
               href="https://posquickbill.vercel.app/"
@@ -93,194 +93,191 @@ export default function Home() {
               className="mobile-highlight-link"
               onClick={() => setMobileMenuOpen(false)}
             >
-              🌐 Launch Live Web POS App ↗
+              🌐 Launch Web POS App ↗
             </a>
-            <Link to="/apk-upload" onClick={() => setMobileMenuOpen(false)} style={{ fontWeight: 600, color: "var(--blue)" }}>Admin</Link>
-            <a
-              className="btn btn-primary"
-              href="#download"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ width: "100%", marginTop: 8 }}
-            >
-              Get App-POS (Download APK)
-            </a>
+            <Link to="/apk-upload" onClick={() => setMobileMenuOpen(false)} style={{ fontWeight: 600, color: "var(--blue)" }}>
+              Admin Panel
+            </Link>
           </nav>
         )}
       </header>
 
       <main id="top">
+        {/* Simple & High-Impact Hero Section */}
         <section className="hero">
           <div className="wrap grid-2">
             <div>
               <div className="kicker">
                 <span className="dot" />
-                Offline-first Point of Sale
+                Fast · Offline-First · Modern
               </div>
-              <h1>A fast, modern POS for retail and billing desks.</h1>
-              <div className="hero-actions">
-                <a
-                  className="btn btn-primary"
-                  href="https://posquickbill.vercel.app/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  🌐 Launch Web POS Desk ↗
-                </a>
-                <a className="btn btn-outline" href="#download">Download APK</a>
-                <a className="btn btn-outline" href="#products">Compare web &amp; mobile</a>
-              </div>
-              <div className="product-pills">
-                <a
-                  href="https://posquickbill.vercel.app/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="pill"
-                  style={{ textDecoration: "none", cursor: "pointer" }}
-                  title="Launch live Point of Sale web app"
-                >
-                  <strong>Web app ↗</strong>
-                  <span>Browser POS · Local history · Thermal print · Click to open</span>
-                </a>
-                <a href="#download" className="pill" style={{ textDecoration: "none" }}>
-                  <strong>App-POS · QuickBillPoss</strong>
-                  <span>React Native, SQLite, Firestore, ESC/POS.</span>
-                </a>
-              </div>
-            </div>
-            <div className="card">
-              <img src="/mockups/mobile-pos.png" alt="QuickBill POS billing keypad and cart" />
-              <div className="shot-caption">Live billing keypad, hold cart, print, and pay — built for a desk, not a demo.</div>
-            </div>
-          </div>
-        </section>
+              <h1>QuickBill POS — Simple, Instant Point of Sale</h1>
+              <p className="lede">
+                High-speed retail billing, Bluetooth thermal receipt printing, and local sales history. Run directly in your browser or install on Android.
+              </p>
 
-        <section className="section" id="products">
-          <div className="wrap">
-            <h2>Two surfaces. One billing workflow.</h2>
-            <p className="sub">Use the web app at the counter. Carry App-POS when the counter moves.</p>
-            <div className="split">
-              <article className="card" style={{ padding: 22 }}>
-                <div className="kicker">WEB APP</div>
-                <h3 style={{ marginTop: 14 }}>QuickBill POS for the browser</h3>
-                <p className="lede" style={{ fontSize: 15 }}>
-                  A fast, modern, and offline-first Point of Sale for retail and billing desks.
-                  Record sales, print thermal receipts, park orders, and review local history —
-                  all in the browser, with no required backend.
-                </p>
-                <div className="stack">
-                  <span className="chip">Offline-first</span>
-                  <span className="chip">Thermal receipts</span>
-                  <span className="chip">Park / hold orders</span>
-                  <span className="chip">Local history</span>
-                  <span className="chip">No required backend</span>
-                </div>
-                <div style={{ marginTop: 20 }}>
+              {/* Efficient Action Cards */}
+              <div className="action-grid">
+                {/* 1. Web POS Action Card */}
+                <div className="action-card highlight">
+                  <div>
+                    <div className="action-card-header">
+                      <span style={{ fontSize: 22 }}>🌐</span>
+                      <span className="action-badge">No Install Needed</span>
+                    </div>
+                    <h3>Web POS Desk</h3>
+                    <p>Instant browser billing with local offline history and thermal printing.</p>
+                  </div>
                   <a
                     className="btn btn-primary"
                     href="https://posquickbill.vercel.app/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ padding: "10px 18px", fontSize: 14 }}
+                    style={{ width: "100%" }}
                   >
-                    Open Web POS Desk ↗
+                    Launch Web POS ↗
                   </a>
                 </div>
-              </article>
-              <article className="card" style={{ padding: 22 }}>
-                <div className="kicker">REACT NATIVE</div>
-                <h3 style={{ marginTop: 14 }}>App-POS (QuickBillPoss)</h3>
-                <p className="lede" style={{ fontSize: 15 }}>
-                  A local-first, offline-capable Point of Sale mobile application built with
-                  React Native, high-performance SQLite, Cloud Firestore, and thermal ESC/POS printing.
-                </p>
-                <div className="stack">
-                  <span className="chip">React Native</span>
-                  <span className="chip">SQLite</span>
-                  <span className="chip">Cloud Firestore</span>
-                  <span className="chip">ESC/POS thermal</span>
-                  <span className="chip">Local-first sync</span>
+
+                {/* 2. Android APK Action Card */}
+                <div className="action-card">
+                  <div>
+                    <div className="action-card-header">
+                      <span style={{ fontSize: 22 }}>📱</span>
+                      <span className="action-badge green">
+                        {latest ? latest.version : "Android APK"}
+                      </span>
+                    </div>
+                    <h3>App-POS (Android)</h3>
+                    <p>Native mobile POS with Bluetooth printing, SQLite, and offline persistence.</p>
+                  </div>
+                  {latest ? (
+                    <a
+                      className="btn btn-dark"
+                      href={latest.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ width: "100%" }}
+                    >
+                      Download APK ({latest.sizeLabel})
+                    </a>
+                  ) : (
+                    <a className="btn btn-outline" href="#download" style={{ width: "100%" }}>
+                      Download APK
+                    </a>
+                  )}
                 </div>
-              </article>
+              </div>
+            </div>
+
+            {/* Clean Interactive Preview Card */}
+            <div id="screens" className="card" style={{ padding: 18 }}>
+              <div className="preview-tabs">
+                <button
+                  type="button"
+                  className={`preview-tab-btn ${activeScreen === "mobile" ? "active" : ""}`}
+                  onClick={() => setActiveScreen("mobile")}
+                >
+                  📱 Mobile POS
+                </button>
+                <button
+                  type="button"
+                  className={`preview-tab-btn ${activeScreen === "web" ? "active" : ""}`}
+                  onClick={() => setActiveScreen("web")}
+                >
+                  💻 Web POS
+                </button>
+                <button
+                  type="button"
+                  className={`preview-tab-btn ${activeScreen === "history" ? "active" : ""}`}
+                  onClick={() => setActiveScreen("history")}
+                >
+                  🧾 History & Sales
+                </button>
+              </div>
+
+              {activeScreen === "mobile" && (
+                <div>
+                  <img
+                    src="/mockups/mobile-pos.png"
+                    alt="QuickBill POS Android App"
+                    style={{ borderRadius: 14, maxHeight: 380, objectFit: "cover", width: "100%" }}
+                  />
+                  <div className="shot-caption">App-POS — Rapid touch keypad, hold cart, and direct thermal printing.</div>
+                </div>
+              )}
+
+              {activeScreen === "web" && (
+                <div>
+                  <img
+                    src="/mockups/web-pos.png"
+                    alt="QuickBill Web POS Desk"
+                    style={{ borderRadius: 14, maxHeight: 380, objectFit: "cover", width: "100%" }}
+                  />
+                  <div className="shot-caption">Web POS — Desktop browser billing desk with local offline data storage.</div>
+                </div>
+              )}
+
+              {activeScreen === "history" && (
+                <div>
+                  <img
+                    src="/mockups/history.png"
+                    alt="QuickBill Sales History"
+                    style={{ borderRadius: 14, maxHeight: 380, objectFit: "cover", width: "100%" }}
+                  />
+                  <div className="shot-caption">History & Invoices — Daily revenue, filter payment modes, and reprint receipts.</div>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
+        {/* Streamlined Features (4 Core Capabilities) */}
         <section className="section" id="features">
           <div className="wrap">
-            <h2>Built for the desk, not the dashboard.</h2>
-            <p className="sub">The keypad is the product. Everything else stays out of the way.</p>
-            <div className="features">
+            <h2>Everything you need. Nothing in the way.</h2>
+            <p className="sub">Built for real counter speed, reliability, and simple retail workflows.</p>
+            <div className="features" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
               <div className="feature">
-                <div className="icon">₹</div>
-                <h3>Amount-first billing</h3>
-                <p>Tap an amount, add the item, print or pay. Custom items and quick picks without leaving the keypad.</p>
+                <div className="icon">⚡</div>
+                <h3>Amount-First Billing</h3>
+                <p>Enter amounts instantly, add quick products, and complete checkouts in seconds.</p>
               </div>
               <div className="feature">
-                <div className="icon">P</div>
-                <h3>Thermal ESC/POS print</h3>
-                <p>Reprint receipts from history. Printer settings live next to the cart so a jammed roll never stops a sale.</p>
+                <div className="icon">🖨️</div>
+                <h3>Thermal Receipt Printing</h3>
+                <p>Direct ESC/POS thermal printing over Bluetooth. Fast reprinting from order history.</p>
               </div>
               <div className="feature">
-                <div className="icon">H</div>
-                <h3>Park orders</h3>
-                <p>Hold a cart, attach a customer later, and resume without losing the ticket — on web or App-POS.</p>
+                <div className="icon">📴</div>
+                <h3>100% Offline-First</h3>
+                <p>Never lose sales during internet outages. Local SQLite and browser storage keep you operational.</p>
               </div>
               <div className="feature">
-                <div className="icon">L</div>
-                <h3>Local history</h3>
-                <p>Revenue, bill count, and average bill stay on the device. Filter cash, UPI, card, split, or cancelled.</p>
-              </div>
-              <div className="feature">
-                <div className="icon">O</div>
-                <h3>Offline-first</h3>
-                <p>Sales record even when the network does not. App-POS syncs through Firestore when the shop comes back online.</p>
-              </div>
-              <div className="feature">
-                <div className="icon">S</div>
-                <h3>SQLite on device</h3>
-                <p>High-performance local store for products, held bills, and invoices — the source of truth at the counter.</p>
+                <div className="icon">⏸️</div>
+                <h3>Park & Recall Orders</h3>
+                <p>Hold customer carts during rush hours and resume anytime without losing tickets.</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="section" id="screens">
-          <div className="wrap">
-            <h2>The counter, as it actually looks.</h2>
-            <p className="sub">Web POS keypad, App-POS billing, and searchable local invoices.</p>
-            <div className="shots">
-              <div className="card">
-                <img src="/mockups/web-pos.png" alt="Web POS amount keypad and empty cart" />
-                <div className="shot-caption">Web POS — amount keypad, add item, print, bill.</div>
-              </div>
-              <div className="card">
-                <img src="/mockups/mobile-pos.png" alt="App-POS React Native billing screen" />
-                <div className="shot-caption">App-POS — quick picks, hold, print, pay.</div>
-              </div>
-              <div className="card wide">
-                <img src="/mockups/history.png" alt="Local invoice history with cash receipts" />
-                <div className="shot-caption">History — revenue, bill count, average bill, reprint from the device.</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
+        {/* Clean Download APK Section */}
         <section className="section" id="download">
           <div className="wrap">
             {loaded && latest ? (
-              <>
-                <div className="release-banner" style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-                  <div style={{ flex: 1, minWidth: 280 }}>
-                    <div className="meta" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span>Latest App-POS release</span>
+              <div>
+                <div className="release-banner">
+                  <div>
+                    <div className="meta" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span>LATEST ANDROID RELEASE</span>
                       <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                        {latest.source === "repo-folder" ? "📁 Releases Folder APK" : "🏷️ GitHub Release"}
+                        {latest.version}
                       </span>
                     </div>
-                    <h3 style={{ margin: "6px 0 8px" }}>QuickBillPoss {latest.version}</h3>
+                    <h3>QuickBillPoss {latest.version}</h3>
                     <div className="meta">
-                      {latest.sizeLabel} · {latest.fileName} ·{" "}
-                      {new Date(latest.uploadedAt).toLocaleDateString()}
+                      Size: {latest.sizeLabel} · File: {latest.fileName} · Released: {new Date(latest.uploadedAt).toLocaleDateString()}
                     </div>
                   </div>
 
@@ -288,7 +285,7 @@ export default function Home() {
                     <a className="btn btn-dark" href={latest.downloadUrl} target="_blank" rel="noopener noreferrer">
                       Download APK ({latest.sizeLabel})
                     </a>
-                    {latest.htmlUrl ? (
+                    {latest.htmlUrl && (
                       <a
                         href={latest.htmlUrl}
                         target="_blank"
@@ -297,73 +294,75 @@ export default function Home() {
                       >
                         View release on GitHub ↗
                       </a>
-                    ) : null}
+                    )}
                   </div>
                 </div>
 
-                {allReleases.length > 1 ? (
-                  <div style={{ marginTop: 24 }}>
-                    <h4 style={{ margin: "0 0 12px", fontSize: 16, color: "var(--navy)" }}>
-                      All Available Builds ({allReleases.length})
-                    </h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {allReleases.slice(1).map((rel) => (
-                        <div
-                          key={rel.id}
-                          style={{
-                            background: "#ffffff",
-                            border: "1px solid var(--line)",
-                            borderRadius: 12,
-                            padding: "12px 18px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 12,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--navy)" }}>
-                              {rel.title || rel.version}
+                {/* Optional Older Builds Accordion */}
+                {allReleases.length > 1 && (
+                  <div style={{ marginTop: 16 }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowOlderBuilds(!showOlderBuilds)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--navy)",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: "pointer",
+                        padding: "6px 0",
+                      }}
+                    >
+                      {showOlderBuilds ? "▲ Hide older versions" : `▼ View ${allReleases.length - 1} older builds`}
+                    </button>
+
+                    {showOlderBuilds && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+                        {allReleases.slice(1).map((rel) => (
+                          <div
+                            key={rel.id}
+                            style={{
+                              background: "#ffffff",
+                              border: "1px solid var(--line)",
+                              borderRadius: 12,
+                              padding: "10px 16px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: 12,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div>
+                              <strong style={{ fontSize: 14 }}>{rel.title || rel.version}</strong>
+                              <span style={{ fontSize: 12.5, color: "var(--muted)", marginLeft: 10 }}>
+                                {rel.sizeLabel} · {new Date(rel.uploadedAt).toLocaleDateString()}
+                              </span>
                             </div>
-                            <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 2 }}>
-                              {rel.fileName} · {rel.sizeLabel} · {new Date(rel.uploadedAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                             <a
-                              className="btn btn-primary"
+                              className="btn btn-outline"
                               href={rel.downloadUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{ padding: "6px 12px", fontSize: 13 }}
+                              style={{ padding: "6px 14px", fontSize: 13 }}
                             >
                               Download ({rel.sizeLabel})
                             </a>
-                            <a
-                              className="btn btn-outline"
-                              href={rel.htmlUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ padding: "6px 12px", fontSize: 13 }}
-                            >
-                              View ↗
-                            </a>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ) : null}
-              </>
+                )}
+              </div>
             ) : (
               <div className="release-banner release-empty">
                 <div>
                   <div className="kicker">ANDROID APK</div>
                   <h3 style={{ margin: "10px 0 6px" }}>No public release yet</h3>
                   <p className="lede" style={{ margin: 0, fontSize: 15 }}>
-                    The latest App-POS APK will appear here after an admin publishes it at{" "}
-                    <Link to="/apk-upload">/apk-upload</Link>.
+                    The latest App-POS APK will appear here after an admin publishes it.
                   </p>
                 </div>
                 <Link className="btn btn-primary" to="/apk-upload">
@@ -375,17 +374,20 @@ export default function Home() {
         </section>
       </main>
 
+      {/* Clean Unified Footer */}
       <footer>
         <div className="wrap foot">
-          <span>QuickBill POS · Web app and App-POS (QuickBillPoss)</span>
+          <span>QuickBill POS · Simple & Offline-First Point of Sale</span>
           <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
+            <Link to="/terms-and-condition" style={{ fontWeight: 600 }}>Terms & Conditions</Link>
+            <Link to="/privacy-policy" style={{ fontWeight: 600 }}>Privacy Policy</Link>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               style={{ fontWeight: 600, color: "var(--blue)" }}
             >
-              🌐 Visit Web POS App ↗
+              🌐 Web POS App ↗
             </a>
             <Link to="/apk-upload" style={{ fontWeight: 600 }}>Admin</Link>
           </div>

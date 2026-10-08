@@ -1,11 +1,23 @@
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import SEO from "../components/SEO";
 
 export default function PrivacyPolicy() {
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -65,7 +77,7 @@ export default function PrivacyPolicy() {
       <header className="nav" id="top-nav">
         <div className="wrap nav-inner">
           <Link to="/" className="brand" id="brand-logo-link">
-            <img src="/logo.svg" className="logo" alt="QuickBill POS Logo" width={36} height={36} />
+            <img src="/logo.svg" className="logo" alt="QuickBill POS Logo" width={38} height={38} />
             QuickBill POS
           </Link>
           <nav className="nav-links" aria-label="Page navigation">
@@ -75,11 +87,12 @@ export default function PrivacyPolicy() {
               target="_blank"
               rel="noopener noreferrer"
               id="nav-web-pos"
-              style={{ color: "var(--blue)", fontWeight: 700 }}
+              className="btn btn-primary"
+              style={{ padding: "8px 16px", fontSize: 13.5 }}
             >
-              Web POS App ↗
+              Launch Web POS ↗
             </a>
-            <Link to="/apk-upload" id="nav-admin" style={{ fontWeight: 600, color: "var(--navy)" }}>Admin</Link>
+            <Link to="/apk-upload" id="nav-admin" className="ghost" style={{ fontWeight: 700 }}>Admin</Link>
           </nav>
         </div>
       </header>
@@ -103,6 +116,26 @@ export default function PrivacyPolicy() {
                 <Link to="/terms_and_condition" className="legal-tab" id="tab-terms-conditions">
                   Terms & Conditions
                 </Link>
+              </div>
+
+              {/* Utility Action Buttons */}
+              <div className="legal-actions-strip">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => window.print()}
+                  style={{ padding: "7px 14px", fontSize: 13 }}
+                >
+                  🖨️ Print Policy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={handleCopy}
+                  style={{ padding: "7px 14px", fontSize: 13 }}
+                >
+                  {copied ? "✓ Copied Link!" : "📋 Copy URL"}
+                </button>
               </div>
             </header>
 
@@ -159,15 +192,16 @@ export default function PrivacyPolicy() {
               </section>
 
               <section id="section-offline-first">
-                <h2>4. Offline-First Privacy & Data Sovereignty</h2>
+                <h2>4. Offline-First Privacy & Indian Data Sovereignty (DPDP Act 2023)</h2>
                 <p>
-                  QuickBill POS functions entirely offline without requiring a constant internet connection:
+                  In full adherence with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong> and the <strong>Information Technology Act, 2000</strong> of India:
                 </p>
                 <ul>
-                  <li>Your billing data is stored locally in IndexedDB (Web) or SQLite/Room (Android).</li>
-                  <li>We do not transmit your transactions to third-party ad networks or data brokers.</li>
-                  <li>Merchants retain 100% ownership and control over their sales databases.</li>
-                  <li>You can clear all stored records at any moment by clearing the application data or cache.</li>
+                  <li>Your billing data is stored locally in IndexedDB (Web) or SQLite/Room (Android) directly within the borders of your physical hardware.</li>
+                  <li>Zero merchant transaction data is sent to foreign servers or external data brokers.</li>
+                  <li>Customer phone numbers entered for digital WhatsApp or SMS receipts remain strictly on your counter machine.</li>
+                  <li>Indian merchants retain 100% data fiduciary sovereignty and ownership over their accounts and financial records.</li>
+                  <li>You can clear all stored records at any moment by clearing the local application storage.</li>
                 </ul>
               </section>
 
@@ -190,9 +224,15 @@ export default function PrivacyPolicy() {
               </section>
 
               <section id="section-contact">
-                <h2>7. Contact & Policy Updates</h2>
+                <h2>7. Contact & Grievance Officer (India)</h2>
                 <p>
-                  We may periodically revise this Privacy Policy to reflect application upgrades or regulatory changes. For questions or privacy inquiries, contact the QuickBill POS administrative team via our official repository or contact channels.
+                  We may periodically revise this Privacy Policy to reflect application upgrades or regulatory changes. For questions, compliance queries, or merchant assistance, contact the QuickBill POS administrative team directly:
+                </p>
+                <p>
+                  <strong>Customer Helpline & WhatsApp Support:</strong>{" "}
+                  <a href="https://wa.me/919446960834" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", fontWeight: 700 }}>
+                    +91 9446960834
+                  </a>
                 </p>
               </section>
             </div>
@@ -207,13 +247,13 @@ export default function PrivacyPolicy() {
           <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
             <Link to="/" id="footer-home" style={{ fontWeight: 600 }}>Home</Link>
             <Link to="/terms_and_condition" id="footer-terms" style={{ fontWeight: 600 }}>Terms & Conditions</Link>
-            <Link to="/privacy_policy" id="footer-privacy" style={{ fontWeight: 600, color: "var(--blue)" }}>Privacy Policy</Link>
+            <Link to="/privacy_policy" id="footer-privacy" style={{ fontWeight: 600, color: "var(--primary)" }}>Privacy Policy</Link>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               id="footer-webpos"
-              style={{ fontWeight: 600, color: "var(--blue)" }}
+              style={{ fontWeight: 700, color: "var(--primary)" }}
             >
               🌐 Web POS ↗
             </a>

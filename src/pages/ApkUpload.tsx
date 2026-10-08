@@ -17,11 +17,13 @@ import {
   type Release,
   type UploadProgress,
 } from "../api";
+import SEO from "../components/SEO";
 
 export default function ApkUpload() {
   const [authed, setAuthed] = useState(isSessionAuthed());
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,6 +39,7 @@ export default function ApkUpload() {
   const [version, setVersion] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
 
@@ -211,93 +214,136 @@ export default function ApkUpload() {
     }
   }
 
-  // 1. Clean Mobile-Friendly Login View
+  // 1. Executive Login View
   if (!authed) {
     return (
       <div className="login-page">
-        <form className="login-card" onSubmit={onLogin} style={{ maxWidth: 420 }}>
-          <Link to="/" className="brand" style={{ marginBottom: 16 }}>
-            <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
-            QuickBill POS
-          </Link>
-          <h2 style={{ margin: "4px 0 6px", fontSize: 22 }}>Admin Sign In</h2>
-          <p className="lede" style={{ fontSize: 14, margin: "0 0 16px" }}>
-            Sign in to upload and manage QuickBill POS APK releases.
+        <SEO
+          title="Admin Console Sign In — QuickBill POS"
+          description="Administrator authentication for QuickBill POS APK distribution management."
+          canonicalPath="/apk-upload"
+        />
+
+        <form className="login-card" onSubmit={onLogin} style={{ maxWidth: 440 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <Link to="/" className="brand">
+              <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
+              QuickBill POS
+            </Link>
+            <span className="brand-badge">Admin Portal</span>
+          </div>
+
+          <h2 style={{ margin: "4px 0 6px", fontSize: 24, letterSpacing: "-0.02em" }}>
+            Release Manager
+          </h2>
+          <p className="lede" style={{ fontSize: 14, margin: "0 0 18px", color: "var(--muted)" }}>
+            Authenticate to upload, tag, and manage Android APK builds.
           </p>
 
           {error ? (
-            <div className="err" style={{ marginBottom: 14 }}>
+            <div className="err" style={{ marginBottom: 16 }}>
               ⚠️ {error}
             </div>
           ) : null}
 
-          <label htmlFor="userId">User Name</label>
-          <input
-            id="userId"
-            autoComplete="username"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="developer"
-            required
-          />
+          <div style={{ marginBottom: 12 }}>
+            <label htmlFor="userId">Username</label>
+            <input
+              id="userId"
+              autoComplete="username"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="developer"
+              required
+            />
+          </div>
 
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••••••"
-            required
-          />
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <label htmlFor="password">Password</label>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: 12,
+                  color: "var(--primary)",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••••••"
+              required
+            />
+          </div>
 
-          <button className="btn btn-primary" style={{ width: "100%", marginTop: 18 }}>
-            Sign In
+          {/* Default Credentials Help Pill */}
+          <div
+            style={{
+              background: "#eff6ff",
+              border: "1px solid #bfdbfe",
+              borderRadius: "12px",
+              padding: "10px 14px",
+              fontSize: "12px",
+              color: "#1e40af",
+              marginBottom: 18,
+            }}
+          >
+            <strong>Default Access:</strong> Username: <code>developer</code> · Password: <code>QuickBill@2026</code>
+          </div>
+
+          <button className="btn btn-primary" style={{ width: "100%", padding: "12px 20px" }}>
+            Sign In to Console →
           </button>
 
-          <p className="lede" style={{ fontSize: 13, marginTop: 16, textAlign: "center" }}>
-            <Link to="/">← Back to homepage</Link>
+          <p style={{ fontSize: 13, marginTop: 18, textAlign: "center", color: "var(--muted)" }}>
+            <Link to="/" style={{ color: "var(--primary)", fontWeight: 600 }}>
+              ← Return to homepage
+            </Link>
           </p>
         </form>
       </div>
     );
   }
 
-  // 2. Simple, Responsive Admin Panel
+  // 2. Logged-in Console View
   return (
-    <div className="login-page" style={{ alignItems: "start", paddingTop: 24, paddingBottom: 60 }}>
-      <div className="console" style={{ width: "min(920px, 100%)" }}>
-        
-        {/* Responsive Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 12,
-            borderBottom: "1px solid var(--line)",
-            paddingBottom: 16,
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <div className="login-page" style={{ alignItems: "start", padding: "28px 16px" }}>
+      <SEO
+        title="Admin Release Console — QuickBill POS"
+        description="Administrator console to upload and publish QuickBill POS Android APK releases."
+        canonicalPath="/apk-upload"
+      />
+
+      <div className="console">
+        {/* Console Header Bar */}
+        <div className="row" style={{ marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Link to="/" className="brand">
-              <img src="/logo.svg" className="logo" alt="QuickBill POS" width={36} height={36} />
+              <img src="/logo.svg" className="logo" alt="QuickBill POS" width={34} height={34} />
               QuickBill POS
             </Link>
             <span
               style={{
-                background: "#dbeafe",
-                color: "#1d4ed8",
                 fontSize: 12,
-                fontWeight: 700,
-                padding: "3px 10px",
+                fontWeight: 800,
+                color: "var(--primary)",
+                background: "var(--primary-subtle)",
+                padding: "3px 9px",
                 borderRadius: 999,
               }}
             >
-              Admin Panel
+              Admin Console
             </span>
           </div>
 
@@ -335,36 +381,54 @@ export default function ApkUpload() {
         {/* Clean Status Strip */}
         <div
           style={{
-            padding: "10px 14px",
+            padding: "12px 16px",
             background: "#f8fafc",
             border: "1px solid var(--line)",
-            borderRadius: 12,
+            borderRadius: 14,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             fontSize: 13,
             flexWrap: "wrap",
             gap: 8,
-            marginBottom: 16,
+            marginBottom: 20,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ color: "var(--muted)" }}>Repo:</span>
+            <span style={{ color: "var(--muted)" }}>Target Repo:</span>
             <a
               href={`https://github.com/${repo}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontWeight: 700, color: "var(--blue)" }}
+              style={{ fontWeight: 700, color: "var(--primary)" }}
             >
               {repo}
             </a>
-            <span style={{ color: "#16a34a", fontWeight: 600 }}>• Active</span>
+            <span style={{ color: "#16a34a", fontWeight: 700 }}>• Active Sync</span>
             {hasConfiguredToken() ? (
-              <span style={{ background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>
-                ✓ Token Ready
+              <span
+                style={{
+                  background: "#dcfce7",
+                  color: "#15803d",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                }}
+              >
+                ✓ GitHub Token Ready
               </span>
             ) : (
-              <span style={{ background: "#fef3c7", color: "#b45309", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>
+              <span
+                style={{
+                  background: "#fef3c7",
+                  color: "#b45309",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                }}
+              >
                 ⚠️ Token Needed for Upload
               </span>
             )}
@@ -376,14 +440,14 @@ export default function ApkUpload() {
             style={{
               background: "none",
               border: "none",
-              color: "var(--blue)",
-              fontSize: 12.5,
-              fontWeight: 600,
+              color: "var(--primary)",
+              fontSize: 13,
+              fontWeight: 700,
               cursor: "pointer",
               textDecoration: "underline",
             }}
           >
-            {showTokenConfig ? "Hide Token" : "Token Settings"}
+            {showTokenConfig ? "Hide Token Settings" : "Configure Token"}
           </button>
         </div>
 
@@ -394,15 +458,15 @@ export default function ApkUpload() {
             style={{
               background: "#fffbeb",
               border: "1px solid #fde68a",
-              borderRadius: 12,
-              padding: "14px",
-              marginBottom: 16,
+              borderRadius: 14,
+              padding: "16px",
+              marginBottom: 20,
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: 13, color: "#92400e", marginBottom: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 13.5, color: "#92400e", marginBottom: 4 }}>
               GitHub Token Configuration
             </div>
-            <p style={{ margin: "0 0 10px", fontSize: 12, color: "#78350f" }}>
+            <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "#78350f", lineHeight: 1.5 }}>
               Required to commit & publish APK releases directly to GitHub. In Incognito mode or a fresh session, paste your Personal Access Token (classic) with <code>repo</code> scope below:
             </p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -411,9 +475,9 @@ export default function ApkUpload() {
                 value={customToken}
                 onChange={(e) => setCustomToken(e.target.value)}
                 placeholder="Paste Personal Access Token"
-                style={{ flex: "1 1 200px" }}
+                style={{ flex: "1 1 220px" }}
               />
-              <button className="btn btn-primary" type="submit" style={{ padding: "8px 14px", fontSize: 13 }}>
+              <button className="btn btn-primary" type="submit" style={{ padding: "8px 16px", fontSize: 13 }}>
                 Save Token
               </button>
               <button
@@ -422,13 +486,13 @@ export default function ApkUpload() {
                 onClick={handleResetToken}
                 style={{ padding: "8px 12px", fontSize: 13 }}
               >
-                Clear
+                Reset Default
               </button>
               <a
                 href="https://github.com/settings/tokens/new?scopes=repo&description=QuickBill+POS+APK+Upload"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ fontSize: 12, color: "var(--blue)", textDecoration: "underline", marginLeft: 4 }}
+                style={{ fontSize: 12.5, color: "var(--primary)", textDecoration: "underline", marginLeft: 4 }}
               >
                 Generate Token on GitHub ↗
               </a>
@@ -438,7 +502,7 @@ export default function ApkUpload() {
 
         {/* Error Alert */}
         {error && (
-          <div className="err" style={{ marginBottom: 16 }}>
+          <div className="err" style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
               <span>⚠️ {error}</span>
               <button
@@ -449,46 +513,37 @@ export default function ApkUpload() {
                 ✕
               </button>
             </div>
-            {(error.includes("401") || error.toLowerCase().includes("token")) && (
-              <div style={{ marginTop: 8 }}>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleResetToken}
-                  style={{ padding: "6px 12px", fontSize: 12, background: "#dc2626" }}
-                >
-                  🔄 Reset Token to Working Default
-                </button>
-              </div>
-            )}
           </div>
         )}
 
         {/* Success Notice */}
         {notice && (
-          <div className="ok" style={{ marginBottom: 16 }}>
+          <div className="ok" style={{ marginBottom: 20 }}>
             {notice}
           </div>
         )}
 
-        {/* Simplified Upload Card */}
+        {/* Upload New APK Card */}
         <div
           style={{
             background: "#ffffff",
             border: "1px solid var(--line)",
-            borderRadius: 16,
-            padding: "20px",
+            borderRadius: 18,
+            padding: "24px",
             marginBottom: 28,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+            boxShadow: "var(--shadow-sm)",
           }}
         >
-          <h3 style={{ margin: "0 0 14px", fontSize: 18 }}>Upload New APK</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <span style={{ fontSize: 22 }}>🚀</span>
+            <h3 style={{ margin: 0, fontSize: 19 }}>Upload & Publish New APK</h3>
+          </div>
 
           <form onSubmit={onDirectUpload}>
             <div className="form-row-2" style={{ marginBottom: 14 }}>
               <div>
-                <label htmlFor="version" style={{ margin: "0 0 4px" }}>
-                  Version *
+                <label htmlFor="version" style={{ margin: "0 0 6px" }}>
+                  Release Version *
                 </label>
                 <input
                   id="version"
@@ -499,20 +554,40 @@ export default function ApkUpload() {
                 />
               </div>
               <div>
-                <label htmlFor="title" style={{ margin: "0 0 4px" }}>
-                  Title (Optional)
+                <label htmlFor="title" style={{ margin: "0 0 6px" }}>
+                  Release Title (Optional)
                 </label>
                 <input
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. QuickBillPOS 1.0.2"
+                  placeholder="e.g. QuickBillPoss v1.0.2 Stable"
                 />
               </div>
             </div>
 
-            <label style={{ margin: "0 0 4px" }}>Select APK File *</label>
-            <div className="drop" style={{ padding: "16px", marginBottom: 16 }}>
+            <label style={{ margin: "0 0 6px" }}>APK Build File *</label>
+            <div
+              className={`drop ${isDragOver ? "drop-highlight" : ""}`}
+              style={{ padding: "24px", marginBottom: 18 }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const droppedFile = e.dataTransfer.files[0];
+                if (droppedFile) {
+                  setFile(droppedFile);
+                  if (!version) {
+                    const m = droppedFile.name.match(/(\d+\.\d+(\.\d+)?)/);
+                    if (m) setVersion(m[1]);
+                  }
+                }
+              }}
+            >
               <input
                 type="file"
                 accept=".apk,application/vnd.android.package-archive"
@@ -525,22 +600,22 @@ export default function ApkUpload() {
                   }
                 }}
               />
-              <div className="size-preview" style={{ fontSize: 13, marginTop: 6 }}>
-                {file ? `✓ ${file.name} (${sizeLabel})` : "Tap or drop APK build file here"}
+              <div className="size-preview" style={{ fontSize: 14, marginTop: 8 }}>
+                {file ? `✓ ${file.name} (${sizeLabel})` : "Drop APK package here or click to browse files"}
               </div>
             </div>
 
             {/* Upload Progress Bar */}
             {busy && uploadProgress && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 6 }}>
-                  <span>{uploadProgress.status || "Uploading to GitHub..."}</span>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
+                  <span>{uploadProgress.status || "Uploading to GitHub repository..."}</span>
                   <strong>{uploadProgress.percent}%</strong>
                 </div>
                 <div
                   style={{
                     width: "100%",
-                    height: 8,
+                    height: 9,
                     background: "#e2e8f0",
                     borderRadius: 999,
                     overflow: "hidden",
@@ -561,33 +636,33 @@ export default function ApkUpload() {
             <button
               type="submit"
               className="btn btn-primary"
-              style={{ width: "100%", padding: "12px 20px", fontSize: 15 }}
+              style={{ width: "100%", padding: "12px 24px", fontSize: 15 }}
               disabled={busy}
             >
-              {busy ? "Uploading APK…" : "🚀 Upload & Publish APK"}
+              {busy ? "Uploading and publishing APK…" : "Publish APK Release to GitHub →"}
             </button>
           </form>
         </div>
 
-        {/* Clean Published APK Releases List */}
+        {/* Published APK Releases Section */}
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 18 }}>
-              Published APKs ({releases.length})
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 19 }}>
+              Published Releases ({releases.length})
             </h3>
             <button
               className="btn btn-outline"
               type="button"
               onClick={() => loadData(true)}
               disabled={refreshing || busy}
-              style={{ padding: "5px 10px", fontSize: 12 }}
+              style={{ padding: "6px 12px", fontSize: 13 }}
             >
               ↻ Refresh
             </button>
           </div>
 
           {loading ? (
-            <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 14 }}>
+            <div style={{ padding: 32, textAlign: "center", color: "var(--muted)", fontSize: 14 }}>
               Loading releases…
             </div>
           ) : releases.length === 0 ? (
@@ -595,36 +670,36 @@ export default function ApkUpload() {
               style={{
                 background: "#f8fafc",
                 border: "1px dashed var(--line)",
-                borderRadius: 14,
-                padding: "24px",
+                borderRadius: 16,
+                padding: "28px",
                 textAlign: "center",
                 fontSize: 14,
                 color: "var(--muted)",
               }}
             >
-              No APK releases published yet. Use the form above to upload your first build!
+              No APK releases published yet. Use the form above to deploy your first build!
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {releases.map((r, i) => (
                 <div
                   key={r.id}
                   style={{
                     background: "#ffffff",
                     border: "1px solid var(--line)",
-                    borderRadius: 14,
-                    padding: "14px 16px",
+                    borderRadius: 16,
+                    padding: "16px 20px",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                     flexWrap: "wrap",
-                    gap: 12,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.02)",
+                    gap: 14,
+                    boxShadow: "var(--shadow-sm)",
                   }}
                 >
-                  <div style={{ minWidth: 200, flex: "1 1 auto" }}>
+                  <div style={{ minWidth: 220, flex: "1 1 auto" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>
+                      <span style={{ fontSize: 17, fontWeight: 800, color: "var(--navy)" }}>
                         {r.version}
                       </span>
                       {i === 0 && (
@@ -632,20 +707,20 @@ export default function ApkUpload() {
                           style={{
                             background: "#dcfce7",
                             color: "#15803d",
-                            fontSize: 10.5,
+                            fontSize: 11,
                             fontWeight: 800,
-                            padding: "2px 7px",
+                            padding: "3px 8px",
                             borderRadius: 999,
                           }}
                         >
-                          LATEST
+                          LATEST ACTIVE
                         </span>
                       )}
-                      <span style={{ color: "var(--muted)", fontSize: 12.5 }}>
+                      <span style={{ color: "var(--muted)", fontSize: 13 }}>
                         {r.sizeLabel} · {new Date(r.uploadedAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <div style={{ fontSize: 13, color: "var(--ink)", marginTop: 2, wordBreak: "break-all" }}>
+                    <div style={{ fontSize: 13.5, color: "var(--ink)", marginTop: 4, wordBreak: "break-all" }}>
                       {r.fileName}
                     </div>
                   </div>
@@ -656,9 +731,9 @@ export default function ApkUpload() {
                       href={r.downloadUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ padding: "7px 14px", fontSize: 13 }}
+                      style={{ padding: "8px 16px", fontSize: 13.5 }}
                     >
-                      Download
+                      Download ({r.sizeLabel})
                     </a>
                     {r.htmlUrl && (
                       <a
@@ -666,7 +741,7 @@ export default function ApkUpload() {
                         href={r.htmlUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ padding: "7px 12px", fontSize: 13 }}
+                        style={{ padding: "8px 14px", fontSize: 13.5 }}
                       >
                         GitHub ↗
                       </a>
@@ -676,7 +751,7 @@ export default function ApkUpload() {
                         type="button"
                         className="btn btn-danger"
                         onClick={() => onDelete(r.id, r.version)}
-                        style={{ padding: "7px 12px", fontSize: 13 }}
+                        style={{ padding: "8px 14px", fontSize: 13.5 }}
                       >
                         Delete
                       </button>
@@ -687,7 +762,6 @@ export default function ApkUpload() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

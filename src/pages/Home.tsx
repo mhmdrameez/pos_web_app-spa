@@ -5,7 +5,6 @@ import SEO from "../components/SEO";
 import LiveWebPosEmbed from "../components/LiveWebPosEmbed";
 import DownloadQrCard from "../components/DownloadQrCard";
 import PricingSection from "../components/PricingSection";
-import PwaInstallCard from "../components/PwaInstallCard";
 
 export default function Home() {
   const [latest, setLatest] = useState<Release | null>(null);
@@ -93,40 +92,25 @@ export default function Home() {
           <a className="brand" href="#top" onClick={() => setMobileMenuOpen(false)}>
             <img src="/logo.svg" className="logo" alt="QuickBill POS Logo" width={38} height={38} />
             <span>QuickBill POS</span>
-            <span className="brand-badge">🇮🇳 India Edition</span>
+            <span className="brand-badge">India Edition</span>
           </a>
 
           <nav className="nav-links desktop-only" aria-label="Main Navigation">
-            <a href="#webpos">Live Web POS</a>
-            <a href="#screens">Screens</a>
             <a href="#features">Features</a>
-            <a href="#pwa" style={{ color: "#0284c7", fontWeight: 750 }}>
-              📲 Install PWA
-            </a>
-            <a href="#pricing" style={{ color: "var(--primary)", fontWeight: 750 }}>
-              Plans (₹99)
-            </a>
-            <a href="#download">Download APK</a>
-            <a
-              href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team,%20I%20am%20interested%20in%20QuickBill%20POS"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#16a34a", fontWeight: 750, display: "inline-flex", alignItems: "center", gap: 4 }}
-              title="Chat with QuickBill Support on WhatsApp"
-            >
-              💬 +91 9446960834
-            </a>
+            <a href="#screens">Screens</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#download">Download</a>
             <a
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"
-              style={{ padding: "8px 16px", fontSize: 13.5 }}
+              style={{ padding: "8px 18px", fontSize: 13.5, marginLeft: 6 }}
               title="Launch Web POS application in browser"
             >
               Launch Web POS ↗
             </a>
-            <Link to="/apk-upload" className="ghost" style={{ fontWeight: 700 }}>
+            <Link to="/apk-upload" className="ghost" style={{ fontWeight: 600 }}>
               Admin
             </Link>
           </nav>
@@ -134,20 +118,11 @@ export default function Home() {
           {/* Mobile Navigation Toggle */}
           <div className="mobile-nav-toggle-wrap">
             <a
-              className="btn btn-outline"
-              href="https://wa.me/919446960834"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ padding: "6px 10px", fontSize: 12, borderColor: "#22c55e", color: "#15803d" }}
-            >
-              💬 WhatsApp
-            </a>
-            <a
               className="btn btn-primary mobile-quick-cta"
               href="https://posquickbill.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ padding: "8px 14px", fontSize: 13 }}
+              style={{ padding: "7px 13px", fontSize: 12.5 }}
             >
               Web POS ↗
             </a>
@@ -166,29 +141,14 @@ export default function Home() {
         {/* Mobile Dropdown Drawer */}
         {mobileMenuOpen && (
           <nav className="mobile-nav-drawer" aria-label="Mobile Navigation">
-            <a
-              href="https://wa.me/919446960834"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#16a34a", fontWeight: 800, background: "#ecfdf5", border: "1px solid #a7f3d0" }}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              💬 Direct WhatsApp: +91 9446960834 ↗
-            </a>
-            <a href="#webpos" onClick={() => setMobileMenuOpen(false)}>
-              🌐 Live Web POS App Desk
+            <a href="#features" onClick={() => setMobileMenuOpen(false)}>
+              ⚡ Features & Hardware
             </a>
             <a href="#screens" onClick={() => setMobileMenuOpen(false)}>
-              📱 Screen Previews
+              📱 App & POS Screens
             </a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)}>
-              ⚡ UPI, GST & Features
-            </a>
-            <a href="#pwa" onClick={() => setMobileMenuOpen(false)} style={{ color: "#0284c7", fontWeight: 800 }}>
-              📲 Install Web App (PWA)
-            </a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: "var(--primary)", fontWeight: 800 }}>
-              💰 Plans (₹99 / mo & ₹999 / yr)
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
+              💰 Pricing & Plans
             </a>
             <a href="#download" onClick={() => setMobileMenuOpen(false)}>
               📥 Download Android APK
@@ -205,7 +165,7 @@ export default function Home() {
             <Link
               to="/apk-upload"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 700, color: "var(--navy)" }}
+              style={{ fontWeight: 600, color: "var(--muted)" }}
             >
               🔐 Admin Console
             </Link>
@@ -616,11 +576,6 @@ export default function Home() {
             POCKET-FRIENDLY INDIAN PRICING (MONTHLY ₹99 & YEARLY ₹999)
             ================================================================= */}
         <PricingSection />
-
-        {/* =================================================================
-            PROGRESSIVE WEB APP (PWA) INSTALL CARD FOR ALL DEVICES
-            ================================================================= */}
-        <PwaInstallCard />
 
         {/* =================================================================
             DOWNLOAD AND RELEASE CENTER WITH QR SCAN

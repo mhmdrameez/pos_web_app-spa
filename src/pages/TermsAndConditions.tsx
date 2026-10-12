@@ -25,7 +25,7 @@ export default function TermsAndConditions() {
     name: "Terms and Conditions — QuickBill POS",
     description:
       "Official Terms and Conditions for QuickBill POS Point of Sale applications. Software license, offline responsibilities, and merchant operational terms.",
-    url: typeof window !== "undefined" ? `${window.location.origin}/terms_and_condition` : "https://posquickbill.vercel.app/terms_and_condition",
+    url: typeof window !== "undefined" ? `${window.location.origin}/terms_and_condition` : "https://www.quickbillpos.in/terms_and_condition",
     datePublished: "2026-09-01",
     dateModified: "2026-10-08",
     inLanguage: "en-US",
@@ -34,7 +34,7 @@ export default function TermsAndConditions() {
       name: "QuickBill POS",
       logo: {
         "@type": "ImageObject",
-        url: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "https://posquickbill.vercel.app/logo.svg",
+        url: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "https://www.quickbillpos.in/logo.svg",
       },
     },
     breadcrumb: {
@@ -44,13 +44,13 @@ export default function TermsAndConditions() {
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: typeof window !== "undefined" ? window.location.origin : "https://posquickbill.vercel.app",
+          item: typeof window !== "undefined" ? window.location.origin : "https://www.quickbillpos.in",
         },
         {
           "@type": "ListItem",
           position: 2,
           name: "Terms and Conditions",
-          item: typeof window !== "undefined" ? `${window.location.origin}/terms_and_condition` : "https://posquickbill.vercel.app/terms_and_condition",
+          item: typeof window !== "undefined" ? `${window.location.origin}/terms_and_condition` : "https://www.quickbillpos.in/terms_and_condition",
         },
       ],
     },
@@ -59,13 +59,13 @@ export default function TermsAndConditions() {
   return (
     <div className="legal-page-wrap" id="terms-conditions-page">
       <SEO
-        title="Terms and Conditions — QuickBill POS | Retail Billing Software"
-        description="Official Terms and Conditions for QuickBill POS (Web POS and Android App-POS). Read our software license terms, offline data disclaimers, and user guidelines."
-        canonicalPath="/terms_and_condition"
+        title="Terms and Conditions — QuickBill POS Retail Software"
+        description="QuickBill POS Terms and Conditions: Software licensing terms, offline merchant responsibilities, GST invoicing rules, and commercial usage guidelines."
+        canonicalPath="/terms-and-conditions"
         keywords={[
           "QuickBill POS terms and conditions",
           "POS software license terms",
-          "retail billing legal terms",
+          "retail billing legal terms India",
           "offline POS terms of service",
         ]}
         type="article"
@@ -82,7 +82,7 @@ export default function TermsAndConditions() {
           <nav className="nav-links" aria-label="Page navigation">
             <Link to="/" className="ghost" id="nav-back-home">← Back to Home</Link>
             <a
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               id="nav-web-pos"
@@ -146,7 +146,7 @@ export default function TermsAndConditions() {
               <section id="section-acceptance">
                 <h2>1. Acceptance of Terms</h2>
                 <p>
-                  By accessing, downloading, installing, or operating <strong>QuickBill POS</strong> (&quot;the Service&quot;), including the web application hosted at <strong>posquickbill.vercel.app</strong> and the mobile Android package <strong>QuickBillPoss (App-POS)</strong>, you agree to be bound by these Terms and Conditions.
+                  By accessing, downloading, installing, or operating <strong>QuickBill POS</strong> (&quot;the Service&quot;), including the web application hosted at <strong>www.quickbillpos.in</strong> and the mobile Android package <strong>QuickBillPoss (App-POS)</strong>, you agree to be bound by these Terms and Conditions.
                 </p>
                 <p>
                   If you disagree with any portion of these terms, you must refrain from installing or using the software.
@@ -240,7 +240,7 @@ export default function TermsAndConditions() {
             <Link to="/terms_and_condition" id="footer-terms" style={{ fontWeight: 600, color: "var(--primary)" }}>Terms & Conditions</Link>
             <Link to="/privacy_policy" id="footer-privacy" style={{ fontWeight: 600 }}>Privacy Policy</Link>
             <a
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               id="footer-webpos"

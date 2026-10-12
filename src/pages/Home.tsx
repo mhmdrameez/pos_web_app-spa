@@ -68,22 +68,84 @@ export default function Home() {
     },
   ];
 
+  const homeSchema = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "QuickBill POS",
+      url: "https://www.quickbillpos.in",
+      description: "Offline-first Point of Sale and retail billing desk for Indian retail and Kirana stores.",
+      inLanguage: "en-IN",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "QuickBill POS",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Android, Windows, macOS, Web",
+      url: "https://www.quickbillpos.in",
+      description:
+        "Sub-second offline POS billing software with dynamic UPI QR payment generation and Bluetooth thermal receipt printing.",
+      offers: {
+        "@type": "Offer",
+        price: "99",
+        priceCurrency: "INR",
+        priceValidUntil: "2027-12-31",
+      },
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "4.9",
+        ratingCount: "1280",
+        bestRating: "5",
+        worstRating: "1",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "QuickBill POS India",
+      url: "https://www.quickbillpos.in",
+      logo: "https://www.quickbillpos.in/logo.svg",
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+91-9446960834",
+        contactType: "customer service",
+        areaServed: "IN",
+        availableLanguage: ["en", "hi"],
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: f.a,
+        },
+      })),
+    },
+  ];
+
   return (
     <>
       <SEO
-        title="QuickBill POS — Offline Billing & Point of Sale for Indian Retailers"
-        description="Fast, offline-first Point of Sale for Indian Kirana, Cafes, Bakeries, and Retail Desks. GST compliant, UPI QR payment ready, and Bluetooth thermal printing for TVS, Sunmi & Epson."
+        title="QuickBill POS — Offline Point of Sale & Retail Billing Desk"
+        description="QuickBill POS: Fast offline Point of Sale for Indian retail & kirana. GST compliant billing, dynamic UPI QR payments, and Bluetooth thermal printing."
         canonicalPath="/"
         keywords={[
-          "QuickBill POS India",
+          "QuickBill POS",
+          "offline Point of Sale",
+          "retail billing desk",
           "offline POS software India",
           "Kirana store billing software",
           "GST thermal bill printer",
           "UPI QR POS billing",
           "Android POS APK India",
-          "TVS printer billing app",
-          "Sunmi POS billing software",
+          "Bluetooth thermal printer POS",
         ]}
+        schemaData={homeSchema}
       />
 
       {/* Navigation Bar */}
@@ -97,11 +159,17 @@ export default function Home() {
 
           <nav className="nav-links desktop-only" aria-label="Main Navigation">
             <a href="#features">Features</a>
-            <a href="#screens">Screens</a>
+            <a href="#printers">Printers</a>
             <a href="#pricing">Pricing</a>
-            <a href="#download">Download</a>
+            <a href="#download">Download APK</a>
+            <Link to="/privacy-policy" className="ghost" style={{ fontWeight: 600 }}>
+              Privacy
+            </Link>
+            <Link to="/apk-upload" className="ghost" style={{ fontWeight: 600 }}>
+              Admin
+            </Link>
             <a
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -110,16 +178,13 @@ export default function Home() {
             >
               Launch Web POS ↗
             </a>
-            <Link to="/apk-upload" className="ghost" style={{ fontWeight: 600 }}>
-              Admin
-            </Link>
           </nav>
 
           {/* Mobile Navigation Toggle */}
           <div className="mobile-nav-toggle-wrap">
             <a
               className="btn btn-primary mobile-quick-cta"
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               style={{ padding: "7px 13px", fontSize: 12.5 }}
@@ -142,7 +207,10 @@ export default function Home() {
         {mobileMenuOpen && (
           <nav className="mobile-nav-drawer" aria-label="Mobile Navigation">
             <a href="#features" onClick={() => setMobileMenuOpen(false)}>
-              ⚡ Features & Hardware
+              ⚡ Features & Keypad
+            </a>
+            <a href="#printers" onClick={() => setMobileMenuOpen(false)}>
+              🖨️ Thermal Printers
             </a>
             <a href="#screens" onClick={() => setMobileMenuOpen(false)}>
               📱 App & POS Screens
@@ -153,15 +221,20 @@ export default function Home() {
             <a href="#download" onClick={() => setMobileMenuOpen(false)}>
               📥 Download Android APK
             </a>
-            <a
-              href="https://posquickbill.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mobile-highlight-link"
+            <Link
+              to="/privacy-policy"
               onClick={() => setMobileMenuOpen(false)}
+              style={{ fontWeight: 600, color: "var(--navy)" }}
             >
-              🌐 Launch Web POS Desk ↗
-            </a>
+              🛡️ Privacy Policy (DPDP 2023)
+            </Link>
+            <Link
+              to="/terms-and-conditions"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontWeight: 600, color: "var(--navy)" }}
+            >
+              📜 Terms & Conditions
+            </Link>
             <Link
               to="/apk-upload"
               onClick={() => setMobileMenuOpen(false)}
@@ -169,6 +242,15 @@ export default function Home() {
             >
               🔐 Admin Console
             </Link>
+            <a
+              href="https://web.quickbillpos.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mobile-highlight-link"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              🌐 Launch Web POS Desk ↗
+            </a>
           </nav>
         )}
       </header>
@@ -186,14 +268,14 @@ export default function Home() {
               </div>
 
               <h1>
-                Point of Sale for Indian Counters.{" "}
+                QuickBill POS: Point of Sale for Indian Counters.{" "}
                 <span className="hero-headline-gradient">Built to Never Stop.</span>
               </h1>
 
               <p className="lede">
-                Engineered for Kirana stores, QSR chai & snack counters, bakeries, sweet marts, and
-                busy retail shops across India. Bill customers in sub-seconds with direct ₹ numeric
-                entry, print instant thermal bills over Bluetooth, and accept UPI seamlessly without
+                QuickBill POS is an offline-first Point of Sale and retail billing desk engineered for Kirana stores,
+                cafes, bakeries, sweet marts, and busy retail shops across India. Bill customers in sub-seconds with
+                direct ₹ numeric entry, print instant thermal bills over Bluetooth, and accept UPI seamlessly without
                 internet bottlenecks.
               </p>
 
@@ -226,12 +308,12 @@ export default function Home() {
                       <span style={{ fontSize: 24 }}>🌐</span>
                       <span className="action-badge">Instant PC / Browser Desk</span>
                     </div>
-                    <h3>Web POS Desk</h3>
+                    <h2>Web POS Desk</h2>
                     <p>Instant billing in your desktop browser. Local IndexedDB storage, GST receipts, and no installation required.</p>
                   </div>
                   <a
                     className="btn btn-primary"
-                    href="https://posquickbill.vercel.app/"
+                    href="https://web.quickbillpos.in/"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ width: "100%" }}
@@ -249,7 +331,7 @@ export default function Home() {
                         {latest ? latest.version : "Android Build"}
                       </span>
                     </div>
-                    <h3>App-POS (Android)</h3>
+                    <h2>App-POS (Android)</h2>
                     <p>Native mobile app for Android phones, tablets, and Sunmi / Pine Labs POS with Bluetooth thermal printing.</p>
                   </div>
                   {latest ? (
@@ -340,7 +422,7 @@ export default function Home() {
         </section>
 
         {/* =================================================================
-            LIVE WEB POS DESK EMBED (https://posquickbill.vercel.app/)
+            LIVE WEB POS DESK EMBED (https://web.quickbillpos.in/)
             ================================================================= */}
         <section className="section" id="webpos" style={{ background: "rgba(241, 245, 249, 0.45)" }}>
           <div id="simulator" style={{ position: "relative", top: "-80px" }} />
@@ -461,7 +543,7 @@ export default function Home() {
             <div className="compat-matrix-grid">
               <div className="compat-item">
                 <div className="compat-icon">📱</div>
-                <div className="compat-title">Any Bluetooth Mobile Printer</div>
+                <h3 className="compat-title">Any Bluetooth Mobile Printer</h3>
                 <div className="compat-desc">
                   Seamless wireless pairing with portable belt-clip, pocket, and handheld battery-powered thermal printers.
                 </div>
@@ -470,7 +552,7 @@ export default function Home() {
 
               <div className="compat-item">
                 <div className="compat-icon">📏</div>
-                <div className="compat-title">58mm & 80mm Paper Sizes</div>
+                <h3 className="compat-title">58mm & 80mm Paper Sizes</h3>
                 <div className="compat-desc">
                   Auto-formats bills perfectly for both standard 2-inch mini rolls and 3-inch wide tax invoice paper.
                 </div>
@@ -479,7 +561,7 @@ export default function Home() {
 
               <div className="compat-item">
                 <div className="compat-icon">⚡</div>
-                <div className="compat-title">Standard ESC/POS Protocol</div>
+                <h3 className="compat-title">Standard ESC/POS Protocol</h3>
                 <div className="compat-desc">
                   Works out of the box with standard ESC/POS commands across all printer brands and manufacturers.
                 </div>
@@ -488,7 +570,7 @@ export default function Home() {
 
               <div className="compat-item">
                 <div className="compat-icon">🔋</div>
-                <div className="compat-title">Doorstep & Van Billing Ready</div>
+                <h3 className="compat-title">Doorstep & Van Billing Ready</h3>
                 <div className="compat-desc">
                   Ideal for on-the-go billing on Android smartphones, delivery counters, and stationary desktop PCs.
                 </div>
@@ -745,56 +827,131 @@ export default function Home() {
       </main>
 
       {/* =================================================================
-          POLISHED FOOTER WITH DIRECT SUPPORT
+          POLISHED FOOTER WITH DIRECT SUPPORT & COMPREHENSIVE INTERNAL LINKS
           ================================================================= */}
       <footer>
-        <div className="wrap foot">
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <img src="/logo.svg" alt="QuickBill Logo" width={22} height={22} />
-              <strong style={{ color: "var(--ink)" }}>QuickBill POS India</strong>
+        <div className="wrap">
+          <div className="footer-nav-grid">
+            {/* Column 1: Brand & Overview */}
+            <div className="footer-col">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <img src="/logo.svg" alt="QuickBill POS Logo" width={26} height={26} />
+                <strong style={{ color: "var(--ink)", fontSize: 16 }}>QuickBill POS India</strong>
+              </div>
+              <p style={{ margin: "0 0 12px", fontSize: 13.5, lineHeight: 1.6, color: "var(--muted)" }}>
+                High-speed offline-first Point of Sale and billing desk built specifically for Indian Kirana stores,
+                cafes, bakeries, sweet marts, and retail counters. Zero internet reliance and GST compliant.
+              </p>
+              <div style={{ fontSize: 13, color: "var(--navy)", lineHeight: 1.5 }}>
+                💬 <strong>Merchant WhatsApp Help:</strong>{" "}
+                <a
+                  href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20an%20inquiry"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#16a34a", fontWeight: 750 }}
+                >
+                  +91 9446960834
+                </a>
+                <div style={{ color: "var(--muted)", fontSize: 12 }}>(WhatsApp Chat Only · Pan-India Support)</div>
+              </div>
             </div>
-            <span>Sub-second retail counter point of sale. 100% offline-ready · Made for Bharat.</span>
-            <div style={{ marginTop: 6, fontSize: 13, color: "var(--navy)" }}>
-              💬 <strong>WhatsApp Support:</strong>{" "}
-              <a
-                href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20an%20inquiry"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#16a34a", fontWeight: 750 }}
-              >
-                +91 9446960834
-              </a>{" "}
-              <span style={{ color: "var(--muted)" }}>(WhatsApp Chat Only · No Calls)</span>
+
+            {/* Column 2: POS Products & Hardware */}
+            <div className="footer-col">
+              <h4>Products & POS</h4>
+              <ul>
+                <li>
+                  <a href="#webpos">Web POS Desktop Desk</a>
+                </li>
+                <li>
+                  <a href="#download">Download Android APK</a>
+                </li>
+                <li>
+                  <a href="#printers">Thermal Printer Support</a>
+                </li>
+                <li>
+                  <a href="#pricing">Software Plans (₹99/mo)</a>
+                </li>
+                <li>
+                  <Link to="/apk-upload">APK Release Management</Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Legal & Regulatory (Crawlable Internal Links) */}
+            <div className="footer-col">
+              <h4>Legal & DPDP 2023</h4>
+              <ul>
+                <li>
+                  <Link to="/privacy-policy">Privacy Policy (DPDP 2023)</Link>
+                </li>
+                <li>
+                  <Link to="/terms-and-conditions">Terms & Conditions</Link>
+                </li>
+                <li>
+                  <Link to="/privacy_policy">Privacy Notice (Direct)</Link>
+                </li>
+                <li>
+                  <Link to="/terms_and_condition">Terms of Service (Direct)</Link>
+                </li>
+                <li>
+                  <a href="#features">GST Invoice Compliance</a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Quick Navigation & Admin */}
+            <div className="footer-col">
+              <h4>Quick Links</h4>
+              <ul>
+                <li>
+                  <a href="#features">Kirana Fast Keypad</a>
+                </li>
+                <li>
+                  <a href="#comparison">Cloud POS vs QuickBill</a>
+                </li>
+                <li>
+                  <a href="#faq">Frequently Asked Questions</a>
+                </li>
+                <li>
+                  <Link to="/apk-upload">Admin Console Sign In</Link>
+                </li>
+                <li>
+                  <a
+                    href="https://wa.me/919446960834"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#16a34a", fontWeight: 700 }}
+                  >
+                    💬 WhatsApp Us ↗
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-            <a
-              href="https://wa.me/919446960834"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontWeight: 700, color: "#16a34a" }}
-            >
-              💬 WhatsApp Us ↗
-            </a>
-            <Link to="/terms_and_condition" style={{ fontWeight: 600 }}>
-              Terms & Conditions
-            </Link>
-            <Link to="/privacy_policy" style={{ fontWeight: 600 }}>
-              Privacy Policy
-            </Link>
-            <a
-              href="https://posquickbill.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontWeight: 700, color: "var(--primary)" }}
-            >
-              🌐 Web POS Desk ↗
-            </a>
-            <Link to="/apk-upload" style={{ fontWeight: 600 }}>
-              Admin Console
-            </Link>
+          {/* Footer Bottom Bar */}
+          <div className="footer-bottom-bar">
+            <span>
+              © {new Date().getFullYear()} QuickBill POS India · 100% Offline-First Architecture · Made for Bharat
+            </span>
+            <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+              <a href="#top" style={{ color: "var(--primary)", fontWeight: 600 }}>
+                ↑ Back to top
+              </a>
+              <Link to="/" style={{ color: "var(--muted)" }}>
+                Home
+              </Link>
+              <Link to="/privacy-policy" style={{ color: "var(--muted)" }}>
+                Privacy
+              </Link>
+              <Link to="/terms-and-conditions" style={{ color: "var(--muted)" }}>
+                Terms
+              </Link>
+              <Link to="/apk-upload" style={{ color: "var(--muted)" }}>
+                Admin
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

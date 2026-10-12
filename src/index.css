@@ -424,6 +424,7 @@ h1 {
   border-color: #bbf7d0;
 }
 
+.action-card h2,
 .action-card h3 {
   margin: 0 0 6px;
   font-size: 19px;
@@ -1351,6 +1352,7 @@ h1 {
 }
 
 .compat-title {
+  margin: 0;
   font-size: 15px;
   font-weight: 700;
   color: var(--ink);
@@ -1964,6 +1966,67 @@ footer {
   align-items: center;
 }
 
+.footer-nav-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1fr;
+  gap: 36px;
+  margin-bottom: 36px;
+}
+
+.footer-col h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 14px;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-col a {
+  color: var(--muted);
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-col a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom-bar {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .footer-nav-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 520px) {
+  .footer-nav-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
 /* ==========================================================================
    PRICING SECTION (MONTHLY ₹99 & YEARLY ₹999)
    ========================================================================== */
@@ -2252,7 +2315,7 @@ footer {
 }
 
 /* ==========================================================================
-   LIVE WEB POS EMBED WINDOW (https://posquickbill.vercel.app/)
+   LIVE WEB POS EMBED WINDOW (https://web.quickbillpos.in/)
    ========================================================================== */
 .live-pos-embed-wrapper {
   background: #ffffff;

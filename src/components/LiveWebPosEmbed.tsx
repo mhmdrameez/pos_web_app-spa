@@ -25,7 +25,7 @@ export default function LiveWebPosEmbed() {
 
         <div className="live-pos-address-bar">
           <span className="live-pos-lock-icon">🔒</span>
-          <span className="live-pos-url-text">https://posquickbill.vercel.app/</span>
+          <span className="live-pos-url-text">https://web.quickbillpos.in/</span>
           <span className="live-pos-tag-pill">Active Live Web App</span>
         </div>
 
@@ -40,7 +40,7 @@ export default function LiveWebPosEmbed() {
             ↻ Reload
           </button>
           <a
-            href="https://posquickbill.vercel.app/"
+            href="https://web.quickbillpos.in/"
             target="_blank"
             rel="noopener noreferrer"
             className="live-pos-launch-btn"
@@ -60,14 +60,14 @@ export default function LiveWebPosEmbed() {
               Connecting to Live QuickBill Web POS Desk…
             </p>
             <span style={{ fontSize: 13, color: "var(--muted)" }}>
-              Loading offline-first billing interface from posquickbill.vercel.app
+              Loading offline-first billing interface from web.quickbillpos.in
             </span>
           </div>
         )}
 
         <iframe
           key={iframeKey}
-          src="https://posquickbill.vercel.app/"
+          src="https://web.quickbillpos.in/"
           title="QuickBill Web POS Live Application"
           className="live-pos-iframe"
           onLoad={() => setIsLoading(false)}
@@ -88,7 +88,7 @@ export default function LiveWebPosEmbed() {
         </div>
 
         <a
-          href="https://posquickbill.vercel.app/"
+          href="https://web.quickbillpos.in/"
           target="_blank"
           rel="noopener noreferrer"
           style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", whiteSpace: "nowrap" }}

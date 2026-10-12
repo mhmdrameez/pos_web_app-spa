@@ -31,7 +31,7 @@
       "name": "Launch Web POS Desk",
       "short_name": "Web POS",
       "description": "Open full billing counter desk",
-      "url": "https://posquickbill.vercel.app/",
+      "url": "https://web.quickbillpos.in/",
       "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
     },
     {

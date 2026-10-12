@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
     name: "Privacy Policy — QuickBill POS",
     description:
       "Official Privacy Policy for QuickBill POS web application and Android mobile POS. Details on data protection, offline-first security, and device permissions.",
-    url: typeof window !== "undefined" ? `${window.location.origin}/privacy_policy` : "https://posquickbill.vercel.app/privacy_policy",
+    url: typeof window !== "undefined" ? `${window.location.origin}/privacy_policy` : "https://www.quickbillpos.in/privacy_policy",
     datePublished: "2026-09-01",
     dateModified: "2026-10-08",
     inLanguage: "en-US",
@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
       name: "QuickBill POS",
       logo: {
         "@type": "ImageObject",
-        url: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "https://posquickbill.vercel.app/logo.svg",
+        url: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "https://www.quickbillpos.in/logo.svg",
       },
     },
     breadcrumb: {
@@ -44,13 +44,13 @@ export default function PrivacyPolicy() {
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: typeof window !== "undefined" ? window.location.origin : "https://posquickbill.vercel.app",
+          item: typeof window !== "undefined" ? window.location.origin : "https://www.quickbillpos.in",
         },
         {
           "@type": "ListItem",
           position: 2,
           name: "Privacy Policy",
-          item: typeof window !== "undefined" ? `${window.location.origin}/privacy_policy` : "https://posquickbill.vercel.app/privacy_policy",
+          item: typeof window !== "undefined" ? `${window.location.origin}/privacy_policy` : "https://www.quickbillpos.in/privacy_policy",
         },
       ],
     },
@@ -59,14 +59,14 @@ export default function PrivacyPolicy() {
   return (
     <div className="legal-page-wrap" id="privacy-policy-page">
       <SEO
-        title="Privacy Policy — QuickBill POS | Offline-First Point of Sale"
-        description="Official Privacy Policy for QuickBill POS (Web POS and Android App-POS). Read how customer transaction data, device permissions, and offline storage are handled securely."
-        canonicalPath="/privacy_policy"
+        title="Privacy Policy — QuickBill POS Offline Point of Sale"
+        description="QuickBill POS Privacy Policy: Learn how merchant transaction records, Android device permissions, and offline storage are kept strictly private and safe."
+        canonicalPath="/privacy-policy"
         keywords={[
           "QuickBill POS privacy policy",
-          "POS data privacy",
-          "offline POS privacy",
-          "retail billing app permissions",
+          "POS data privacy India",
+          "DPDP Act 2023 POS compliance",
+          "offline retail billing security",
           "thermal printer bluetooth privacy",
         ]}
         type="article"
@@ -83,7 +83,7 @@ export default function PrivacyPolicy() {
           <nav className="nav-links" aria-label="Page navigation">
             <Link to="/" className="ghost" id="nav-back-home">← Back to Home</Link>
             <a
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               id="nav-web-pos"
@@ -147,7 +147,7 @@ export default function PrivacyPolicy() {
               <section id="section-introduction">
                 <h2>1. Introduction & Scope</h2>
                 <p>
-                  This Privacy Policy governs the manner in which <strong>QuickBill POS</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) handles data and user privacy across our digital Point of Sale platforms, including our Web POS application (<strong>posquickbill.vercel.app</strong>) and our Android APK application (<strong>QuickBillPoss / App-POS</strong>).
+                  This Privacy Policy governs the manner in which <strong>QuickBill POS</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) handles data and user privacy across our digital Point of Sale platforms, including our Web POS application (<strong>www.quickbillpos.in</strong>) and our Android APK application (<strong>QuickBillPoss / App-POS</strong>).
                 </p>
                 <p>
                   By using or accessing QuickBill POS on any device, you acknowledge and agree to the data collection and management practices described in this document.
@@ -250,7 +250,7 @@ export default function PrivacyPolicy() {
             <Link to="/terms_and_condition" id="footer-terms" style={{ fontWeight: 600 }}>Terms & Conditions</Link>
             <Link to="/privacy_policy" id="footer-privacy" style={{ fontWeight: 600, color: "var(--primary)" }}>Privacy Policy</Link>
             <a
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               id="footer-webpos"

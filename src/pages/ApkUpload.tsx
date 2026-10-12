@@ -350,7 +350,7 @@ export default function ApkUpload() {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <a
               className="btn btn-outline"
-              href="https://posquickbill.vercel.app/"
+              href="https://web.quickbillpos.in/"
               target="_blank"
               rel="noopener noreferrer"
               style={{ padding: "7px 12px", fontSize: 13 }}

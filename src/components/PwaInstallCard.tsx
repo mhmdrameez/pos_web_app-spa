@@ -49,7 +49,7 @@ export default function PwaInstallCard() {
       setShowIosGuide(!showIosGuide);
     } else {
       // Fallback for browsers: prompt user to use browser install menu or open Web POS
-      window.open("https://posquickbill.vercel.app/", "_blank");
+      window.open("https://web.quickbillpos.in/", "_blank");
     }
   };
 
@@ -119,7 +119,7 @@ export default function PwaInstallCard() {
               </button>
 
               <a
-                href="https://posquickbill.vercel.app/"
+                href="https://web.quickbillpos.in/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-outline"

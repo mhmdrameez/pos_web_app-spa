@@ -60,11 +60,11 @@ export default function Home() {
     },
     {
       q: "What are the subscription plans for QuickBill POS?",
-      a: "We offer simple, pocket-friendly pricing for Indian merchants: Monthly Plan at just ₹99/month (₹3.3/day) for maximum flexibility, or our Yearly Value Pass at ₹999/year (effective ~₹83/month with 2 months free and 16% savings). Both plans include unlimited offline bills, dynamic UPI QR payments, GST tax invoicing, and TVS/Sunmi Bluetooth printing.",
+      a: "We offer simple, pocket-friendly pricing for Indian merchants: Monthly Plan at just ₹99/month (₹3.3/day) for maximum flexibility, or our Yearly Value Pass at ₹999/year (effective ~₹83/month with 2 months free and 16% savings). Both plans include unlimited offline bills, dynamic UPI QR payments, GST tax invoicing, and Bluetooth & USB thermal printing.",
     },
     {
       q: "Can I use it on my existing Android phone, tablet, or PC?",
-      a: "Yes! You can run Web POS directly in Google Chrome or Microsoft Edge on any desktop or laptop, or install the lightweight 29 MB Android APK on any smartphone, tablet, or Sunmi POS device running Android 7.0 or higher.",
+      a: "Yes! You can run Web POS directly in Google Chrome or Microsoft Edge on any desktop or laptop, or install the lightweight 29 MB Android APK on any smartphone, tablet, or POS handheld terminal running Android 7.0 or higher.",
     },
   ];
 
@@ -295,7 +295,7 @@ export default function Home() {
                 </div>
                 <div className="stat-item">
                   <span className="stat-val">58/80mm</span>
-                  <span className="stat-lbl">TVS / Sunmi Thermal</span>
+                  <span className="stat-lbl">Thermal Printing</span>
                 </div>
               </div>
 
@@ -332,7 +332,7 @@ export default function Home() {
                       </span>
                     </div>
                     <h2>App-POS (Android)</h2>
-                    <p>Native mobile app for Android phones, tablets, and Sunmi / Pine Labs POS with Bluetooth thermal printing.</p>
+                    <p>Native mobile app for Android phones, tablets, and smart POS handhelds with Bluetooth thermal printing.</p>
                   </div>
                   {latest ? (
                     <a
@@ -361,7 +361,7 @@ export default function Home() {
                   className={`preview-tab-btn ${activeScreen === "mobile" ? "active" : ""}`}
                   onClick={() => setActiveScreen("mobile")}
                 >
-                  📱 Mobile & Sunmi POS
+                  📱 Mobile &amp; Smart POS
                 </button>
                 <button
                   type="button"
@@ -387,7 +387,7 @@ export default function Home() {
                     style={{ borderRadius: 14, maxHeight: 390, objectFit: "cover", width: "100%" }}
                   />
                   <div className="shot-caption">
-                    <strong>Android App-POS:</strong> Rapid touch keypad, hold cart queue, and direct ESC/POS Bluetooth pairing for TVS, Bluprint & Sunmi.
+                    <strong>Android App-POS:</strong> Rapid touch keypad, hold cart queue, and direct ESC/POS Bluetooth pairing for thermal printers.
                   </div>
                 </div>
               )}
@@ -802,7 +802,7 @@ export default function Home() {
               <span className="kicker">अक्सर पूछे जाने वाले सवाल</span>
               <h2>Frequently Asked Questions</h2>
               <p className="sub">
-                Answers to common queries about Indian GST billing, UPI QR codes, TVS/Sunmi printer setup, and offline mode.
+                Answers to common queries about Indian GST billing, UPI QR codes, thermal printer setup, and offline mode.
               </p>
             </div>
 

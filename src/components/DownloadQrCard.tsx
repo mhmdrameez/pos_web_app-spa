@@ -50,7 +50,7 @@ export default function DownloadQrCard({ release }: Props) {
 
         <h3 className="apk-qr-title">Instant Mobile & POS Device Install</h3>
         <p className="apk-qr-desc">
-          Point your Android phone, tablet, or Sunmi / Pine Labs POS camera to directly download and install{" "}
+          Point your Android phone, tablet, or smart POS handheld camera to directly download and install{" "}
           <strong>{release.fileName}</strong>. Works completely offline with local Bluetooth thermal printers.
         </p>
 

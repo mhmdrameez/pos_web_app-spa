@@ -14,7 +14,6 @@ export default function PricingSection() {
   const [merchantName, setMerchantName] = useState("");
   const [merchantPhone, setMerchantPhone] = useState("");
   const [merchantCity, setMerchantCity] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
   const openCheckout = (
     name: string,
@@ -32,7 +31,6 @@ export default function PricingSection() {
       savings,
       includes,
     });
-    setSubmitted(false);
   };
 
   const handleWhatsAppDirect = () => {
@@ -508,16 +506,6 @@ export default function PricingSection() {
                 style={{ width: "100%", background: "#25D366", borderColor: "#1ebd5a" }}
               >
                 💬 Order / Activate via WhatsApp (Fast Response) →
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => {
-                  setSubmitted(true);
-                  setTimeout(() => setCheckoutItem(null), 1800);
-                }}
-              >
-                {submitted ? "✓ Order Submitted! Our team is contacting you..." : "Submit Order Online (Pay via UPI / COD)"}
               </button>
             </div>
           </div>

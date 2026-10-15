@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
+import "./qb.css";
 
 // Register PWA Service Worker for all devices (Mobile, Tablet, Desktop)
 if ("serviceWorker" in navigator && process.env.NODE_ENV !== "development") {

@@ -7,8 +7,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0f172a",
-  "theme_color": "#2563eb",
+  "background_color": "#fbf6ee",
+  "theme_color": "#fbf6ee",
   "lang": "en-IN",
   "dir": "ltr",
   "categories": ["business", "finance", "productivity", "utilities"],
@@ -28,10 +28,10 @@
   ],
   "shortcuts": [
     {
-      "name": "Launch Web POS Desk",
-      "short_name": "Web POS",
-      "description": "Open full billing counter desk",
-      "url": "https://web.quickbillpos.in/",
+      "name": "Download Android App",
+      "short_name": "Get App",
+      "description": "Download the free QuickBill POS Android APK",
+      "url": "/#download",
       "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
     },
     {

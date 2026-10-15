@@ -1,513 +1,285 @@
-import React, { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Icon from "./Icon";
+import { WA_DISPLAY, waLink } from "../lib/contact";
+
+type Plan = {
+  id: string;
+  tag: string;
+  name: string;
+  price: string;
+  unit: string;
+  blurb: string;
+  was?: string;
+  save?: string;
+  features: string[];
+  cta: string;
+  note: string;
+  best?: boolean;
+  order: { name: string; amount: number; period: string; includes: string[] };
+};
+
+const PLANS: Plan[] = [
+  {
+    id: "monthly",
+    tag: "Flexible",
+    name: "Monthly",
+    price: "99",
+    unit: "per month",
+    blurb: "For small shops, tea stalls and seasonal counters. Stop whenever you like.",
+    features: [
+      "Unlimited bills and customers",
+      "Works with no internet",
+      "UPI QR on screen and on the bill",
+      "GST with CGST and SGST, or 0%",
+      "Bluetooth and USB printer support",
+    ],
+    cta: "Start monthly · ₹99",
+    note: "Cancel anytime",
+    order: {
+      name: "Monthly license",
+      amount: 99,
+      period: "per month",
+      includes: ["Unlimited bills", "Offline billing", "UPI QR codes", "Android app"],
+    },
+  },
+  {
+    id: "yearly",
+    tag: "Best value",
+    name: "Yearly",
+    price: "999",
+    unit: "per year",
+    blurb: "For shops that are here to stay. About ₹83 a month.",
+    was: "₹1,188",
+    save: "Save ₹189",
+    features: [
+      "Everything in Monthly",
+      "365 days, no renewal in between",
+      "Priority WhatsApp support",
+      "Help setting up your items or menu",
+      "Renewal price locked",
+    ],
+    cta: "Get yearly · ₹999",
+    note: "7-day money-back guarantee",
+    best: true,
+    order: {
+      name: "Yearly license",
+      amount: 999,
+      period: "per year",
+      includes: ["365 days of billing", "Priority WhatsApp support", "Item / menu setup help"],
+    },
+  },
+  {
+    id: "kit",
+    tag: "Printer included",
+    name: "Annual kit",
+    price: "3,199",
+    unit: "one payment",
+    blurb: "A Bluetooth printer and a year of the app. Plug in, pair, and bill.",
+    was: "₹3,499",
+    save: "Save ₹300",
+    features: [
+      "Wireless Bluetooth thermal printer (₹2,500 value)",
+      "1 year of QuickBill POS (₹999 value)",
+      "5 paper rolls free",
+      "WhatsApp help to get set up",
+      "Free courier delivery across India",
+      "1 year hardware replacement support",
+    ],
+    cta: "Order the kit · ₹3,199",
+    note: "Ready to bill about 2 minutes after delivery",
+    order: {
+      name: "Annual kit (printer + 1 year)",
+      amount: 3199,
+      period: "one payment",
+      includes: [
+        "Wireless Bluetooth thermal printer",
+        "1 year of QuickBill POS",
+        "5 paper rolls",
+        "Free courier delivery across India",
+      ],
+    },
+  },
+];
 
 export default function PricingSection() {
-  const [filterCategory, setFilterCategory] = useState<"all" | "software" | "combos">("all");
-  const [checkoutItem, setCheckoutItem] = useState<{
-    name: string;
-    price: number;
-    billingPeriod: string;
-    type: "software" | "hardware" | "combo";
-    savings?: string;
-    includes: string[];
-  } | null>(null);
+  const [selected, setSelected] = useState<Plan | null>(null);
+  const [shop, setShop] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const firstField = useRef<HTMLInputElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
 
-  const [merchantName, setMerchantName] = useState("");
-  const [merchantPhone, setMerchantPhone] = useState("");
-  const [merchantCity, setMerchantCity] = useState("");
+  useEffect(() => {
+    if (!selected) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    firstField.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+      opener.current?.focus();
+    };
+  }, [selected]);
 
-  const openCheckout = (
-    name: string,
-    price: number,
-    billingPeriod: string,
-    type: "software" | "hardware" | "combo",
-    savings?: string,
-    includes: string[] = []
-  ) => {
-    setCheckoutItem({
-      name,
-      price,
-      billingPeriod,
-      type,
-      savings,
-      includes,
-    });
-  };
-
-  const handleWhatsAppDirect = () => {
-    if (!checkoutItem) return;
-    const text = encodeURIComponent(
-      `Hello QuickBill POS Team! 🇮🇳\nI want to order / activate the following:\n\n*Package:* ${checkoutItem.name}\n*Price:* ₹${checkoutItem.price} (${checkoutItem.billingPeriod})\n\n*Business Name:* ${
-        merchantName || "Retail Merchant"
-      }\n*Phone:* ${merchantPhone || "Not provided"}\n*City:* ${merchantCity || "India"}\n\nPlease share payment & delivery/activation details.`
-    );
-    window.open(`https://wa.me/919446960834?text=${text}`, "_blank");
-  };
+  const message = selected
+    ? [
+        "Hello QuickBill POS team,",
+        `I'd like to order: ${selected.order.name} (₹${selected.order.amount.toLocaleString("en-IN")}, ${selected.order.period}).`,
+        "",
+        `Shop: ${shop.trim() || "-"}`,
+        `Phone: ${phone.trim() || "-"}`,
+        `City: ${city.trim() || "-"}`,
+        "",
+        "Please share the payment and activation details.",
+      ].join("\n")
+    : "";
 
   return (
-    <section className="section" id="pricing" style={{ background: "linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%)" }}>
-      <div className="wrap">
-        <div className="section-head" style={{ textAlign: "center", margin: "0 auto 32px" }}>
-          <span className="kicker">TRANSPARENT PRICING FOR INDIAN MERCHANTS</span>
-          <h2>Software Plans & Complete POS Setup Kits</h2>
-          <p className="sub" style={{ maxWidth: 700, margin: "0 auto" }}>
-            Choose affordable software-only licenses (₹99/mo or ₹999/yr),
-            or get the complete ready-to-bill Annual Setup Kit with a wireless mobile thermal printer for ₹3,199.
+    <section className="qb-sec qb-sec--alt" id="pricing">
+      <div className="qb-wrap">
+        <div className="qb-head">
+          <p className="qb-eyebrow">Pricing</p>
+          <h2 className="qb-h2">One price. Unlimited bills.</h2>
+          <p className="qb-sub">
+            We don&rsquo;t charge per bill or per device. Pick monthly, yearly, or get the kit with a printer in the
+            box.
           </p>
-
-          {/* Category Filter Pills */}
-          <div className="pricing-toggle-wrap">
-            <button
-              type="button"
-              className={`pricing-toggle-btn ${filterCategory === "all" ? "active" : ""}`}
-              onClick={() => setFilterCategory("all")}
-            >
-              All Plans
-            </button>
-            <button
-              type="button"
-              className={`pricing-toggle-btn ${filterCategory === "software" ? "active" : ""}`}
-              onClick={() => setFilterCategory("software")}
-            >
-              Software Plans (₹99 / ₹999)
-            </button>
-            <button
-              type="button"
-              className={`pricing-toggle-btn ${filterCategory === "combos" ? "active" : ""}`}
-              onClick={() => setFilterCategory("combos")}
-            >
-              <span>Annual POS Kit (₹3,199)</span>
-              <span className="pricing-save-badge">Save ₹300 🔥</span>
-            </button>
-          </div>
         </div>
 
-        {/* Pricing Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "22px",
-            alignItems: "stretch",
-          }}
-        >
-          {/* ==============================================================
-              CARD 1: SOFTWARE MONTHLY (₹99)
-              ============================================================== */}
-          {(filterCategory === "all" || filterCategory === "software") && (
-            <div className="pricing-card">
-              <div className="pricing-card-header">
-                <span className="pricing-plan-badge">SOFTWARE ONLY</span>
-                <h3 className="pricing-plan-title">Monthly License</h3>
-                <p className="pricing-plan-desc">
-                  Pocket-friendly flexibility for small shops, tea stalls & seasonal counters.
-                </p>
-              </div>
+        <div className="qb-plans">
+          {PLANS.map((plan) => (
+            <article key={plan.id} className={`qb-plan ${plan.best ? "qb-plan--best" : ""}`}>
+              <p className="qb-plan__tag">{plan.tag}</p>
+              <h3>{plan.name}</h3>
+              <p className="qb-plan__blurb">{plan.blurb}</p>
 
-              <div className="pricing-price-wrap">
-                <div className="pricing-amount">
-                  <span className="pricing-currency">₹</span>
-                  <span className="pricing-num">99</span>
-                  <span className="pricing-period">/ month</span>
-                </div>
-                <div className="pricing-daily-cost">
-                  Just <strong>₹3.3 per day</strong> — Less than a single cup of cutting chai! ☕
-                </div>
-              </div>
-
-              <ul className="pricing-features-list">
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>100% Offline Billing</strong> — Zero internet reliance
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>Unlimited Bills & Customers</strong>
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>Dynamic UPI QR Codes</strong> (GPay / PhonePe / Paytm)
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>GST (CGST/SGST) & Composition 0%</strong>
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  <strong>Supports All Mobile Printers</strong> via Bluetooth
-                </li>
-                <li>
-                  <span className="check-icon">✓</span>
-                  Android APK + Desktop Web POS Access
-                </li>
-              </ul>
-
-              <button
-                type="button"
-                className="btn btn-outline pricing-cta-btn"
-                onClick={() =>
-                  openCheckout("Monthly Software License", 99, "per month", "software", undefined, [
-                    "Full offline billing engine",
-                    "Unlimited bills & invoices",
-                    "Dynamic UPI QR codes",
-                    "Android APK + Web POS",
-                  ])
-                }
-              >
-                Get Monthly Plan (₹99) →
-              </button>
-              <div className="pricing-guarantee-note">Cancel anytime · Instant activation</div>
-            </div>
-          )}
-
-          {/* ==============================================================
-              CARD 2: SOFTWARE YEARLY (₹999)
-              ============================================================== */}
-          {(filterCategory === "all" || filterCategory === "software") && (
-            <div className="pricing-card featured glow-border">
-              <div className="pricing-featured-ribbon">👑 2 MONTHS FREE</div>
-
-              <div className="pricing-card-header">
-                <span className="pricing-plan-badge highlight">ANNUAL VALUE</span>
-                <h3 className="pricing-plan-title">Yearly License</h3>
-                <p className="pricing-plan-desc">
-                  Maximum savings for established Kirana stores, bakeries, cafes & busy counters.
-                </p>
-              </div>
-
-              <div className="pricing-price-wrap">
-                <div className="pricing-amount">
-                  <span className="pricing-currency">₹</span>
-                  <span className="pricing-num">999</span>
-                  <span className="pricing-period">/ year</span>
-                </div>
-                <div className="pricing-old-price">
-                  <span style={{ textDecoration: "line-through", color: "#94a3b8" }}>₹1,188/yr</span>
-                  <span className="pricing-save-pill">Save ₹189 (16% OFF)</span>
-                </div>
-                <div className="pricing-daily-cost highlight">
-                  Effective <strong>~₹83/month</strong> (Just <strong>₹2.7 per day</strong>)
-                </div>
-              </div>
-
-              <ul className="pricing-features-list">
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>All Monthly Software Features Included</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>Full 365 Days Uninterrupted Billing</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>2 Months Completely FREE</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>Priority VIP WhatsApp & Remote Support</strong> 💬
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>Free Catalog / Menu Setup Assistance</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  Guaranteed Renewal Price Lock
-                </li>
-              </ul>
-
-              <button
-                type="button"
-                className="btn btn-primary pricing-cta-btn"
-                onClick={() =>
-                  openCheckout(
-                    "Yearly Software Value Pass",
-                    999,
-                    "per year",
-                    "software",
-                    "Save ₹189 (2 Months Free)",
-                    [
-                      "Full 365 days offline license",
-                      "Priority WhatsApp & phone setup",
-                      "Menu import assistance",
-                      "Commercial Tax Invoice",
-                    ]
-                  )
-                }
-              >
-                Claim Yearly Pass (₹999) →
-              </button>
-              <div className="pricing-guarantee-note">
-                🛡️ 7-Day 100% Money-Back Guarantee
-              </div>
-            </div>
-          )}
-
-
-
-          {/* ==============================================================
-              CARD 4: ALL-IN-ONE ANNUAL POS COMBO (₹3,199) — BEST VALUE
-              ============================================================== */}
-          {(filterCategory === "all" || filterCategory === "combos") && (
-            <div
-              className="pricing-card featured"
-              style={{
-                background: "linear-gradient(180deg, #ffffff 0%, #eff6ff 100%)",
-                borderColor: "#3b82f6",
-                boxShadow: "0 18px 40px rgba(37, 99, 235, 0.18)",
-              }}
-            >
-              <div
-                className="pricing-featured-ribbon"
-                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
-              >
-                🔥 BEST VALUE COMBO · SAVE ₹300
-              </div>
-
-              <div className="pricing-card-header">
-                <span
-                  className="pricing-plan-badge"
-                  style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac" }}
-                >
-                  COMPLETE HARDWARE + SOFTWARE BUNDLE
-                </span>
-                <h3 className="pricing-plan-title">Annual All-in-One Kit</h3>
-                <p className="pricing-plan-desc">
-                  Mobile Printer (₹2,500) + 1 Full Year Software (₹999) + Free Starter Rolls!
-                </p>
-              </div>
-
-              <div className="pricing-price-wrap">
-                <div className="pricing-amount">
-                  <span className="pricing-currency">₹</span>
-                  <span className="pricing-num">3,199</span>
-                  <span className="pricing-period">package</span>
-                </div>
-                <div className="pricing-old-price">
-                  <span style={{ textDecoration: "line-through", color: "#94a3b8" }}>₹3,499 Total</span>
-                  <span className="pricing-save-pill">Instant ₹300 Combo Savings!</span>
-                </div>
-                <div className="pricing-daily-cost highlight" style={{ color: "#15803d" }}>
-                  Complete POS setup for an entire year! No extra software or hardware cost.
-                </div>
-              </div>
-
-              <ul className="pricing-features-list">
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>1x Wireless Mobile Thermal Printer (₹2,500 value)</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>1 Year Unlimited Software License (₹999 value)</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>5x High-Grade Thermal Paper Rolls (Free Gift)</strong> 🎁
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>VIP WhatsApp Onboarding & Setup Assistance</strong> 💬
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  <strong>Free Doorstep Courier Delivery Across India</strong>
-                </li>
-                <li>
-                  <span className="check-icon highlight">✓</span>
-                  1 Year Complete Hardware Replacement Support
-                </li>
-              </ul>
-
-              <button
-                type="button"
-                className="btn btn-primary pricing-cta-btn"
-                style={{
-                  background: "linear-gradient(135deg, #10b981, #059669)",
-                  boxShadow: "0 6px 20px rgba(16, 185, 129, 0.35)",
-                }}
-                onClick={() =>
-                  openCheckout(
-                    "All-in-One Annual POS Kit (Printer + 1 Yr Software)",
-                    3199,
-                    "complete combo package",
-                    "combo",
-                    "Save ₹300 + 5 Free Rolls",
-                    [
-                      "1x Wireless Mobile Bluetooth Thermal Printer",
-                      "1x Full 1-Year QuickBill Software License (APK & Web Desk)",
-                      "5x Thermal Receipt Paper Rolls (Free)",
-                      "VIP WhatsApp Remote Onboarding & Menu Setup",
-                      "Free Express Courier Shipping Across India",
-                    ]
-                  )
-                }
-              >
-                Order All-in-One Kit (₹3,199) →
-              </button>
-              <div className="pricing-guarantee-note">
-                ✨ Ready to Bill within 2 minutes of delivery
-              </div>
-            </div>
-          )}
-        </div>
-
-
-
-        {/* Trust Badges */}
-        <div className="pricing-trust-bar">
-          <div className="trust-item">
-            <span className="trust-icon">🚚</span>
-            <div>
-              <strong>Pan-India Fast Courier</strong>
-              <p>Delivered to your shop doorstep</p>
-            </div>
-          </div>
-          <div className="trust-item">
-            <span className="trust-icon">🔒</span>
-            <div>
-              <strong>Secure UPI / Card / COD</strong>
-              <p>GPay, PhonePe, Paytm, RuPay, NetBanking</p>
-            </div>
-          </div>
-          <div className="trust-item">
-            <span className="trust-icon">🔋</span>
-            <div>
-              <strong>Rechargeable Battery Printer</strong>
-              <p>Continuous wireless mobile billing</p>
-            </div>
-          </div>
-          <div className="trust-item">
-            <span className="trust-icon">💬</span>
-            <div>
-              <strong>WhatsApp Support</strong>
-              <p>
-                <a
-                  href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team,%20I%20need%20assistance%20with%20POS%20setup"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#16a34a", fontWeight: 700 }}
-                >
-                  +91 9446960834 ↗
-                </a>
+              <p className="qb-price">
+                <span className="qb-price__cur">₹</span>
+                {plan.price}
+                <small>{plan.unit}</small>
               </p>
-            </div>
-          </div>
+              <p className="qb-plan__was">
+                {plan.was ? (
+                  <>
+                    <s>{plan.was}</s> <strong>{plan.save}</strong>
+                  </>
+                ) : (
+                  <>&nbsp;</>
+                )}
+              </p>
+
+              <ul className="qb-plan__list">
+                {plan.features.map((f) => (
+                  <li key={f}>
+                    <Icon name="check" size={20} />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                className={`qb-btn ${plan.best ? "qb-btn--primary" : "qb-btn--ghost"}`}
+                onClick={(e) => {
+                  opener.current = e.currentTarget;
+                  setSelected(plan);
+                }}
+              >
+                {plan.cta}
+              </button>
+              <p className="qb-plan__note">{plan.note}</p>
+            </article>
+          ))}
         </div>
+
+        <p className="qb-pay-line">
+          Pay by UPI, card, net banking or cash on delivery. Questions before you buy? WhatsApp{" "}
+          <a href={waLink("Hi QuickBill POS team, I have a question before buying.")} target="_blank" rel="noopener noreferrer">
+            {WA_DISPLAY}
+          </a>
+          .
+        </p>
       </div>
 
-      {/* Checkout / Order Activation Modal */}
-      {checkoutItem && (
-        <div className="receipt-overlay" onClick={() => setCheckoutItem(null)}>
+      {selected && (
+        <div className="qb-modal" onClick={() => setSelected(null)}>
           <div
-            className="receipt-modal animate-slide-up"
-            style={{
-              width: "min(480px, 100%)",
-              background: "#ffffff",
-              borderRadius: 22,
-              padding: 24,
-              boxShadow: "var(--shadow-xl)",
-            }}
+            className="qb-modal__box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qb-order-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div className="qb-modal__top">
               <div>
-                <span className="kicker" style={{ fontSize: 11, padding: "2px 8px" }}>
-                  {checkoutItem.type === "hardware" ? "MOBILE PRINTER" : checkoutItem.type.toUpperCase()} ORDER / ACTIVATION
-                </span>
-                <h3 style={{ margin: "4px 0 0", fontSize: 20 }}>{checkoutItem.name}</h3>
+                <p className="qb-eyebrow">Order</p>
+                <h3 id="qb-order-title">{selected.order.name}</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setCheckoutItem(null)}
-                style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--muted)" }}
-              >
-                ✕
+              <button type="button" className="qb-modal__close" onClick={() => setSelected(null)} aria-label="Close">
+                <span />
+                <span />
               </button>
             </div>
 
-            <div style={{ background: "#f8fafc", border: "1px solid var(--line)", borderRadius: 14, padding: "14px", marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>Total Order Value:</span>
-                <span style={{ fontSize: 26, fontWeight: 850, color: "var(--primary)" }}>
-                  ₹{checkoutItem.price}
-                </span>
-              </div>
-              <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 2 }}>
-                Package: {checkoutItem.billingPeriod}
-              </div>
-              {checkoutItem.savings && (
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#15803d", marginTop: 4 }}>
-                  🎉 {checkoutItem.savings}
-                </div>
-              )}
-            </div>
+            <p className="qb-modal__price">
+              ₹{selected.order.amount.toLocaleString("en-IN")} <small>{selected.order.period}</small>
+            </p>
+            <ul className="qb-modal__list">
+              {selected.order.includes.map((i) => (
+                <li key={i}>
+                  <Icon name="check" size={18} />
+                  <span>{i}</span>
+                </li>
+              ))}
+            </ul>
 
-            {/* Package Includes List */}
-            {checkoutItem.includes.length > 0 && (
-              <div style={{ background: "#eff6ff", borderRadius: 12, padding: "10px 14px", marginBottom: 14, fontSize: 12.5 }}>
-                <strong style={{ color: "#1e40af", display: "block", marginBottom: 4 }}>What you get:</strong>
-                <ul style={{ margin: 0, paddingLeft: 18, color: "#1e3a8a" }}>
-                  {checkoutItem.includes.map((inc, i) => (
-                    <li key={i}>{inc}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Merchant Details Inputs */}
-            <div style={{ marginBottom: 14 }}>
-              <label htmlFor="modalShopName" style={{ fontSize: 12.5, margin: "0 0 4px" }}>
-                Shop / Business Name
-              </label>
+            <div className="qb-form">
+              <label htmlFor="qb-shop">Shop name</label>
               <input
-                id="modalShopName"
-                value={merchantName}
-                onChange={(e) => setMerchantName(e.target.value)}
-                placeholder="e.g. Ramesh Kirana & General Store"
-                style={{ marginBottom: 8, padding: "9px 12px" }}
+                id="qb-shop"
+                ref={firstField}
+                value={shop}
+                onChange={(e) => setShop(e.target.value)}
+                placeholder="Ramesh Kirana Store"
+                autoComplete="organization"
               />
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div className="qb-form__two">
                 <div>
-                  <label htmlFor="modalPhone" style={{ fontSize: 12.5, margin: "0 0 4px" }}>
-                    WhatsApp Mobile No. *
-                  </label>
+                  <label htmlFor="qb-phone">WhatsApp number</label>
                   <input
-                    id="modalPhone"
+                    id="qb-phone"
                     type="tel"
-                    value={merchantPhone}
-                    onChange={(e) => setMerchantPhone(e.target.value)}
-                    placeholder="e.g. 9876543210"
-                    style={{ padding: "9px 12px" }}
+                    inputMode="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="98765 43210"
+                    autoComplete="tel"
                   />
                 </div>
                 <div>
-                  <label htmlFor="modalCity" style={{ fontSize: 12.5, margin: "0 0 4px" }}>
-                    City / Pin Code
-                  </label>
+                  <label htmlFor="qb-city">City</label>
                   <input
-                    id="modalCity"
-                    value={merchantCity}
-                    onChange={(e) => setMerchantCity(e.target.value)}
-                    placeholder="e.g. Mumbai, 400001"
-                    style={{ padding: "9px 12px" }}
+                    id="qb-city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Kochi"
+                    autoComplete="address-level2"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleWhatsAppDirect}
-                style={{ width: "100%", background: "#25D366", borderColor: "#1ebd5a" }}
-              >
-                💬 Order / Activate via WhatsApp (Fast Response) →
-              </button>
-            </div>
+            <a className="qb-btn qb-btn--wa qb-btn--block" href={waLink(message)} target="_blank" rel="noopener noreferrer">
+              <Icon name="chat" />
+              <span>Continue on WhatsApp</span>
+            </a>
+            <p className="qb-modal__fine">
+              This opens WhatsApp with your order already written. Nothing is charged until we confirm with you.
+            </p>
           </div>
         </div>
       )}

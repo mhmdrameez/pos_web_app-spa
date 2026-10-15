@@ -348,15 +348,6 @@ export default function ApkUpload() {
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <a
-              className="btn btn-outline"
-              href="https://web.quickbillpos.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ padding: "7px 12px", fontSize: 13 }}
-            >
-              🌐 Web POS ↗
-            </a>
             <button
               className="btn btn-outline"
               type="button"

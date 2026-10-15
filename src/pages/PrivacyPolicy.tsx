@@ -1,279 +1,364 @@
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import SEO from "../components/SEO";
+import LegalLayout, { Fill, Mail, Table, type LegalSection } from "../components/LegalLayout";
+import { LEGAL } from "../lib/legal";
+import { WA_DISPLAY, waLink } from "../lib/contact";
+
+const GLANCE = [
+  "Your sales records are stored on your device first. Cloud sync is optional.",
+  "We never sell, rent or trade your business or customer records.",
+  "Bluetooth, camera and storage are used only for printing, scanning and import or export.",
+  "You can delete your account any time in the app. Cloud data is wiped within 30 days.",
+];
+
+const SECTIONS: LegalSection[] = [
+  {
+    id: "introduction",
+    title: "Introduction and Scope",
+    body: (
+      <>
+        <div className="qb-callout">
+          <strong>Privacy commitment.</strong> QuickBill POS is built on a <strong>local-first architecture</strong>.
+          Your transactions, inventory and sales records are stored locally on your device. We never sell, rent or
+          trade your business or customer records to third parties.
+        </div>
+        <p>
+          QuickBill POS provides a point-of-sale (POS) and inventory management mobile application and related website
+          services designed for retail merchants, small-to-medium businesses, cafés and service operators.
+        </p>
+        <p>This Privacy Policy applies to personal and business information collected through:</p>
+        <ul>
+          <li>
+            The <strong>QuickBill POS</strong> mobile application (Android and iOS);
+          </li>
+          <li>
+            Our official <strong>website</strong> and web-hosted portals;
+          </li>
+          <li>Cloud backup, cloud database synchronisation and subscription billing services (together, the &ldquo;Services&rdquo;).</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "roles",
+    title: "Roles: Data Controller and Data Processor",
+    body: (
+      <>
+        <p>Under international privacy laws (including the EU/UK GDPR and California CCPA/CPRA):</p>
+        <ul>
+          <li>
+            <strong>QuickBill POS as Data Controller.</strong> We act as the Data Controller for information about you
+            (the merchant or website visitor), such as your registration email, store profile settings, device
+            diagnostics and in-app purchase status.
+          </li>
+          <li>
+            <strong>QuickBill POS as Data Processor (Service Provider).</strong> When you record personal details of
+            your retail customers (such as names, phone numbers or email addresses for digital receipts),{" "}
+            <strong>you, the merchant, are the Data Controller</strong>. We process that data only on your behalf, to
+            provide receipts and transaction storage.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "information-we-collect",
+    title: "Information We Collect",
+    body: (
+      <>
+        <h3>A. Information you provide directly</h3>
+        <ul>
+          <li>
+            <strong>Authentication:</strong> name, email address, profile photo (via Google Sign-In or Firebase Auth)
+            and unique user IDs (<code>uid</code>). Passwords are never seen by us in plain text and are handled by
+            Google Firebase Auth.
+          </li>
+          <li>
+            <strong>Merchant store profile:</strong> business name, address, phone number, tax / VAT / GST registration
+            number, currency, receipt header and footer notes, and store logo.
+          </li>
+          <li>
+            <strong>Catalogue and sales records:</strong> product names, SKUs, barcodes, unit prices, cost prices, tax
+            rates, sales history, order totals, discount coupons and expense logs.
+          </li>
+          <li>
+            <strong>End-customer records:</strong> optional customer name, phone number and email entered at checkout
+            for sending receipts or tracking credit.
+          </li>
+          <li>
+            <strong>Contact inquiries:</strong> messages sent through our website contact form or support email.
+          </li>
+        </ul>
+
+        <h3>B. Information collected automatically</h3>
+        <ul>
+          <li>
+            <strong>Device data:</strong> hardware model, operating system version (Android / iOS), screen resolution,
+            system language and time zone.
+          </li>
+          <li>
+            <strong>App diagnostics and sync state:</strong> crash logs, sync failure diagnostics, database version
+            checkpoints and execution metrics needed for software stability.
+          </li>
+          <li>
+            <strong>Network state:</strong> connectivity status (online, offline, Wi-Fi, cellular), used to trigger
+            sync queues.
+          </li>
+          <li>
+            <strong>Website cookies:</strong> basic essential cookies to manage sessions and privacy-respecting website
+            analytics. You can adjust cookie preferences in your browser.
+          </li>
+        </ul>
+
+        <h3>C. In-app purchase and subscription details</h3>
+        <p>
+          When you buy a subscription through <strong>Google Play Billing</strong> or the <strong>Apple App Store</strong>,
+          we receive transaction tokens, purchase IDs, subscription status and expiry timestamps. We{" "}
+          <strong>never</strong> collect, receive or store your raw credit or debit card numbers.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "permissions",
+    title: "Device Permissions",
+    body: (
+      <>
+        <p>QuickBill POS requests only the permissions its features strictly need:</p>
+        <Table
+          head={["Permission", "Platform", "Purpose", "Data usage"]}
+          rows={[
+            [
+              <strong key="p">Bluetooth (connect / scan)</strong>,
+              "Android 12+ / iOS",
+              "Discover and print receipts to Bluetooth ESC/POS thermal printers.",
+              "Never used for location tracking or tracking user movement.",
+            ],
+            [
+              <strong key="p">Camera</strong>,
+              "Android / iOS",
+              "Scan product barcodes and capture store logo images.",
+              "Real-time scanning only. Video is never recorded or streamed.",
+            ],
+            [
+              <strong key="p">Storage / document picker</strong>,
+              "Android / iOS",
+              "Export and import Excel / CSV inventory, sales and expense files.",
+              "Restricted to files you select and app storage.",
+            ],
+            [
+              <strong key="p">Internet</strong>,
+              "Android / iOS",
+              "Sync with Firebase Cloud Firestore and verify active subscriptions.",
+              "Encrypted via TLS 1.3 / HTTPS.",
+            ],
+            [
+              <strong key="p">Billing</strong>,
+              "Android",
+              "Manage in-app subscriptions and free trials via Google Play.",
+              "Processed through the official Google Play Billing library.",
+            ],
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: "storage-and-sync",
+    title: "Local-First Storage vs. Cloud Synchronisation",
+    body: (
+      <>
+        <p>
+          QuickBill POS operates on a <strong>local-first</strong> foundation:
+        </p>
+        <ul>
+          <li>
+            <strong>Local SQLite database.</strong> All transactions, products, receipts and expenses are processed
+            locally in an isolated SQLite database on your device. You can work fully offline.
+          </li>
+          <li>
+            <strong>Cloud sync (optional, requires sign-in).</strong> When you log in and enable cloud sync, your
+            records synchronise with <strong>Google Firebase Cloud Firestore</strong> using TLS 1.3 transport
+            encryption and AES-256 storage encryption. Your data is isolated using Firebase Security Rules.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "legal-bases",
+    title: "Legal Bases for Processing (GDPR Article 6)",
+    body: (
+      <>
+        <p>For users in the EEA, UK and Switzerland, our lawful bases for processing are:</p>
+        <Table
+          head={["Purpose", "Data categories", "Legal basis"]}
+          rows={[
+            [
+              "Delivering POS, billing and cloud synchronisation",
+              "Account info, business profile, sales records",
+              <>
+                <strong>Contractual necessity</strong> (Art. 6(1)(b))
+              </>,
+            ],
+            [
+              "Verifying subscription validity",
+              "Purchase tokens, transaction identifiers",
+              <>
+                <strong>Contractual necessity</strong> (Art. 6(1)(b))
+              </>,
+            ],
+            [
+              "Preventing abuse, fixing bugs and securing servers",
+              "Crash diagnostics, IP address, device specs",
+              <>
+                <strong>Legitimate interests</strong> (Art. 6(1)(f))
+              </>,
+            ],
+            [
+              "Meeting legal, statutory or tax obligations",
+              "Receipts, invoice logs, billing records",
+              <>
+                <strong>Legal obligation</strong> (Art. 6(1)(c))
+              </>,
+            ],
+          ]}
+        />
+      </>
+    ),
+  },
+  {
+    id: "third-parties",
+    title: "Sub-Processors and Third Parties",
+    body: (
+      <>
+        <p>We work only with vetted service providers that follow strict privacy safeguards:</p>
+        <ul>
+          <li>
+            <strong>Google Firebase / Google Cloud:</strong> Cloud Firestore, Firebase Authentication and Cloud
+            Functions (USA / global, Standard Contractual Clauses).
+          </li>
+          <li>
+            <strong>Google Play Billing (Google LLC):</strong> in-app subscription processing on Android.
+          </li>
+          <li>
+            <strong>Apple App Store / StoreKit (Apple Inc.):</strong> in-app subscription processing on iOS.
+          </li>
+          <li>
+            <strong>Google Sign-In:</strong> optional OAuth single sign-on.
+          </li>
+        </ul>
+        <div className="qb-callout">
+          <strong>We do not sell, lease or monetise your data to data brokers or advertising networks.</strong>
+        </div>
+      </>
+    ),
+  },
+  {
+    id: "retention-and-deletion",
+    title: "Data Retention and Account Deletion",
+    body: (
+      <>
+        <p>You stay in control of your data:</p>
+        <ul>
+          <li>
+            <strong>Local data</strong> stays on your device until you uninstall the app or clear app data.
+          </li>
+          <li>
+            <strong>Cloud data</strong> is kept while your account is active.
+          </li>
+          <li>
+            <strong>Account deletion (Apple Guideline 5.1.1(v) and GDPR).</strong> You can delete your account at any
+            time in the app via <strong>Settings &gt; Account &gt; Delete Account</strong>, or by emailing{" "}
+            <Mail address={LEGAL.privacyEmail} />. Once requested, your authentication and cloud database documents are
+            permanently wiped within 30 days.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "your-rights",
+    title: "Your Privacy Rights",
+    body: (
+      <>
+        <p>Depending on where you live, you have the right to:</p>
+        <ul>
+          <li>
+            <strong>Access and export:</strong> request a copy of your records, or export your sales and inventory to
+            Excel / JSON files yourself.
+          </li>
+          <li>
+            <strong>Rectification:</strong> correct inaccurate store or personal details in the app settings.
+          </li>
+          <li>
+            <strong>Erasure:</strong> ask for permanent deletion of your account and cloud records.
+          </li>
+          <li>
+            <strong>Opt out of cloud sync:</strong> use the app purely in offline mode.
+          </li>
+          <li>
+            <strong>California residents (CCPA/CPRA):</strong> we do not sell or share personal information. You have
+            the right to know, to delete, and to receive non-discriminatory service.
+          </li>
+        </ul>
+        <p>
+          To make a request, contact us at <Mail address={LEGAL.privacyEmail} />.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "children",
+    title: "Children’s Privacy",
+    body: (
+      <p>
+        QuickBill POS is designed strictly for commercial retail and business use. We do not knowingly collect personal
+        data from children under 16 (or 13 where applicable). If we find such data, we will delete it immediately.
+      </p>
+    ),
+  },
+  {
+    id: "contact",
+    title: "Contact Us",
+    body: (
+      <>
+        <p>For questions or privacy requests, please contact our Data Protection Officer:</p>
+        <ul>
+          <li>
+            <strong>App and website:</strong> QuickBill POS
+          </li>
+          <li>
+            <strong>Entity:</strong> <Fill value={LEGAL.entityName} />
+          </li>
+          <li>
+            <strong>Support email:</strong> <Mail address={LEGAL.supportEmail} />
+          </li>
+          <li>
+            <strong>Privacy and DPO inquiries:</strong> <Mail address={LEGAL.privacyEmail} />
+          </li>
+          <li>
+            <strong>WhatsApp (chat only):</strong>{" "}
+            <a href={waLink("Hi QuickBill POS team, I have a privacy question.")} target="_blank" rel="noopener noreferrer">
+              {WA_DISPLAY}
+            </a>
+          </li>
+        </ul>
+      </>
+    ),
+  },
+];
 
 export default function PrivacyPolicy() {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // ignore
-    }
-  };
-
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: "Privacy Policy — QuickBill POS",
-    description:
-      "Official Privacy Policy for QuickBill POS web application and Android mobile POS. Details on data protection, offline-first security, and device permissions.",
-    url: typeof window !== "undefined" ? `${window.location.origin}/privacy_policy` : "https://www.quickbillpos.in/privacy_policy",
-    datePublished: "2026-09-01",
-    dateModified: "2026-10-08",
-    inLanguage: "en-US",
-    publisher: {
-      "@type": "Organization",
-      name: "QuickBill POS",
-      logo: {
-        "@type": "ImageObject",
-        url: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "https://www.quickbillpos.in/logo.svg",
-      },
-    },
-    breadcrumb: {
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: "Home",
-          item: typeof window !== "undefined" ? window.location.origin : "https://www.quickbillpos.in",
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: "Privacy Policy",
-          item: typeof window !== "undefined" ? `${window.location.origin}/privacy_policy` : "https://www.quickbillpos.in/privacy_policy",
-        },
-      ],
-    },
-  };
-
   return (
-    <div className="legal-page-wrap" id="privacy-policy-page">
-      <SEO
-        title="Privacy Policy — QuickBill POS Offline Point of Sale"
-        description="QuickBill POS Privacy Policy: Learn how merchant transaction records, Android device permissions, and offline storage are kept strictly private and safe."
-        canonicalPath="/privacy-policy"
-        keywords={[
-          "QuickBill POS privacy policy",
-          "POS data privacy India",
-          "DPDP Act 2023 POS compliance",
-          "offline retail billing security",
-          "thermal printer bluetooth privacy",
-        ]}
-        type="article"
-        schemaData={schemaData}
-      />
-
-      {/* Navigation Header */}
-      <header className="nav" id="top-nav">
-        <div className="wrap nav-inner">
-          <Link to="/" className="brand" id="brand-logo-link">
-            <img src="/logo.svg" className="logo" alt="QuickBill POS Logo" width={38} height={38} />
-            QuickBill POS
-          </Link>
-          <nav className="nav-links" aria-label="Page navigation">
-            <Link to="/" className="ghost" id="nav-back-home">← Back to Home</Link>
-            <a
-              href="https://web.quickbillpos.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              id="nav-web-pos"
-              className="btn btn-primary"
-              style={{ padding: "8px 16px", fontSize: 13.5 }}
-            >
-              Launch Web POS ↗
-            </a>
-            <Link to="/apk-upload" id="nav-admin" className="ghost" style={{ fontWeight: 700 }}>Admin</Link>
-          </nav>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="legal-main" id="main-content">
-        <div className="wrap">
-          <article className="legal-card" id="privacy-policy-document">
-            <header className="legal-header">
-              <span className="kicker" id="policy-badge">
-                <span className="dot" /> LEGAL & PRIVACY COMPLIANCE
-              </span>
-              <h1 id="page-heading">Privacy Policy</h1>
-              <p className="legal-date" id="last-updated">Last updated: October 8, 2026</p>
-
-              {/* Quick Tab Switcher */}
-              <div className="legal-nav-tabs" aria-label="Legal documents">
-                <Link to="/privacy_policy" className="legal-tab active" id="tab-privacy-policy">
-                  Privacy Policy
-                </Link>
-                <Link to="/terms_and_condition" className="legal-tab" id="tab-terms-conditions">
-                  Terms & Conditions
-                </Link>
-              </div>
-
-              {/* Utility Action Buttons */}
-              <div className="legal-actions-strip">
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => window.print()}
-                  style={{ padding: "7px 14px", fontSize: 13 }}
-                >
-                  🖨️ Print Policy
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={handleCopy}
-                  style={{ padding: "7px 14px", fontSize: 13 }}
-                >
-                  {copied ? "✓ Copied Link!" : "📋 Copy URL"}
-                </button>
-              </div>
-            </header>
-
-            <div className="legal-body">
-              <div className="legal-callout" id="privacy-summary">
-                <strong>Executive Summary:</strong> QuickBill POS is engineered around offline-first architecture. Your sales data, product catalogs, customer records, and invoices remain strictly on your local device. We never sell, harvest, or track your customer financial transactions.
-              </div>
-
-              <section id="section-introduction">
-                <h2>1. Introduction & Scope</h2>
-                <p>
-                  This Privacy Policy governs the manner in which <strong>QuickBill POS</strong> (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) handles data and user privacy across our digital Point of Sale platforms, including our Web POS application (<strong>www.quickbillpos.in</strong>) and our Android APK application (<strong>QuickBillPoss / App-POS</strong>).
-                </p>
-                <p>
-                  By using or accessing QuickBill POS on any device, you acknowledge and agree to the data collection and management practices described in this document.
-                </p>
-              </section>
-
-              <section id="section-data-collection">
-                <h2>2. Information We Process</h2>
-                <p>To provide high-speed retail checkout capabilities, the application processes the following types of information:</p>
-                <ul>
-                  <li>
-                    <strong>Product & Inventory Data:</strong> Items, product names, SKU barcodes, categories, retail prices, and tax rates entered by the merchant.
-                  </li>
-                  <li>
-                    <strong>Order & Transaction Records:</strong> Invoices, payment methods (Cash, Card, UPI, Split), timestamps, and itemized totals generated during checkout.
-                  </li>
-                  <li>
-                    <strong>Customer Records (Optional):</strong> Contact information such as customer names or phone numbers entered solely for issuing digital receipts or loyalty lookup.
-                  </li>
-                  <li>
-                    <strong>Hardware Connectivity:</strong> Anonymized Bluetooth identifiers used to pair and communicate with ESC/POS thermal receipt printers.
-                  </li>
-                </ul>
-              </section>
-
-              <section id="section-device-permissions">
-                <h2>3. Android Device Permissions</h2>
-                <p>
-                  The QuickBill POS Android application requests minimal device permissions strictly necessary for hardware integration:
-                </p>
-                <ul>
-                  <li>
-                    <strong>Bluetooth & Nearby Devices (BLUETOOTH_CONNECT / BLUETOOTH_SCAN):</strong> Used solely to discover, connect with, and transmit receipt data to 58mm / 80mm ESC/POS thermal printers.
-                  </li>
-                  <li>
-                    <strong>Camera Access:</strong> Utilized only when activating the in-app barcode or QR code scanner to quickly look up items during billing. No photos or video streams are stored or uploaded.
-                  </li>
-                  <li>
-                    <strong>Storage Access:</strong> Enables exporting sales spreadsheets, PDF invoices, and offline SQLite database backup files.
-                  </li>
-                </ul>
-              </section>
-
-              <section id="section-offline-first">
-                <h2>4. Offline-First Privacy & Indian Data Sovereignty (DPDP Act 2023)</h2>
-                <p>
-                  In full adherence with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong> and the <strong>Information Technology Act, 2000</strong> of India:
-                </p>
-                <ul>
-                  <li>Your billing data is stored locally in IndexedDB (Web) or SQLite/Room (Android) directly within the borders of your physical hardware.</li>
-                  <li>Zero merchant transaction data is sent to foreign servers or external data brokers.</li>
-                  <li>Customer phone numbers entered for digital WhatsApp or SMS receipts remain strictly on your counter machine.</li>
-                  <li>Indian merchants retain 100% data fiduciary sovereignty and ownership over their accounts and financial records.</li>
-                  <li>You can clear all stored records at any moment by clearing the local application storage.</li>
-                </ul>
-              </section>
-
-              <section id="section-third-party">
-                <h2>5. Third-Party Infrastructure</h2>
-                <p>
-                  We rely on industry-standard infrastructure providers for hosting and software distribution:
-                </p>
-                <ul>
-                  <li><strong>Vercel:</strong> Static asset CDN and website delivery.</li>
-                  <li><strong>GitHub:</strong> Secure distribution of official Android APK releases.</li>
-                </ul>
-              </section>
-
-              <section id="section-data-security">
-                <h2>6. Data Security Practices</h2>
-                <p>
-                  We implement robust technical safeguards to ensure application stability and security. Since data resides locally on your terminal, we advise merchants to secure devices with screen locks, biometric authentication, and regular local backups.
-                </p>
-              </section>
-
-              <section id="section-contact">
-                <h2>7. Contact & Grievance Officer (India)</h2>
-                <p>
-                  We may periodically revise this Privacy Policy to reflect application upgrades or regulatory changes. For questions, compliance queries, or merchant assistance, contact the QuickBill POS administrative team directly:
-                </p>
-                <p>
-                  💬 <strong>Merchant WhatsApp Support:</strong>{" "}
-                  <a href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20a%20data%20privacy%20inquiry" target="_blank" rel="noopener noreferrer" style={{ color: "#16a34a", fontWeight: 750 }}>
-                    +91 9446960834
-                  </a>{" "}
-                  <span style={{ color: "var(--muted)" }}>(WhatsApp Chat Only · No Calls)</span>
-                </p>
-              </section>
-            </div>
-          </article>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer id="footer">
-        <div className="wrap foot">
-          <span>QuickBill POS · Offline-first billing for retail desks</span>
-          <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-            <Link to="/" id="footer-home" style={{ fontWeight: 600 }}>Home</Link>
-            <Link to="/terms_and_condition" id="footer-terms" style={{ fontWeight: 600 }}>Terms & Conditions</Link>
-            <Link to="/privacy_policy" id="footer-privacy" style={{ fontWeight: 600, color: "var(--primary)" }}>Privacy Policy</Link>
-            <a
-              href="https://web.quickbillpos.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              id="footer-webpos"
-              style={{ fontWeight: 700, color: "var(--primary)" }}
-            >
-              🌐 Web POS ↗
-            </a>
-          </div>
-        </div>
-      </footer>
-
-      {/* Floating WhatsApp Quick Action Button */}
-      <a
-        href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20a%20query%20regarding%20QuickBill%20POS"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="floating-whatsapp-btn"
-        aria-label="Chat on WhatsApp"
-        title="WhatsApp Support (Chat Only): +91 9446960834"
-      >
-        <span style={{ fontSize: 20 }}>💬</span>
-        <span className="floating-whatsapp-text">WhatsApp Support: +91 9446960834</span>
-      </a>
-    </div>
+    <LegalLayout
+      kind="privacy"
+      title="Privacy Policy"
+      seoTitle="Privacy Policy | QuickBill POS"
+      seoDescription="How QuickBill POS handles your data: local-first storage, optional cloud sync, device permissions, your privacy rights and how to delete your account."
+      canonicalPath="/privacy-policy"
+      keywords={["QuickBill POS privacy policy", "POS data privacy", "offline billing app privacy", "delete account"]}
+      glance={GLANCE}
+      sections={SECTIONS}
+      next={{ to: "/terms-and-conditions", label: "Terms & Conditions" }}
+    />
   );
 }

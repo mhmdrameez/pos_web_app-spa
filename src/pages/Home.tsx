@@ -1,19 +1,108 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { fetchReleases, type Release } from "../api";
 import SEO from "../components/SEO";
-import LiveWebPosEmbed from "../components/LiveWebPosEmbed";
-import DownloadQrCard from "../components/DownloadQrCard";
+import SiteHeader from "../components/SiteHeader";
+import SiteFooter, { WhatsAppFloat } from "../components/SiteFooter";
+import Icon from "../components/Icon";
+import Receipt from "../components/Receipt";
 import PricingSection from "../components/PricingSection";
+import DownloadSection from "../components/DownloadSection";
+import { waLink } from "../lib/contact";
+
+const FAQS: Array<{ q: string; a: string }> = [
+  {
+    q: "Do I need internet to bill my customers?",
+    a: "No. Every bill is saved on your phone or tablet, so billing keeps working when the network is down or the router restarts. Connect now and then so the app can sync and check your subscription.",
+  },
+  {
+    q: "Can customers pay by UPI?",
+    a: "Yes. A QR code with the exact bill amount shows on your screen and prints on the bill. Customers can scan it with Google Pay, PhonePe, Paytm, BHIM or any other UPI app.",
+  },
+  {
+    q: "Does it handle GST?",
+    a: "Yes. Choose 5%, 12% or 18%, and the bill shows CGST and SGST separately with your GSTIN. If you are unregistered or on the Composition Scheme, set the rate to 0%. Check with your CA for your exact filing needs.",
+  },
+  {
+    q: "Which printers work with it?",
+    a: "Standard ESC/POS thermal printers over Bluetooth or USB, in 58 mm (2-inch) and 80 mm (3-inch) paper. That covers most portable pocket printers and desktop receipt printers. There are no drivers to install.",
+  },
+  {
+    q: "How much does it cost?",
+    a: "₹99 a month, or ₹999 a year (that is about ₹83 a month). You can also buy the annual kit for ₹3,199, which includes a Bluetooth printer, a year of the app and five paper rolls. Bills are unlimited on every plan.",
+  },
+  {
+    q: "Which phones and tablets can I use?",
+    a: "Android phones, tablets and POS handhelds running Android 7.0 or newer. The app is built for 64-bit (arm64-v8a) devices, which is almost every current Android phone and tablet.",
+  },
+  {
+    q: "Where is my sales data stored?",
+    a: "On your own device first. If you sign in and turn on optional cloud sync, your records are backed up to Google Firebase. We never sell your data. The full details are in our Privacy Policy.",
+  },
+];
+
+const STEPS = [
+  {
+    title: "Install the app",
+    body: "Download it, open the file, and allow the install if Android asks. It is about 30 MB.",
+  },
+  {
+    title: "Add your shop",
+    body: "Enter your shop name, GST rate and UPI ID. Add a few items, or skip that and just type amounts.",
+  },
+  {
+    title: "Start billing",
+    body: "Type the amount, tap Add, then Pay. Pair a Bluetooth printer if you want a paper bill.",
+  },
+];
+
+const FEATURES: Array<{ icon: Parameters<typeof Icon>[0]["name"]; title: string; body: string }> = [
+  {
+    icon: "keypad",
+    title: "Type the amount, tap Add",
+    body: "Not everything has a barcode. Key in the rupee amount for a loose item, or pick saved items when you have them.",
+  },
+  {
+    icon: "offline",
+    title: "Keeps working offline",
+    body: "Bills are saved on the device. If the network drops or the router restarts, the counter carries on.",
+  },
+  {
+    icon: "receipt",
+    title: "GST bills with CGST and SGST",
+    body: "Pick 5%, 12% or 18% and your GSTIN prints on the bill. Set 0% if you are unregistered or on the Composition Scheme.",
+  },
+  {
+    icon: "qr",
+    title: "UPI QR with the exact amount",
+    body: "Show it on the screen or print it on the bill. Customers pay with whichever UPI app they already use.",
+  },
+  {
+    icon: "hold",
+    title: "Hold a bill, serve the next person",
+    body: "Customer went to fetch one more thing? Hold the bill, take the next customer, and bring it back later.",
+  },
+  {
+    icon: "printer",
+    title: "Prints on 58 mm and 80 mm paper",
+    body: "Connect a Bluetooth or USB thermal printer. The bill is laid out to fit whichever roll you load.",
+  },
+];
+
+function useIsAndroid() {
+  const [isAndroid] = useState(
+    () => typeof navigator !== "undefined" && /android/i.test(navigator.userAgent)
+  );
+  return isAndroid;
+}
 
 export default function Home() {
+  const location = useLocation();
+  const isAndroid = useIsAndroid();
   const [latest, setLatest] = useState<Release | null>(null);
   const [allReleases, setAllReleases] = useState<Release[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeScreen, setActiveScreen] = useState<"mobile" | "web" | "history">("mobile");
-  const [showOlderBuilds, setShowOlderBuilds] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showBar, setShowBar] = useState(false);
 
   useEffect(() => {
     fetchReleases()
@@ -27,54 +116,65 @@ export default function Home() {
       })
       .finally(() => setLoaded(true));
 
-    function handleUpdate(e: any) {
-      if (e.detail && Array.isArray(e.detail) && e.detail.length > 0) {
-        setLatest(e.detail[0]);
-        setAllReleases(e.detail);
+    function handleUpdate(e: Event) {
+      const detail = (e as CustomEvent<Release[]>).detail;
+      if (Array.isArray(detail) && detail.length > 0) {
+        setLatest(detail[0]);
+        setAllReleases(detail);
       }
     }
     window.addEventListener("qb:releases_updated", handleUpdate);
     return () => window.removeEventListener("qb:releases_updated", handleUpdate);
   }, []);
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
+  useEffect(() => {
+    const id = location.hash.replace("#", "");
+    const target = id ? document.getElementById(id) : null;
+    if (target) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      requestAnimationFrame(() => target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location.key, location.hash]);
 
-  const faqs = [
-    {
-      q: "क्या QuickBill POS चलाने के लिए इंटरनेट ज़रूरी है? (Does it require active internet?)",
-      a: "बिलकुल नहीं! (No!). QuickBill POS पूरी तरह से 100% Offline-First है। चाहे आपकी दुकान में ब्रॉडबैंड बंद हो या मोबाइल नेटवर्क न आ रहा हो, आपका बिलिंग काउंटर कभी नहीं रुकेगा। सारा डेटा आपके डिवाइस (SQLite / IndexedDB) में सुरक्षित रहता है।",
-    },
-    {
-      q: "Does it support UPI payments (Google Pay, PhonePe, Paytm, BHIM)?",
-      a: "Yes! QuickBill POS generates dynamic UPI QR payment codes directly on your counter screen or on your printed 58mm/80mm thermal receipt slip. Customers can scan with any UPI app to pay instantly.",
-    },
-    {
-      q: "Is it compliant with Indian GST (CGST + SGST) or Composition Scheme?",
-      a: "Yes. You can configure GST tax rates (5%, 12%, 18%) with automatic CGST and SGST splits and print your GSTIN on the tax invoice. If you are unregistered or under the Composition Scheme, switch to 0% with a single tap.",
-    },
-    {
-      q: "Does QuickBill POS support all mobile printers?",
-      a: "Yes! QuickBill POS supports all mobile Bluetooth and USB thermal printers using standard ESC/POS protocol across both 58mm (2-inch) and 80mm (3-inch) paper rolls. Whether it is a portable battery-operated pocket printer, handheld Android POS, or desktop thermal machine, it connects in seconds with zero driver hassle.",
-    },
-    {
-      q: "What are the subscription plans for QuickBill POS?",
-      a: "We offer simple, pocket-friendly pricing for Indian merchants: Monthly Plan at just ₹99/month (₹3.3/day) for maximum flexibility, or our Yearly Value Pass at ₹999/year (effective ~₹83/month with 2 months free and 16% savings). Both plans include unlimited offline bills, dynamic UPI QR payments, GST tax invoicing, and Bluetooth & USB thermal printing.",
-    },
-    {
-      q: "Can I use it on my existing Android phone, tablet, or PC?",
-      a: "Yes! You can run Web POS directly in Google Chrome or Microsoft Edge on any desktop or laptop, or install the lightweight 29 MB Android APK on any smartphone, tablet, or POS handheld terminal running Android 7.0 or higher.",
-    },
-  ];
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
+    const watched = ["hero-cta", "download", "final-cta"];
+    const visible = new Set<string>(["hero-cta"]);
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) visible.add(entry.target.id);
+        else visible.delete(entry.target.id);
+      }
+      setShowBar(visible.size === 0);
+    });
+    watched.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+  }, []);
 
-  const homeSchema = [
+  const direct = Boolean(latest && isAndroid);
+  const ctaHref = direct && latest ? latest.downloadUrl : "#download";
+  const ctaMain = isAndroid ? "Download the app" : "Get the Android app";
+  const ctaSub = latest
+    ? isAndroid
+      ? `${latest.version} · ${latest.sizeLabel}`
+      : "Scan a QR code with your phone"
+    : "Download link on this page";
+
+  const ctaProps = direct
+    ? { href: ctaHref, target: "_blank", rel: "noopener noreferrer" }
+    : { href: ctaHref };
+
+  const schema = [
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
       name: "QuickBill POS",
       url: "https://www.quickbillpos.in",
-      description: "Offline-first Point of Sale and retail billing desk for Indian retail and Kirana stores.",
       inLanguage: "en-IN",
     },
     {
@@ -82,28 +182,19 @@ export default function Home() {
       "@type": "SoftwareApplication",
       name: "QuickBill POS",
       applicationCategory: "BusinessApplication",
-      operatingSystem: "Android, Windows, macOS, Web",
+      operatingSystem: "Android",
       url: "https://www.quickbillpos.in",
       description:
-        "Sub-second offline POS billing software with dynamic UPI QR payment generation and Bluetooth thermal receipt printing.",
-      offers: {
-        "@type": "Offer",
-        price: "99",
-        priceCurrency: "INR",
-        priceValidUntil: "2027-12-31",
-      },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        ratingCount: "1280",
-        bestRating: "5",
-        worstRating: "1",
-      },
+        "Offline billing app for Indian shops with GST bills, UPI QR payments and Bluetooth thermal printing.",
+      offers: [
+        { "@type": "Offer", name: "Monthly", price: "99", priceCurrency: "INR" },
+        { "@type": "Offer", name: "Yearly", price: "999", priceCurrency: "INR" },
+      ],
     },
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "QuickBill POS India",
+      name: "QuickBill POS",
       url: "https://www.quickbillpos.in",
       logo: "https://www.quickbillpos.in/logo.svg",
       contactPoint: {
@@ -117,857 +208,331 @@ export default function Home() {
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      mainEntity: faqs.map((f) => ({
+      mainEntity: FAQS.map((f) => ({
         "@type": "Question",
         name: f.q,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: f.a,
-        },
+        acceptedAnswer: { "@type": "Answer", text: f.a },
       })),
     },
   ];
 
   return (
-    <>
+    <div className="qb">
       <SEO
-        title="QuickBill POS — Offline Point of Sale & Retail Billing Desk"
-        description="QuickBill POS: Fast offline Point of Sale for Indian retail & kirana. GST compliant billing, dynamic UPI QR payments, and Bluetooth thermal printing."
+        title="QuickBill POS: Billing app for Indian shops that works offline"
+        description="Bill customers in seconds with GST invoices, a UPI QR on every bill and Bluetooth thermal printing. Works without internet on any Android phone or tablet. From ₹99 a month."
         canonicalPath="/"
         keywords={[
           "QuickBill POS",
-          "offline Point of Sale",
-          "retail billing desk",
-          "offline POS software India",
-          "Kirana store billing software",
-          "GST thermal bill printer",
-          "UPI QR POS billing",
-          "Android POS APK India",
-          "Bluetooth thermal printer POS",
+          "billing app for kirana store",
+          "offline billing software India",
+          "GST billing app Android",
+          "UPI QR billing",
+          "Bluetooth thermal printer billing app",
+          "POS app for small shops",
         ]}
-        schemaData={homeSchema}
+        schemaData={schema}
       />
 
-      {/* Navigation Bar */}
-      <header className="nav" id="top-nav">
-        <div className="wrap nav-inner">
-          <a className="brand" href="#top" onClick={() => setMobileMenuOpen(false)}>
-            <img src="/logo.svg" className="logo" alt="QuickBill POS Logo" width={38} height={38} />
-            <span>QuickBill POS</span>
-            <span className="brand-badge">India Edition</span>
-          </a>
+      <SiteHeader />
 
-          <nav className="nav-links desktop-only" aria-label="Main Navigation">
-            <a href="#features">Features</a>
-            <a href="#printers">Printers</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#download">Download APK</a>
-            <Link to="/privacy-policy" className="ghost" style={{ fontWeight: 600 }}>
-              Privacy
-            </Link>
-            <Link to="/apk-upload" className="ghost" style={{ fontWeight: 600 }}>
-              Admin
-            </Link>
-            <a
-              href="https://web.quickbillpos.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-              style={{ padding: "8px 18px", fontSize: 13.5, marginLeft: 6 }}
-              title="Launch Web POS application in browser"
-            >
-              Launch Web POS ↗
-            </a>
-          </nav>
-
-          {/* Mobile Navigation Toggle */}
-          <div className="mobile-nav-toggle-wrap">
-            <a
-              className="btn btn-primary mobile-quick-cta"
-              href="https://web.quickbillpos.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ padding: "7px 13px", fontSize: 12.5 }}
-            >
-              Web POS ↗
-            </a>
-            <button
-              type="button"
-              className="mobile-menu-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? "✕" : "☰"}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Dropdown Drawer */}
-        {mobileMenuOpen && (
-          <nav className="mobile-nav-drawer" aria-label="Mobile Navigation">
-            <a href="#features" onClick={() => setMobileMenuOpen(false)}>
-              ⚡ Features & Keypad
-            </a>
-            <a href="#printers" onClick={() => setMobileMenuOpen(false)}>
-              🖨️ Thermal Printers
-            </a>
-            <a href="#screens" onClick={() => setMobileMenuOpen(false)}>
-              📱 App & POS Screens
-            </a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
-              💰 Pricing & Plans
-            </a>
-            <a href="#download" onClick={() => setMobileMenuOpen(false)}>
-              📥 Download Android APK
-            </a>
-            <Link
-              to="/privacy-policy"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, color: "var(--navy)" }}
-            >
-              🛡️ Privacy Policy (DPDP 2023)
-            </Link>
-            <Link
-              to="/terms-and-conditions"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, color: "var(--navy)" }}
-            >
-              📜 Terms & Conditions
-            </Link>
-            <Link
-              to="/apk-upload"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, color: "var(--muted)" }}
-            >
-              🔐 Admin Console
-            </Link>
-            <a
-              href="https://web.quickbillpos.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mobile-highlight-link"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              🌐 Launch Web POS Desk ↗
-            </a>
-          </nav>
-        )}
-      </header>
-
-      <main id="top">
-        {/* =================================================================
-            HERO SECTION (FOR INDIAN MERCHANTS)
-            ================================================================= */}
-        <section className="hero">
-          <div className="wrap grid-2">
-            <div>
-              <div className="kicker">
-                <span className="dot" />
-                <span>🇮🇳 Made for Indian Retail · 100% Offline · UPI & GST Ready</span>
-              </div>
-
+      <main id="main-content">
+        {/* HERO */}
+        <section className="qb-hero">
+          <div className="qb-wrap qb-hero__grid">
+            <div className="qb-hero__copy">
+              <p className="qb-eyebrow">For kirana, café &amp; bakery</p>
               <h1>
-                QuickBill POS: Point of Sale for Indian Counters.{" "}
-                <span className="hero-headline-gradient">Built to Never Stop.</span>
+                Bill in{" "}
+                <span className="qb-ul">
+                  two seconds
+                  <svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M2 8 C 38 2, 72 11, 108 5 S 172 3, 198 7" pathLength="1" />
+                  </svg>
+                </span>
+                . Even when the internet is down.
               </h1>
-
-              <p className="lede">
-                QuickBill POS is an offline-first Point of Sale and retail billing desk engineered for Kirana stores,
-                cafes, bakeries, sweet marts, and busy retail shops across India. Bill customers in sub-seconds with
-                direct ₹ numeric entry, print instant thermal bills over Bluetooth, and accept UPI seamlessly without
-                internet bottlenecks.
+              <p className="qb-lede">
+                QuickBill POS is a billing app that runs on the Android phone or tablet you already own. Type the
+                amount, take cash or UPI, print the bill. Your counter never waits on the network.
+              </p>
+              <p className="qb-hi" lang="hi">
+                इंटरनेट बंद हो, तब भी बिलिंग चलती रहती है।
               </p>
 
-              {/* Indian Performance Stats Strip */}
-              <div className="hero-stats-row">
-                <div className="stat-item">
-                  <span className="stat-val">0.3s</span>
-                  <span className="stat-lbl">Billing Speed (तेज़ बिलिंग)</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-val">100%</span>
-                  <span className="stat-lbl">Offline (बिना इंटरनेट)</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-val">UPI & GST</span>
-                  <span className="stat-lbl">GPay / PhonePe Ready</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-val">58/80mm</span>
-                  <span className="stat-lbl">Thermal Printing</span>
-                </div>
+              <div className="qb-cta-row" id="hero-cta">
+                <a className="qb-btn qb-btn--primary qb-btn--lg" {...ctaProps}>
+                  <Icon name="download" />
+                  <span className="qb-btn__text">
+                    <span className="qb-btn__main">{ctaMain}</span>
+                    <span className="qb-btn__sub">{ctaSub}</span>
+                  </span>
+                </a>
+                <a
+                  className="qb-btn qb-btn--ghost qb-btn--lg"
+                  href={waLink("Hi QuickBill POS team, I'd like to see how it works for my shop.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="chat" />
+                  <span className="qb-btn__text">
+                    <span className="qb-btn__main">Ask us on WhatsApp</span>
+                    <span className="qb-btn__sub">Chat with a real person</span>
+                  </span>
+                </a>
               </div>
 
-              {/* Primary Dual Platform Action Cards */}
-              <div className="action-grid">
-                {/* 1. Web POS Action Card */}
-                <div className="action-card highlight">
+              <ul className="qb-micro">
+                <li>
+                  <Icon name="check" size={18} /> No sign-up to install
+                </li>
+                <li>
+                  <Icon name="check" size={18} /> Android 7.0+
+                </li>
+                <li>
+                  <Icon name="check" size={18} /> Works offline
+                </li>
+              </ul>
+            </div>
+
+            <div className="qb-stage">
+              <figure className="qb-device qb-device--tilt">
+                <img
+                  src="/mockups/mobile-pos.png"
+                  width={1024}
+                  height={550}
+                  alt="The QuickBill POS billing screen: a big amount field, a number keypad, and Hold, Print and Pay buttons"
+                />
+              </figure>
+              <div className="qb-stage__receipt">
+                <Receipt tilt />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FACTS */}
+        <section className="qb-facts" aria-label="At a glance">
+          <div className="qb-wrap qb-facts__grid">
+            <div>
+              <strong>No internet needed</strong>
+              <span>Bills are saved on your device</span>
+            </div>
+            <div>
+              <strong>GST ready</strong>
+              <span>CGST and SGST on every bill</span>
+            </div>
+            <div>
+              <strong>UPI QR on the bill</strong>
+              <span>Google Pay, PhonePe, Paytm, BHIM</span>
+            </div>
+            <div>
+              <strong>58 mm and 80 mm</strong>
+              <span>Bluetooth and USB printers</span>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section className="qb-sec" id="how">
+          <div className="qb-wrap">
+            <div className="qb-head">
+              <p className="qb-eyebrow">How it works</p>
+              <h2 className="qb-h2">Ready to bill in about two minutes.</h2>
+              <p className="qb-sub">No hardware to wire up and no account to create. Three steps and you&rsquo;re at the counter.</p>
+            </div>
+            <ol className="qb-steps">
+              {STEPS.map((s, i) => (
+                <li key={s.title}>
+                  <span className="qb-steps__n" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <h3>{s.title}</h3>
+                  <p>{s.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* FEATURES */}
+        <section className="qb-sec qb-sec--alt" id="features">
+          <div className="qb-wrap">
+            <div className="qb-head">
+              <p className="qb-eyebrow">What&rsquo;s inside</p>
+              <h2 className="qb-h2">Built around how a busy counter actually works.</h2>
+            </div>
+            <ul className="qb-features">
+              {FEATURES.map((f) => (
+                <li key={f.title}>
+                  <Icon name={f.icon} size={28} />
                   <div>
-                    <div className="action-card-header">
-                      <span style={{ fontSize: 24 }}>🌐</span>
-                      <span className="action-badge">Instant PC / Browser Desk</span>
-                    </div>
-                    <h2>Web POS Desk</h2>
-                    <p>Instant billing in your desktop browser. Local IndexedDB storage, GST receipts, and no installation required.</p>
+                    <h3>{f.title}</h3>
+                    <p>{f.body}</p>
                   </div>
-                  <a
-                    className="btn btn-primary"
-                    href="https://web.quickbillpos.in/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ width: "100%" }}
-                  >
-                    Launch Web POS ↗
-                  </a>
-                </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
-                {/* 2. Android APK Action Card */}
-                <div className="action-card">
-                  <div>
-                    <div className="action-card-header">
-                      <span style={{ fontSize: 24 }}>📱</span>
-                      <span className="action-badge green">
-                        {latest ? latest.version : "Android Build"}
-                      </span>
-                    </div>
-                    <h2>App-POS (Android)</h2>
-                    <p>Native mobile app for Android phones, tablets, and smart POS handhelds with Bluetooth thermal printing.</p>
-                  </div>
-                  {latest ? (
-                    <a
-                      className="btn btn-dark"
-                      href={latest.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ width: "100%" }}
-                    >
-                      Download APK ({latest.sizeLabel})
-                    </a>
-                  ) : (
-                    <a className="btn btn-outline" href="#download" style={{ width: "100%" }}>
-                      Download APK
-                    </a>
-                  )}
-                </div>
-              </div>
+        {/* SALES HISTORY */}
+        <section className="qb-sec" id="history">
+          <div className="qb-wrap qb-split">
+            <div>
+              <p className="qb-eyebrow">Know your day</p>
+              <h2 className="qb-h2">At closing time, you already know what you sold.</h2>
+              <p className="qb-sub">
+                Every bill goes into your history. See the day&rsquo;s total, how many bills you made, and the average
+                bill, without opening a notebook.
+              </p>
+              <ul className="qb-ticks">
+                <li>
+                  <Icon name="check" size={20} /> Total sales, bill count and average bill
+                </li>
+                <li>
+                  <Icon name="check" size={20} /> Filter by Cash, UPI, Card or Split
+                </li>
+                <li>
+                  <Icon name="check" size={20} /> Search by invoice number or customer
+                </li>
+                <li>
+                  <Icon name="check" size={20} /> Reprint any bill in one tap
+                </li>
+              </ul>
             </div>
+            <figure className="qb-device">
+              <img
+                src="/mockups/history.png"
+                width={1024}
+                height={541}
+                loading="lazy"
+                alt="QuickBill POS sales history showing total revenue, bill count, average bill and a list of invoices with a reprint button"
+              />
+            </figure>
+          </div>
+        </section>
 
-            {/* Interactive Screen Viewer Card */}
-            <div id="screens" className="card" style={{ padding: 20 }}>
-              <div className="preview-tabs">
-                <button
-                  type="button"
-                  className={`preview-tab-btn ${activeScreen === "mobile" ? "active" : ""}`}
-                  onClick={() => setActiveScreen("mobile")}
-                >
-                  📱 Mobile &amp; Smart POS
-                </button>
-                <button
-                  type="button"
-                  className={`preview-tab-btn ${activeScreen === "web" ? "active" : ""}`}
-                  onClick={() => setActiveScreen("web")}
-                >
-                  💻 Desktop Web Desk
-                </button>
-                <button
-                  type="button"
-                  className={`preview-tab-btn ${activeScreen === "history" ? "active" : ""}`}
-                  onClick={() => setActiveScreen("history")}
-                >
-                  🧾 Khata & History
-                </button>
-              </div>
-
-              {activeScreen === "mobile" && (
+        {/* PRINTERS */}
+        <section className="qb-sec qb-sec--alt" id="printers">
+          <div className="qb-wrap qb-split qb-split--flip">
+            <div className="qb-printers__visual">
+              <Receipt />
+            </div>
+            <div>
+              <p className="qb-eyebrow">Printing</p>
+              <h2 className="qb-h2">Use the Bluetooth printer you already own.</h2>
+              <p className="qb-sub">
+                QuickBill POS speaks standard ESC/POS, the language most thermal printers understand, so pairing takes
+                a minute and there is nothing to install.
+              </p>
+              <dl className="qb-specs">
                 <div>
-                  <img
-                    src="/mockups/mobile-pos.png"
-                    alt="QuickBill POS Android App"
-                    style={{ borderRadius: 14, maxHeight: 390, objectFit: "cover", width: "100%" }}
-                  />
-                  <div className="shot-caption">
-                    <strong>Android App-POS:</strong> Rapid touch keypad, hold cart queue, and direct ESC/POS Bluetooth pairing for thermal printers.
-                  </div>
+                  <dt>Paper</dt>
+                  <dd>58 mm (2-inch) and 80 mm (3-inch) rolls</dd>
                 </div>
-              )}
-
-              {activeScreen === "web" && (
                 <div>
-                  <img
-                    src="/mockups/web-pos.png"
-                    alt="QuickBill Web POS Desk"
-                    style={{ borderRadius: 14, maxHeight: 390, objectFit: "cover", width: "100%" }}
-                  />
-                  <div className="shot-caption">
-                    <strong>Web POS Desk:</strong> Desktop browser billing interface with local offline database storage and GST calculation.
-                  </div>
+                  <dt>Connection</dt>
+                  <dd>Bluetooth or USB</dd>
                 </div>
-              )}
-
-              {activeScreen === "history" && (
                 <div>
-                  <img
-                    src="/mockups/history.png"
-                    alt="QuickBill Sales History"
-                    style={{ borderRadius: 14, maxHeight: 390, objectFit: "cover", width: "100%" }}
-                  />
-                  <div className="shot-caption">
-                    <strong>Audit & Invoices:</strong> Daily revenue tally, payment mode filter (Cash / UPI / RuPay Card), and instant bill reprint.
-                  </div>
+                  <dt>Protocol</dt>
+                  <dd>ESC/POS, no drivers needed</dd>
                 </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* =================================================================
-            LIVE WEB POS DESK EMBED (https://web.quickbillpos.in/)
-            ================================================================= */}
-        <section className="section" id="webpos" style={{ background: "rgba(241, 245, 249, 0.45)" }}>
-          <div id="simulator" style={{ position: "relative", top: "-80px" }} />
-          <div className="wrap">
-            <div className="section-head">
-              <span className="kicker">LIVE CLOUD & BROWSER COUNTER</span>
-              <h2>Experience the Real QuickBill Web POS App Right Here</h2>
-              <p className="sub">
-                Try the actual live retail billing desk directly in your browser. Add products,
-                enter ₹ amounts, test GST calculations, hold bills, and generate receipts in real-time.
+                <div>
+                  <dt>Good for</dt>
+                  <dd>Counters, home delivery and van sales</dd>
+                </div>
+              </dl>
+              <p className="qb-printers__aside">
+                Don&rsquo;t have a printer yet? The <a href="#pricing">annual kit</a> includes one.
               </p>
             </div>
-
-            <LiveWebPosEmbed />
           </div>
         </section>
 
-        {/* =================================================================
-            BENTO GRID CORE CAPABILITIES (TAILORED FOR INDIA)
-            ================================================================= */}
-        <section className="section" id="features">
-          <div className="wrap">
-            <div className="section-head">
-              <span className="kicker">BUILT FOR BHARAT</span>
-              <h2>Tailored for Indian Retail Workflows</h2>
-              <p className="sub">
-                Designed to solve the real daily challenges of Indian shopkeepers, cafes, and billing desks.
-              </p>
-            </div>
-
-            <div className="bento-grid">
-              {/* Feature 1 */}
-              <div className="bento-card bento-span-2">
-                <div className="bento-icon-wrap">⚡</div>
-                <h3>Amount-First Rapid Keypad (नकद व खुला हिसाब)</h3>
-                <p>
-                  In Indian retail, not every vegetable, sweet, or snack has a barcode. Simply type the ₹
-                  amount into the tactile numeric pad, hit Enter, and bill customers in under 2 seconds.
-                  Eliminates cashier lines during evening rush hours.
-                </p>
-                <div className="bento-pill-tag">⚡ 300% faster than typing item names</div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="bento-card">
-                <div className="bento-icon-wrap">📱</div>
-                <h3>Dynamic UPI QR Code Billing</h3>
-                <p>
-                  Print customer payment QR codes directly onto thermal bills or show them on screen.
-                  Customers scan with Google Pay, PhonePe, Paytm, or BHIM for instant confirmation.
-                </p>
-                <div className="bento-pill-tag">📱 Works with all Indian UPI apps</div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="bento-card">
-                <div className="bento-icon-wrap">📴</div>
-                <h3>100% Offline-First (बिना इंटरनेट की चिंता)</h3>
-                <p>
-                  Frequent broadband drops, Wi-Fi router restarts, or spotty 4G/5G signals will never
-                  freeze your checkout counter. Invoices and inventory persist locally in SQLite and IndexedDB.
-                </p>
-                <div className="bento-pill-tag">🔒 Zero downtime during network cuts</div>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="bento-card">
-                <div className="bento-icon-wrap">🧾</div>
-                <h3>GST Ready (CGST + SGST Breakdown)</h3>
-                <p>
-                  One-tap configuration for 5%, 12%, or 18% GST with compliant CGST and SGST itemization
-                  and GSTIN printing. Easily toggle 0% for Unregistered or Composition Scheme merchants.
-                </p>
-                <div className="bento-pill-tag">⚖️ Indian GST Tax Invoice compliant</div>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="bento-card">
-                <div className="bento-icon-wrap">⏸️</div>
-                <h3>Park & Recall Multi-Carts (होल्ड बिल)</h3>
-                <p>
-                  Customer stepped away to pick up more items or is transferring money via UPI? Park the
-                  bill with one tap, attend to the next customer, and resume the ticket whenever ready.
-                </p>
-                <div className="bento-pill-tag">🔄 Smooth queue management</div>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="bento-card">
-                <div className="bento-icon-wrap">💰</div>
-                <h3>Zero Monthly Software Rent</h3>
-                <p>
-                  Stop paying ₹12,000 to ₹30,000 every year for software subscriptions. QuickBill POS is
-                  free of monthly recurring fees and vendor lock-in.
-                </p>
-                <div className="bento-pill-tag">💸 100% Lifetime Savings</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =================================================================
-            SUPPORTS ALL MOBILE PRINTERS SECTION & HARDWARE SHOWCASE
-            ================================================================= */}
-        <section className="section" id="printers" style={{ background: "#ffffff" }}>
-          <div id="compatibility" style={{ position: "relative", top: "-80px" }} />
-          <div className="wrap">
-            <div className="section-head">
-              <span className="kicker">PRINTER COMPATIBILITY</span>
-              <h2>Supports All Mobile Thermal Printers</h2>
-              <p className="sub">
-                Pair directly via Bluetooth SPP or USB with any portable 58mm (2-inch) or 80mm (3-inch) mobile thermal receipt printer.
-                QuickBill POS speaks standard ESC/POS protocol across all brands with zero driver hassle.
-              </p>
-            </div>
-
-            {/* Universal Feature Grid */}
-            <div className="compat-matrix-grid">
-              <div className="compat-item">
-                <div className="compat-icon">📱</div>
-                <h3 className="compat-title">Any Bluetooth Mobile Printer</h3>
-                <div className="compat-desc">
-                  Seamless wireless pairing with portable belt-clip, pocket, and handheld battery-powered thermal printers.
-                </div>
-                <span className="compat-status-badge">✓ 100% Plug & Play</span>
-              </div>
-
-              <div className="compat-item">
-                <div className="compat-icon">📏</div>
-                <h3 className="compat-title">58mm & 80mm Paper Sizes</h3>
-                <div className="compat-desc">
-                  Auto-formats bills perfectly for both standard 2-inch mini rolls and 3-inch wide tax invoice paper.
-                </div>
-                <span className="compat-status-badge">✓ Universal Sizes</span>
-              </div>
-
-              <div className="compat-item">
-                <div className="compat-icon">⚡</div>
-                <h3 className="compat-title">Standard ESC/POS Protocol</h3>
-                <div className="compat-desc">
-                  Works out of the box with standard ESC/POS commands across all printer brands and manufacturers.
-                </div>
-                <span className="compat-status-badge">✓ Zero Driver Setup</span>
-              </div>
-
-              <div className="compat-item">
-                <div className="compat-icon">🔋</div>
-                <h3 className="compat-title">Doorstep & Van Billing Ready</h3>
-                <div className="compat-desc">
-                  Ideal for on-the-go billing on Android smartphones, delivery counters, and stationary desktop PCs.
-                </div>
-                <span className="compat-status-badge">✓ Ultra Portable</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =================================================================
-            COMPARISON MATRIX: QUICKBILL VS COSTLY CLOUD POS (PETPOOJA, VYAPAR, ETC.)
-            ================================================================= */}
-        <section className="section" id="comparison">
-          <div className="wrap">
-            <div className="section-head">
-              <span className="kicker">SAVINGS & FREEDOM</span>
-              <h2>QuickBill POS vs Typical Indian Cloud Billing Apps</h2>
-              <p className="sub">
-                Why thousands of Indian shopkeepers are moving away from restrictive monthly subscription software.
-              </p>
-            </div>
-
-            <div className="table-container">
-              <table className="comp-table">
-                <thead>
-                  <tr>
-                    <th>Parameter / सुविधा</th>
-                    <th className="highlight-col">QuickBill POS (Offline-First)</th>
-                    <th>Legacy Indian Cloud Apps</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Internet Downtime (नेटवर्क कटने पर)</strong></td>
-                    <td className="highlight-col">
-                      <span className="comp-badge-good">✓ 100% Uninterrupted Offline</span>
-                    </td>
-                    <td>
-                      <span className="comp-badge-bad">✕ Bills freeze or slow down</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Software Cost & Monthly Rent</strong></td>
-                    <td className="highlight-col">
-                      <span className="comp-badge-good">✓ ₹99/mo or ₹999/yr (Unlimited Bills)</span>
-                    </td>
-                    <td>
-                      <span className="comp-badge-bad">✕ ₹1,200 to ₹2,500 every month (₹15k - ₹30k/yr)</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Data Privacy & Sovereignty</strong></td>
-                    <td className="highlight-col">
-                      <span className="comp-badge-good">✓ Stored strictly on your device</span>
-                    </td>
-                    <td>
-                      <span className="comp-badge-bad">✕ Uploaded to external cloud servers</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Checkout Velocity</strong></td>
-                    <td className="highlight-col">
-                      <span className="comp-badge-good">✓ Sub-second numeric entry</span>
-                    </td>
-                    <td>
-                      <span className="comp-badge-bad">✕ 5 to 10 seconds per customer</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>UPI QR on Receipt</strong></td>
-                    <td className="highlight-col">
-                      <span className="comp-badge-good">✓ Dynamic UPI QR code included</span>
-                    </td>
-                    <td>
-                      <span className="comp-badge-bad">✕ Often requires paid add-on licenses</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* =================================================================
-            POCKET-FRIENDLY INDIAN PRICING (MONTHLY ₹99 & YEARLY ₹999)
-            ================================================================= */}
         <PricingSection />
 
-        {/* =================================================================
-            DOWNLOAD AND RELEASE CENTER WITH QR SCAN
-            ================================================================= */}
-        <section className="section" id="download">
-          <div className="wrap">
-            <div className="section-head">
-              <span className="kicker">ANDROID APK DOWNLOAD</span>
-              <h2>Download QuickBillPoss for Android & POS</h2>
-              <p className="sub">
-                Get the official native Android APK build for your smartphone, tablet, or handheld POS terminal.
+        <DownloadSection release={latest} loaded={loaded} olderReleases={allReleases.slice(1)} />
+
+        {/* FAQ */}
+        <section className="qb-sec" id="faq">
+          <div className="qb-wrap qb-faq">
+            <div className="qb-head">
+              <p className="qb-eyebrow">Questions</p>
+              <h2 className="qb-h2">Things shop owners ask before they start.</h2>
+              <p className="qb-sub">
+                Still unsure? Message us on WhatsApp and a real person will answer.
               </p>
+              <a
+                className="qb-btn qb-btn--wa"
+                href={waLink("Hi QuickBill POS team, I have a question.")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="chat" />
+                <span>Ask on WhatsApp</span>
+              </a>
             </div>
-
-            {loaded && latest ? (
-              <div>
-                <div className="release-banner">
-                  <div>
-                    <div className="meta" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span>OFFICIAL ANDROID APK BUILD</span>
-                      <span
-                        style={{
-                          background: "rgba(255,255,255,0.2)",
-                          padding: "3px 9px",
-                          borderRadius: 999,
-                          fontSize: 12,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {latest.version}
-                      </span>
-                    </div>
-                    <h3>QuickBillPoss {latest.version}</h3>
-                    <div className="meta">
-                      Size: {latest.sizeLabel} · File: {latest.fileName} · Released:{" "}
-                      {new Date(latest.uploadedAt).toLocaleDateString("en-IN")}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                    <a className="btn btn-primary" href={latest.downloadUrl} target="_blank" rel="noopener noreferrer">
-                      Download APK ({latest.sizeLabel})
-                    </a>
-                    {latest.htmlUrl && (
-                      <a
-                        href={latest.htmlUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: 13, color: "#bfdbfe", textDecoration: "underline" }}
-                      >
-                        View release details on GitHub ↗
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {/* Instant QR Code Scanner Card */}
-                <DownloadQrCard release={latest} />
-
-                {/* Optional Older Builds Accordion */}
-                {allReleases.length > 1 && (
-                  <div style={{ marginTop: 20 }}>
-                    <button
-                      type="button"
-                      onClick={() => setShowOlderBuilds(!showOlderBuilds)}
-                      style={{
-                        background: "#ffffff",
-                        border: "1px solid var(--line)",
-                        borderRadius: "12px",
-                        color: "var(--navy)",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        cursor: "pointer",
-                        padding: "10px 18px",
-                      }}
-                    >
-                      {showOlderBuilds ? "▲ Hide previous versions" : `▼ View ${allReleases.length - 1} earlier builds`}
-                    </button>
-
-                    {showOlderBuilds && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
-                        {allReleases.slice(1).map((rel) => (
-                          <div
-                            key={rel.id}
-                            style={{
-                              background: "#ffffff",
-                              border: "1px solid var(--line)",
-                              borderRadius: 14,
-                              padding: "12px 18px",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              gap: 12,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <div>
-                              <strong style={{ fontSize: 14 }}>{rel.title || rel.version}</strong>
-                              <span style={{ fontSize: 12.5, color: "var(--muted)", marginLeft: 10 }}>
-                                {rel.sizeLabel} · {new Date(rel.uploadedAt).toLocaleDateString("en-IN")}
-                              </span>
-                            </div>
-                            <a
-                              className="btn btn-outline"
-                              href={rel.downloadUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ padding: "7px 16px", fontSize: 13 }}
-                            >
-                              Download ({rel.sizeLabel})
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="release-banner release-empty">
-                <div>
-                  <div className="kicker">ANDROID APK</div>
-                  <h3 style={{ margin: "10px 0 6px" }}>No public release deployed yet</h3>
-                  <p className="lede" style={{ margin: 0, fontSize: 15 }}>
-                    The latest App-POS APK will appear here as soon as an administrator publishes it.
-                  </p>
-                </div>
-                <Link className="btn btn-primary" to="/apk-upload">
-                  Open Admin Panel
-                </Link>
-              </div>
-            )}
+            <div className="qb-faq__list">
+              {FAQS.map((f) => (
+                <details key={f.q} name="faq">
+                  <summary>{f.q}</summary>
+                  <p>{f.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* =================================================================
-            INTERACTIVE FAQ ACCORDION (FOR INDIAN RETAILERS)
-            ================================================================= */}
-        <section className="section" id="faq" style={{ background: "#f8fafc" }}>
-          <div className="wrap">
-            <div className="section-head">
-              <span className="kicker">अक्सर पूछे जाने वाले सवाल</span>
-              <h2>Frequently Asked Questions</h2>
-              <p className="sub">
-                Answers to common queries about Indian GST billing, UPI QR codes, thermal printer setup, and offline mode.
-              </p>
+        {/* FINAL CTA */}
+        <section className="qb-final" id="final-cta">
+          <div className="qb-wrap qb-final__in">
+            <div>
+              <h2>Try it at your counter today.</h2>
+              <p>Install it, make one bill, print it. You&rsquo;ll know in five minutes whether it fits your shop.</p>
             </div>
-
-            <div className="faq-grid">
-              {faqs.map((faq, idx) => (
-                <div key={idx} className={`faq-item ${openFaq === idx ? "open" : ""}`}>
-                  <button
-                    type="button"
-                    className="faq-toggle-btn"
-                    onClick={() => toggleFaq(idx)}
-                    aria-expanded={openFaq === idx}
-                  >
-                    <span>{faq.q}</span>
-                    <span className="faq-icon-chevron">{openFaq === idx ? "▲" : "▼"}</span>
-                  </button>
-                  {openFaq === idx && <div className="faq-answer">{faq.a}</div>}
-                </div>
-              ))}
+            <div className="qb-cta-row">
+              <a className="qb-btn qb-btn--paper qb-btn--lg" {...ctaProps}>
+                <Icon name="download" />
+                <span className="qb-btn__text">
+                  <span className="qb-btn__main">{ctaMain}</span>
+                  <span className="qb-btn__sub">{ctaSub}</span>
+                </span>
+              </a>
+              <a
+                className="qb-btn qb-btn--ghost-light qb-btn--lg"
+                href={waLink("Hi QuickBill POS team, I'd like to see how it works for my shop.")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="chat" />
+                <span>WhatsApp us</span>
+              </a>
             </div>
           </div>
         </section>
       </main>
 
-      {/* =================================================================
-          POLISHED FOOTER WITH DIRECT SUPPORT & COMPREHENSIVE INTERNAL LINKS
-          ================================================================= */}
-      <footer>
-        <div className="wrap">
-          <div className="footer-nav-grid">
-            {/* Column 1: Brand & Overview */}
-            <div className="footer-col">
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <img src="/logo.svg" alt="QuickBill POS Logo" width={26} height={26} />
-                <strong style={{ color: "var(--ink)", fontSize: 16 }}>QuickBill POS India</strong>
-              </div>
-              <p style={{ margin: "0 0 12px", fontSize: 13.5, lineHeight: 1.6, color: "var(--muted)" }}>
-                High-speed offline-first Point of Sale and billing desk built specifically for Indian Kirana stores,
-                cafes, bakeries, sweet marts, and retail counters. Zero internet reliance and GST compliant.
-              </p>
-              <div style={{ fontSize: 13, color: "var(--navy)", lineHeight: 1.5 }}>
-                💬 <strong>Merchant WhatsApp Help:</strong>{" "}
-                <a
-                  href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20have%20an%20inquiry"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#16a34a", fontWeight: 750 }}
-                >
-                  +91 9446960834
-                </a>
-                <div style={{ color: "var(--muted)", fontSize: 12 }}>(WhatsApp Chat Only · Pan-India Support)</div>
-              </div>
-            </div>
+      <SiteFooter />
+      <WhatsAppFloat hideOnMobile />
 
-            {/* Column 2: POS Products & Hardware */}
-            <div className="footer-col">
-              <h4>Products & POS</h4>
-              <ul>
-                <li>
-                  <a href="#webpos">Web POS Desktop Desk</a>
-                </li>
-                <li>
-                  <a href="#download">Download Android APK</a>
-                </li>
-                <li>
-                  <a href="#printers">Thermal Printer Support</a>
-                </li>
-                <li>
-                  <a href="#pricing">Software Plans (₹99/mo)</a>
-                </li>
-                <li>
-                  <Link to="/apk-upload">APK Release Management</Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: Legal & Regulatory (Crawlable Internal Links) */}
-            <div className="footer-col">
-              <h4>Legal & DPDP 2023</h4>
-              <ul>
-                <li>
-                  <Link to="/privacy-policy">Privacy Policy (DPDP 2023)</Link>
-                </li>
-                <li>
-                  <Link to="/terms-and-conditions">Terms & Conditions</Link>
-                </li>
-                <li>
-                  <Link to="/privacy_policy">Privacy Notice (Direct)</Link>
-                </li>
-                <li>
-                  <Link to="/terms_and_condition">Terms of Service (Direct)</Link>
-                </li>
-                <li>
-                  <a href="#features">GST Invoice Compliance</a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4: Quick Navigation & Admin */}
-            <div className="footer-col">
-              <h4>Quick Links</h4>
-              <ul>
-                <li>
-                  <a href="#features">Kirana Fast Keypad</a>
-                </li>
-                <li>
-                  <a href="#comparison">Cloud POS vs QuickBill</a>
-                </li>
-                <li>
-                  <a href="#faq">Frequently Asked Questions</a>
-                </li>
-                <li>
-                  <Link to="/apk-upload">Admin Console Sign In</Link>
-                </li>
-                <li>
-                  <a
-                    href="https://wa.me/919446960834"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#16a34a", fontWeight: 700 }}
-                  >
-                    💬 WhatsApp Us ↗
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Footer Bottom Bar */}
-          <div className="footer-bottom-bar">
-            <span>
-              © {new Date().getFullYear()} QuickBill POS India · 100% Offline-First Architecture · Made for Bharat
-            </span>
-            <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-              <a href="#top" style={{ color: "var(--primary)", fontWeight: 600 }}>
-                ↑ Back to top
-              </a>
-              <Link to="/" style={{ color: "var(--muted)" }}>
-                Home
-              </Link>
-              <Link to="/privacy-policy" style={{ color: "var(--muted)" }}>
-                Privacy
-              </Link>
-              <Link to="/terms-and-conditions" style={{ color: "var(--muted)" }}>
-                Terms
-              </Link>
-              <Link to="/apk-upload" style={{ color: "var(--muted)" }}>
-                Admin
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Floating WhatsApp Quick Action Button */}
-      <a
-        href="https://wa.me/919446960834?text=Hi%20QuickBill%20POS%20Team!%20I%20want%20to%20know%20more%20about%20QuickBill%20POS%20and%20the%20Mobile%20Printer."
-        target="_blank"
-        rel="noopener noreferrer"
-        className="floating-whatsapp-btn"
-        aria-label="Chat with QuickBill Support on WhatsApp"
-        title="Chat on WhatsApp: +91 9446960834"
-      >
-        <span style={{ fontSize: 20 }}>💬</span>
-        <span className="floating-whatsapp-text">+91 9446960834</span>
-      </a>
-    </>
+      {/* Mobile bar: appears once the hero button has scrolled away */}
+      <div className={`qb-bar ${showBar ? "is-on" : ""}`}>
+        <a className="qb-btn qb-btn--primary" {...ctaProps}>
+          <Icon name="download" />
+          <span>{isAndroid && latest ? `Download · ${latest.sizeLabel}` : "Get the Android app"}</span>
+        </a>
+        <a
+          className="qb-btn qb-btn--wa qb-btn--icon"
+          href={waLink("Hi QuickBill POS team, I have a question.")}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat on WhatsApp"
+        >
+          <Icon name="chat" />
+        </a>
+      </div>
+    </div>
   );
 }

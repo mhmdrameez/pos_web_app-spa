@@ -1,5 +1,5 @@
 // QuickBill POS — Progressive Web App (PWA) Service Worker
-const CACHE_NAME = 'quickbill-pos-cache-v1';
+const CACHE_NAME = 'quickbill-pos-cache-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -7,7 +7,6 @@ const PRECACHE_ASSETS = [
   '/favicon.svg',
   '/logo.svg',
   '/mockups/mobile-pos.png',
-  '/mockups/web-pos.png',
   '/mockups/history.png',
   '/mockups/qr-code.png'
 ];

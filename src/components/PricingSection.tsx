@@ -119,6 +119,11 @@ export default function PricingSection() {
           </a>
           {p.payPost}
         </p>
+        <p className="qb-pay-line qb-pay-line--terms">
+          {p.terms.pre}
+          <a href="/terms-and-conditions">{t.nav.terms}</a>
+          {p.terms.post}
+        </p>
       </div>
 
       {meta && plan && (

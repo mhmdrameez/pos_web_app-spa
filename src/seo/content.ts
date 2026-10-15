@@ -20,7 +20,11 @@ export const HOME_FAQS: Faq[] = [
   },
   {
     q: "How much does it cost?",
-    a: "₹99 a month, or ₹999 a year (that is about ₹83 a month). You can also buy the annual kit for ₹3,199, which includes a Bluetooth printer, a year of the app and five paper rolls. Bills are unlimited on every plan.",
+    a: "₹99 a month, or ₹999 a year (that is about ₹83 a month). You can also buy the annual kit for ₹3,199, which includes a Bluetooth printer, a year of the app and five paper rolls. Bills are unlimited on every plan. Monthly and yearly plans renew automatically until you cancel.",
+  },
+  {
+    q: "Is there a free trial, and how do I cancel?",
+    a: "Yes. There is a 3-day free trial with full access. Unless you cancel at least 24 hours before it ends, your plan is billed automatically. Subscriptions are billed through Google Play or the App Store, so you cancel in your store account settings. Cancelling stops future billing at the end of the paid term. Refund requests go to Google Play or the App Store and follow their policies.",
   },
   {
     q: "Which phones and tablets can I use?",

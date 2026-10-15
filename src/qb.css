@@ -1039,6 +1039,12 @@ body:has(.qb) {
   color: var(--ink-2);
 }
 
+.qb-pay-line--terms {
+  max-width: 760px;
+  margin: 12px auto 0;
+  font-size: 15px;
+}
+
 /* order dialog */
 
 .qb-modal {
@@ -2528,11 +2534,7 @@ body:has(.qb) {
   margin-top: 48px;
 }
 
-/* Sections far below the first screen are laid out and painted only when they get near the viewport. */
-#history,
-#printers,
-#guides,
-#faq,
+/* Only the footer is skipped until near the viewport: it sits below every in-page anchor, so jumps to #pricing, #faq etc. stay accurate. */
 .qb-footer {
   content-visibility: auto;
   contain-intrinsic-size: auto 700px;

@@ -111,6 +111,8 @@ export interface Dict {
     plans: Plan[];
     payPre: string;
     payPost: string;
+    /** Subscription terms line; the Terms link sits between pre and post. */
+    terms: { pre: string; post: string };
     modal: {
       order: string;
       close: string;

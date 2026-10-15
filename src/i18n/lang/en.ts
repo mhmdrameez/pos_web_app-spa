@@ -52,7 +52,7 @@ const en: Dict = {
   how: {
     eyebrow: "How it works",
     h2: "Ready to bill in about two minutes.",
-    sub: "No hardware to wire up and no account to create. Three steps and you’re at the counter.",
+    sub: "No hardware to wire up. Three steps and you’re at the counter.",
     steps: HOME_STEPS,
   },
   features: {
@@ -147,7 +147,7 @@ const en: Dict = {
           "Bluetooth printer support",
         ],
         cta: "Start monthly · ₹99",
-        note: "Cancel anytime",
+        note: "3-day free trial · cancel anytime",
         includes: ["Unlimited bills", "Offline billing", "UPI QR codes", "Android app"],
       },
       {
@@ -165,7 +165,7 @@ const en: Dict = {
           "Renewal price locked",
         ],
         cta: "Get yearly · ₹999",
-        note: "7-day money-back guarantee",
+        note: "Renews yearly until you cancel",
         includes: ["365 days of billing", "Priority WhatsApp support", "Item / menu setup help"],
       },
       {
@@ -195,6 +195,10 @@ const en: Dict = {
     ],
     payPre: "Pay by UPI, card, net banking or cash on delivery. Questions before you buy? WhatsApp",
     payPost: ".",
+    terms: {
+      pre: "Monthly and yearly plans renew automatically until you cancel. The 3-day free trial bills you unless you cancel at least 24 hours before it ends. Read our ",
+      post: " for the full details.",
+    },
     modal: {
       order: "Order",
       close: "Close",

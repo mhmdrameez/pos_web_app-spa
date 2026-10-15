@@ -94,7 +94,7 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
               <p>
                 {loaded
                   ? "The latest build is being updated right now. Message us on WhatsApp and we will send you the app directly."
-                  : "Checking for the latest build…"}
+                  : "The latest version number and file size appear here in a moment. If they don't, message us on WhatsApp and we will send you the app."}
               </p>
               <a
                 className="qb-btn qb-btn--wa"

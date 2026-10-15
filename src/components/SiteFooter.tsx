@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import { WA_DISPLAY, waLink } from "../lib/contact";
+import { LANDING_PAGES } from "../seo/pages";
 
 export function WhatsAppFloat({ hideOnMobile = false }: { hideOnMobile?: boolean }) {
   return (
@@ -48,6 +49,17 @@ export default function SiteFooter() {
               <li>
                 <Link to={{ pathname: "/", hash: "#download" }}>Download</Link>
               </li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Guides">
+            <h2>Guides</h2>
+            <ul>
+              {LANDING_PAGES.map((p) => (
+                <li key={p.slug}>
+                  <Link to={`/${p.slug}`}>{p.navTitle}</Link>
+                </li>
+              ))}
             </ul>
           </nav>
 

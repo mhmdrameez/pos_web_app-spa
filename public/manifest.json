@@ -1,7 +1,7 @@
 {
-  "name": "QuickBill POS — Offline Retail Billing Desk",
+  "name": "QuickBill POS: Billing app for Indian shops",
   "short_name": "QuickBill POS",
-  "description": "High-speed offline-first Point of Sale for Indian Kirana, Cafes, Bakeries & Retail Desks. GST compliant, UPI QR payment ready, and Bluetooth thermal printing.",
+  "description": "Offline billing app for Indian shops. GST bills, UPI QR and Bluetooth thermal printing.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
@@ -11,35 +11,27 @@
   "theme_color": "#fbf6ee",
   "lang": "en-IN",
   "dir": "ltr",
-  "categories": ["business", "finance", "productivity", "utilities"],
+  "categories": ["business", "finance", "productivity"],
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/logo.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "shortcuts": [
     {
       "name": "Download Android App",
       "short_name": "Get App",
-      "description": "Download the free QuickBill POS Android APK",
+      "description": "Download the QuickBill POS Android APK",
       "url": "/#download",
-      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "View Pricing Plans",
       "short_name": "Plans",
-      "description": "View Monthly ₹99 & Annual ₹999 plans",
+      "description": "Monthly ₹99, yearly ₹999 and the Annual Kit",
       "url": "/#pricing",
-      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "prefer_related_applications": false

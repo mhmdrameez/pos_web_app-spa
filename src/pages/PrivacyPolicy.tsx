@@ -355,7 +355,6 @@ export default function PrivacyPolicy() {
       seoTitle="Privacy Policy | QuickBill POS"
       seoDescription="How QuickBill POS handles your data: local-first storage, optional cloud sync, device permissions, your privacy rights and how to delete your account."
       canonicalPath="/privacy-policy"
-      keywords={["QuickBill POS privacy policy", "POS data privacy", "offline billing app privacy", "delete account"]}
       glance={GLANCE}
       sections={SECTIONS}
       next={{ to: "/terms-and-conditions", label: "Terms & Conditions" }}

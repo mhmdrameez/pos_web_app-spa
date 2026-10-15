@@ -19,10 +19,18 @@ if ("serviceWorker" in navigator && process.env.NODE_ENV !== "development") {
   });
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root")!;
+const app = (
   <React.StrictMode>
     <BrowserRouter>
       <App />
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Pages prerendered at build time already contain the full HTML; attach to it instead of replacing it.
+if (root.hasAttribute("data-prerendered")) {
+  ReactDOM.hydrateRoot(root, app);
+} else {
+  ReactDOM.createRoot(root).render(app);
+}

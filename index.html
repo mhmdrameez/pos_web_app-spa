@@ -1,46 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>QuickBill POS</title>
+    <!--app-head-->
 
-    <title>QuickBill POS: Billing app for Indian shops that works offline</title>
-    <meta name="description" content="Bill customers in seconds with GST invoices, a UPI QR on every bill and Bluetooth thermal printing. Works without internet on any Android phone or tablet. From ₹99 a month." />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <link rel="canonical" href="https://www.quickbillpos.in/" />
-
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.quickbillpos.in/" />
-    <meta property="og:title" content="QuickBill POS: Billing app for Indian shops that works offline" />
-    <meta property="og:description" content="GST bills, UPI QR and Bluetooth printing on the Android phone you already own. Works without internet. From ₹99 a month." />
-    <meta property="og:image" content="https://www.quickbillpos.in/logo.svg" />
-    <meta property="og:image:alt" content="QuickBill POS logo" />
-    <meta property="og:site_name" content="QuickBill POS" />
-    <meta property="og:locale" content="en_IN" />
-
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:url" content="https://www.quickbillpos.in/" />
-    <meta name="twitter:title" content="QuickBill POS: Billing app for Indian shops that works offline" />
-    <meta name="twitter:description" content="GST bills, UPI QR and Bluetooth printing on the Android phone you already own. Works without internet. From ₹99 a month." />
-    <meta name="twitter:image" content="https://www.quickbillpos.in/logo.svg" />
-    <meta name="twitter:image:alt" content="QuickBill POS logo" />
-
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/logo.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#fbf6ee" />
+    <meta name="color-scheme" content="light" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="QuickBill POS" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="QuickBill POS" />
+    <meta name="format-detection" content="telephone=no" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      />
+    </noscript>
 
     <style>
       html { background: #fbf6ee; }
@@ -49,36 +47,10 @@
     </style>
   </head>
   <body>
-    <div id="root">
-      <div class="qb-boot">
+    <div id="root"><!--app-html-start--><div class="qb-boot">
         <img src="/logo.svg" alt="" width="40" height="40" />
         <span>QuickBill POS</span>
-      </div>
-    </div>
-
-    <noscript>
-      <main style="max-width: 640px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; line-height: 1.6; color: #1d1a16">
-        <h1>QuickBill POS: billing app for Indian shops</h1>
-        <p>
-          QuickBill POS runs on your Android phone or tablet. Type the amount, take cash or UPI, print a GST bill.
-          It keeps working when the internet is down.
-        </p>
-        <ul>
-          <li>Works offline: bills are saved on your device</li>
-          <li>GST bills with CGST and SGST</li>
-          <li>UPI QR code on the screen and on the printed bill</li>
-          <li>Bluetooth and USB thermal printers, 58 mm and 80 mm</li>
-        </ul>
-        <p>Plans: ₹99 a month, ₹999 a year, or the annual kit with a Bluetooth printer for ₹3,199.</p>
-        <p>
-          Please turn on JavaScript to download the app, or message us on WhatsApp:
-          <a href="https://wa.me/919446960834">+91 94469 60834</a>.
-        </p>
-        <p>
-          <a href="/privacy-policy">Privacy Policy</a> · <a href="/terms-and-conditions">Terms &amp; Conditions</a>
-        </p>
-      </main>
-    </noscript>
+      </div><!--app-html-end--></div>
 
     <script type="module" src="/src/main.tsx"></script>
   </body>

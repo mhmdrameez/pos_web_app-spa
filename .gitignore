@@ -10,3 +10,4 @@ data/sessions.json
 .env
 .env.*
 !.env.example
+dist-ssr

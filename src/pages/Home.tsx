@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { fetchReleases, type Release } from "../api";
 import SEO from "../components/SEO";
 import SiteHeader from "../components/SiteHeader";
@@ -9,52 +9,9 @@ import Receipt from "../components/Receipt";
 import PricingSection from "../components/PricingSection";
 import DownloadSection from "../components/DownloadSection";
 import { waLink } from "../lib/contact";
-
-const FAQS: Array<{ q: string; a: string }> = [
-  {
-    q: "Do I need internet to bill my customers?",
-    a: "No. Every bill is saved on your phone or tablet, so billing keeps working when the network is down or the router restarts. Connect now and then so the app can sync and check your subscription.",
-  },
-  {
-    q: "Can customers pay by UPI?",
-    a: "Yes. A QR code with the exact bill amount shows on your screen and prints on the bill. Customers can scan it with Google Pay, PhonePe, Paytm, BHIM or any other UPI app.",
-  },
-  {
-    q: "Does it handle GST?",
-    a: "Yes. Choose 5%, 12% or 18%, and the bill shows CGST and SGST separately with your GSTIN. If you are unregistered or on the Composition Scheme, set the rate to 0%. Check with your CA for your exact filing needs.",
-  },
-  {
-    q: "Which printers work with it?",
-    a: "Standard ESC/POS thermal printers over Bluetooth or USB, in 58 mm (2-inch) and 80 mm (3-inch) paper. That covers most portable pocket printers and desktop receipt printers. There are no drivers to install.",
-  },
-  {
-    q: "How much does it cost?",
-    a: "₹99 a month, or ₹999 a year (that is about ₹83 a month). You can also buy the annual kit for ₹3,199, which includes a Bluetooth printer, a year of the app and five paper rolls. Bills are unlimited on every plan.",
-  },
-  {
-    q: "Which phones and tablets can I use?",
-    a: "Android phones, tablets and POS handhelds running Android 7.0 or newer. The app is built for 64-bit (arm64-v8a) devices, which is almost every current Android phone and tablet.",
-  },
-  {
-    q: "Where is my sales data stored?",
-    a: "On your own device first. If you sign in and turn on optional cloud sync, your records are backed up to Google Firebase. We never sell your data. The full details are in our Privacy Policy.",
-  },
-];
-
-const STEPS = [
-  {
-    title: "Install the app",
-    body: "Download it, open the file, and allow the install if Android asks. It is about 30 MB.",
-  },
-  {
-    title: "Add your shop",
-    body: "Enter your shop name, GST rate and UPI ID. Add a few items, or skip that and just type amounts.",
-  },
-  {
-    title: "Start billing",
-    body: "Type the amount, tap Add, then Pay. Pair a Bluetooth printer if you want a paper bill.",
-  },
-];
+import { HOME_FAQS, HOME_STEPS } from "../seo/content";
+import { LANDING_PAGES } from "../seo/pages";
+import { homeGraph } from "../seo/schema";
 
 const FEATURES: Array<{ icon: Parameters<typeof Icon>[0]["name"]; title: string; body: string }> = [
   {
@@ -85,17 +42,17 @@ const FEATURES: Array<{ icon: Parameters<typeof Icon>[0]["name"]; title: string;
   {
     icon: "printer",
     title: "Prints on 58 mm and 80 mm paper",
-    body: "Connect a Bluetooth or USB thermal printer. The bill is laid out to fit whichever roll you load.",
+    body: "Connect a Bluetooth thermal printer. The bill is laid out to fit whichever roll you load.",
   },
 ];
 
 function useIsAndroid() {
-  const [isAndroid] = useState(
-    () => typeof navigator !== "undefined" && /android/i.test(navigator.userAgent)
-  );
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => {
+    setIsAndroid(/android/i.test(navigator.userAgent));
+  }, []);
   return isAndroid;
 }
-
 export default function Home() {
   const location = useLocation();
   const isAndroid = useIsAndroid();
@@ -169,71 +126,18 @@ export default function Home() {
     ? { href: ctaHref, target: "_blank", rel: "noopener noreferrer" }
     : { href: ctaHref };
 
-  const schema = [
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: "QuickBill POS",
-      url: "https://www.quickbillpos.in",
-      inLanguage: "en-IN",
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: "QuickBill POS",
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Android",
-      url: "https://www.quickbillpos.in",
-      description:
-        "Offline billing app for Indian shops with GST bills, UPI QR payments and Bluetooth thermal printing.",
-      offers: [
-        { "@type": "Offer", name: "Monthly", price: "99", priceCurrency: "INR" },
-        { "@type": "Offer", name: "Yearly", price: "999", priceCurrency: "INR" },
-      ],
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: "QuickBill POS",
-      url: "https://www.quickbillpos.in",
-      logo: "https://www.quickbillpos.in/logo.svg",
-      contactPoint: {
-        "@type": "ContactPoint",
-        telephone: "+91-9446960834",
-        contactType: "customer service",
-        areaServed: "IN",
-        availableLanguage: ["en", "hi"],
-      },
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQS.map((f) => ({
-        "@type": "Question",
-        name: f.q,
-        acceptedAnswer: { "@type": "Answer", text: f.a },
-      })),
-    },
-  ];
+  const seoTitle = "QuickBill POS: Billing App for Indian Shops | Works Offline";
+  const seoDescription =
+    "Bill in seconds with GST invoices, a UPI QR on every bill and Bluetooth printing. Works offline on Android phones and tablets. From ₹99 a month.";
 
   return (
     <div className="qb">
       <SEO
-        title="QuickBill POS: Billing app for Indian shops that works offline"
-        description="Bill customers in seconds with GST invoices, a UPI QR on every bill and Bluetooth thermal printing. Works without internet on any Android phone or tablet. From ₹99 a month."
+        title={seoTitle}
+        description={seoDescription}
         canonicalPath="/"
-        keywords={[
-          "QuickBill POS",
-          "billing app for kirana store",
-          "offline billing software India",
-          "GST billing app Android",
-          "UPI QR billing",
-          "Bluetooth thermal printer billing app",
-          "POS app for small shops",
-        ]}
-        schemaData={schema}
+        schemaData={homeGraph(HOME_FAQS, HOME_STEPS, seoTitle, seoDescription)}
       />
-
       <SiteHeader />
 
       <main id="main-content">
@@ -328,7 +232,7 @@ export default function Home() {
             </div>
             <div>
               <strong>58 mm and 80 mm</strong>
-              <span>Bluetooth and USB printers</span>
+              <span>Bluetooth printers</span>
             </div>
           </div>
         </section>
@@ -342,13 +246,13 @@ export default function Home() {
               <p className="qb-sub">No hardware to wire up and no account to create. Three steps and you&rsquo;re at the counter.</p>
             </div>
             <ol className="qb-steps">
-              {STEPS.map((s, i) => (
-                <li key={s.title}>
+              {HOME_STEPS.map((s, i) => (
+                <li key={s.name}>
                   <span className="qb-steps__n" aria-hidden="true">
                     {i + 1}
                   </span>
-                  <h3>{s.title}</h3>
-                  <p>{s.body}</p>
+                  <h3>{s.name}</h3>
+                  <p>{s.text}</p>
                 </li>
               ))}
             </ol>
@@ -433,7 +337,7 @@ export default function Home() {
                 </div>
                 <div>
                   <dt>Connection</dt>
-                  <dd>Bluetooth or USB</dd>
+                  <dd>Bluetooth</dd>
                 </div>
                 <div>
                   <dt>Protocol</dt>
@@ -455,6 +359,30 @@ export default function Home() {
 
         <DownloadSection release={latest} loaded={loaded} olderReleases={allReleases.slice(1)} />
 
+        {/* GUIDES */}
+        <section className="qb-sec qb-sec--alt" id="guides">
+          <div className="qb-wrap">
+            <div className="qb-head">
+              <p className="qb-eyebrow">Guides</p>
+              <h2 className="qb-h2">See how it fits your kind of shop.</h2>
+              <p className="qb-sub">
+                Short, plain guides on GST, UPI, printing and working offline, and how QuickBill POS handles each one.
+              </p>
+            </div>
+            <ul className="qb-cards">
+              {LANDING_PAGES.map((p) => (
+                <li key={p.slug}>
+                  <Link to={`/${p.slug}`}>
+                    <strong>{p.navTitle}</strong>
+                    <span>{p.cardBlurb}</span>
+                    <Icon name="arrow" size={20} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         {/* FAQ */}
         <section className="qb-sec" id="faq">
           <div className="qb-wrap qb-faq">
@@ -475,7 +403,7 @@ export default function Home() {
               </a>
             </div>
             <div className="qb-faq__list">
-              {FAQS.map((f) => (
+              {HOME_FAQS.map((f) => (
                 <details key={f.q} name="faq">
                   <summary>{f.q}</summary>
                   <p>{f.a}</p>

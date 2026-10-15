@@ -5,9 +5,9 @@ export const LEGAL = {
   effectiveDate: "October 15, 2026",
   updatedDate: "October 15, 2026",
   effectiveIso: "2026-10-15",
-  supportEmail: "support@quickbillpos.com",
-  privacyEmail: "privacy@quickbillpos.com",
-  legalEmail: "legal@quickbillpos.com",
+  supportEmail: "support@quickbillpos.in",
+  privacyEmail: "privacy@quickbillpos.in",
+  legalEmail: "legal@quickbillpos.in",
 };
 
 export const isPlaceholder = (value: string) => value.trim().startsWith("[");

@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    QuickBill POS — public site
    Warm paper palette, serif headlines, tactile buttons, real thermal receipt.
    Everything is scoped under .qb so the admin console keeps its own styles.
@@ -1541,7 +1541,7 @@ body:has(.qb) {
 
 @media (min-width: 900px) {
   .qb-footer__grid {
-    grid-template-columns: 1.6fr 1fr 1.2fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1.4fr 1.2fr 1fr;
   }
 
   .qb-footer__about {
@@ -2274,4 +2274,251 @@ body:has(.qb) {
     color: #000;
     text-decoration: none;
   }
+}
+
+/* ---------- guide / landing pages ---------- */
+
+.qb-crumbs {
+  margin-bottom: 20px;
+  font-size: 14.5px;
+}
+
+.qb-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--ink-3);
+}
+
+.qb-crumbs li + li::before {
+  content: "/";
+  margin-right: 6px;
+  color: var(--line-2);
+}
+
+.qb-crumbs a {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.qb-lhero .qb-lede {
+  max-width: 38em;
+}
+
+.qb-lhero .qb-cta-row {
+  margin-top: 28px;
+}
+
+.qb-guide {
+  display: grid;
+  gap: 24px 56px;
+  padding-block: clamp(28px, 5vw, 56px) clamp(56px, 8vw, 96px);
+}
+
+@media (min-width: 1000px) {
+  .qb-guide {
+    grid-template-columns: minmax(0, 46rem) 300px;
+    justify-content: space-between;
+    align-items: start;
+  }
+}
+
+.qb-guide .qb-prose > .qb-sect:first-child {
+  margin-top: 0;
+}
+
+.qb-guide__side {
+  order: -1;
+}
+
+@media (min-width: 1000px) {
+  .qb-guide__side {
+    order: 0;
+    position: sticky;
+    top: 96px;
+  }
+}
+
+.qb-sidecard {
+  padding: 24px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 6px 6px 0 var(--accent);
+}
+
+.qb-sidecard__title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.qb-sidecard__price {
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.qb-sidecard__price small {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.qb-sidecard__sub {
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+.qb-sidecard ul {
+  margin: 16px 0 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  font-size: 15.5px;
+}
+
+.qb-sidecard li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qb-sidecard svg {
+  color: var(--accent);
+}
+
+.qb-sidecard .qb-btn {
+  justify-content: center;
+  text-align: center;
+}
+
+.qb-sidecard__link {
+  display: block;
+  margin-top: 14px;
+  text-align: center;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 999px) {
+  .qb-guide__side {
+    display: none;
+  }
+}
+
+.qb-howto {
+  display: grid;
+  gap: 0;
+}
+
+.qb-howto li {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line-2);
+}
+
+.qb-howto li:last-child {
+  border-bottom: 1px solid var(--line-2);
+}
+
+.qb-howto li > span {
+  font-family: var(--serif);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.qb-howto strong {
+  display: block;
+  color: var(--ink);
+}
+
+.qb-howto p {
+  margin: 2px 0 0;
+}
+
+.qb-prose .qb-faq__list details p {
+  padding-right: 44px;
+}
+
+.qb-prose .qb-faq__list summary {
+  font-size: 17.5px;
+}
+
+/* link cards (home guides, related, 404) */
+
+.qb-cards {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+@media (min-width: 700px) {
+  .qb-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .qb-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.qb-cards a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 20px 52px 20px 20px;
+  background: var(--card);
+  border: 2px solid var(--line-2);
+  border-radius: 12px;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+
+.qb-cards a:hover {
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+.qb-cards strong {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.qb-cards span {
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.qb-cards svg {
+  position: absolute;
+  right: 18px;
+  top: 22px;
+  color: var(--accent);
+}
+
+.qb-404 .qb-lede {
+  margin-top: 16px;
+}
+
+.qb-cards--404 {
+  margin-top: 48px;
 }

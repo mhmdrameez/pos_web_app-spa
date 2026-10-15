@@ -222,6 +222,7 @@ export default function ApkUpload() {
           title="Admin Console Sign In — QuickBill POS"
           description="Administrator authentication for QuickBill POS APK distribution management."
           canonicalPath="/apk-upload"
+          noindex
         />
 
         <form className="login-card" onSubmit={onLogin} style={{ maxWidth: 440 }}>
@@ -323,6 +324,7 @@ export default function ApkUpload() {
         title="Admin Release Console — QuickBill POS"
         description="Administrator console to upload and publish QuickBill POS Android APK releases."
         canonicalPath="/apk-upload"
+        noindex
       />
 
       <div className="console">

@@ -251,7 +251,6 @@ export default function TermsAndConditions() {
       seoTitle="Terms and Conditions | QuickBill POS"
       seoDescription="The terms for using QuickBill POS: business use, licence, subscriptions and free trial, your responsibilities for taxes and data, and limits of liability."
       canonicalPath="/terms-and-conditions"
-      keywords={["QuickBill POS terms and conditions", "POS software licence terms", "subscription terms", "terms of service"]}
       glance={GLANCE}
       sections={SECTIONS}
       next={{ to: "/privacy-policy", label: "Privacy Policy" }}

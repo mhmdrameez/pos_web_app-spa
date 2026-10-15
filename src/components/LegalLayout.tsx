@@ -5,6 +5,8 @@ import SiteHeader from "./SiteHeader";
 import SiteFooter, { WhatsAppFloat } from "./SiteFooter";
 import Icon from "./Icon";
 import { LEGAL, isPlaceholder } from "../lib/legal";
+import { legalGraph } from "../seo/schema";
+import { SITE } from "../seo/site";
 
 export type LegalSection = { id: string; title: string; body: ReactNode };
 
@@ -14,13 +16,10 @@ type Props = {
   seoTitle: string;
   seoDescription: string;
   canonicalPath: string;
-  keywords: string[];
   glance: string[];
   sections: LegalSection[];
   next: { to: string; label: string };
 };
-
-const ORIGIN = "https://www.quickbillpos.in";
 
 /** Shows a value normally, or highlighted if it is still a [placeholder]. */
 export function Fill({ value }: { value: string }) {
@@ -81,7 +80,6 @@ export default function LegalLayout({
   seoTitle,
   seoDescription,
   canonicalPath,
-  keywords,
   glance,
   sections,
   next,
@@ -113,31 +111,12 @@ export default function LegalLayout({
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(`${ORIGIN}${canonicalPath}`);
+      await navigator.clipboard.writeText(`${SITE.origin}${canonicalPath}`);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2200);
     } catch {
       /* clipboard unavailable */
     }
-  };
-
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: seoTitle,
-    description: seoDescription,
-    url: `${ORIGIN}${canonicalPath}`,
-    datePublished: LEGAL.effectiveIso,
-    dateModified: LEGAL.effectiveIso,
-    inLanguage: "en",
-    publisher: { "@type": "Organization", name: "QuickBill POS", logo: { "@type": "ImageObject", url: `${ORIGIN}/logo.svg` } },
-    breadcrumb: {
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: ORIGIN },
-        { "@type": "ListItem", position: 2, name: title, item: `${ORIGIN}${canonicalPath}` },
-      ],
-    },
   };
 
   return (
@@ -146,9 +125,8 @@ export default function LegalLayout({
         title={seoTitle}
         description={seoDescription}
         canonicalPath={canonicalPath}
-        keywords={keywords}
         type="article"
-        schemaData={schema}
+        schemaData={legalGraph({ path: canonicalPath, name: title, description: seoDescription })}
       />
       <SiteHeader />
 

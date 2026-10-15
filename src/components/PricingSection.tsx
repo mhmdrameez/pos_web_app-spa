@@ -31,7 +31,7 @@ const PLANS: Plan[] = [
       "Works with no internet",
       "UPI QR on screen and on the bill",
       "GST with CGST and SGST, or 0%",
-      "Bluetooth and USB printer support",
+      "Bluetooth printer support",
     ],
     cta: "Start monthly · ₹99",
     note: "Cancel anytime",

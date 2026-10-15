@@ -9,42 +9,12 @@ import Receipt from "../components/Receipt";
 import PricingSection from "../components/PricingSection";
 import DownloadSection from "../components/DownloadSection";
 import { waLink } from "../lib/contact";
-import { HOME_FAQS, HOME_STEPS } from "../seo/content";
-import { LANDING_PAGES } from "../seo/pages";
+import { LANGS, homePath, langInfo, pagePath, type LangCode } from "../i18n/config";
+import { I18nProvider, fmt, useI18n } from "../i18n/context";
+import { guidesFor } from "../seo/guides";
 import { homeGraph } from "../seo/schema";
 
-const FEATURES: Array<{ icon: Parameters<typeof Icon>[0]["name"]; title: string; body: string }> = [
-  {
-    icon: "keypad",
-    title: "Type the amount, tap Add",
-    body: "Not everything has a barcode. Key in the rupee amount for a loose item, or pick saved items when you have them.",
-  },
-  {
-    icon: "offline",
-    title: "Keeps working offline",
-    body: "Bills are saved on the device. If the network drops or the router restarts, the counter carries on.",
-  },
-  {
-    icon: "receipt",
-    title: "GST bills with CGST and SGST",
-    body: "Pick 5%, 12% or 18% and your GSTIN prints on the bill. Set 0% if you are unregistered or on the Composition Scheme.",
-  },
-  {
-    icon: "qr",
-    title: "UPI QR with the exact amount",
-    body: "Show it on the screen or print it on the bill. Customers pay with whichever UPI app they already use.",
-  },
-  {
-    icon: "hold",
-    title: "Hold a bill, serve the next person",
-    body: "Customer went to fetch one more thing? Hold the bill, take the next customer, and bring it back later.",
-  },
-  {
-    icon: "printer",
-    title: "Prints on 58 mm and 80 mm paper",
-    body: "Connect a Bluetooth thermal printer. The bill is laid out to fit whichever roll you load.",
-  },
-];
+const FEATURE_ICONS = ["keypad", "offline", "receipt", "qr", "hold", "printer"] as const;
 
 function useIsAndroid() {
   const [isAndroid, setIsAndroid] = useState(false);
@@ -53,25 +23,35 @@ function useIsAndroid() {
   }, []);
   return isAndroid;
 }
-export default function Home() {
+
+function HomeContent() {
+  const { lang, t } = useI18n();
   const location = useLocation();
   const isAndroid = useIsAndroid();
   const [latest, setLatest] = useState<Release | null>(null);
   const [allReleases, setAllReleases] = useState<Release[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [showBar, setShowBar] = useState(false);
+  const info = langInfo(lang);
+  const guides = guidesFor(lang);
 
   useEffect(() => {
-    fetchReleases()
-      .then((data) => {
-        setLatest(data.latest);
-        setAllReleases(data.releases || []);
-      })
-      .catch(() => {
-        setLatest(null);
-        setAllReleases([]);
-      })
-      .finally(() => setLoaded(true));
+    // The page is already painted from prerendered HTML. Fetch the release list when the browser is idle
+    // so the GitHub requests never compete with fonts, images or scripts.
+    const load = () =>
+      fetchReleases()
+        .then((data) => {
+          setLatest(data.latest);
+          setAllReleases(data.releases || []);
+        })
+        .catch(() => {
+          setLatest(null);
+          setAllReleases([]);
+        })
+        .finally(() => setLoaded(true));
+
+    const hasIdle = "requestIdleCallback" in window;
+    const handle = hasIdle ? window.requestIdleCallback(load, { timeout: 2000 }) : window.setTimeout(load, 800);
 
     function handleUpdate(e: Event) {
       const detail = (e as CustomEvent<Release[]>).detail;
@@ -81,7 +61,11 @@ export default function Home() {
       }
     }
     window.addEventListener("qb:releases_updated", handleUpdate);
-    return () => window.removeEventListener("qb:releases_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("qb:releases_updated", handleUpdate);
+      if (hasIdle) window.cancelIdleCallback(handle);
+      else window.clearTimeout(handle);
+    };
   }, []);
 
   useEffect(() => {
@@ -114,29 +98,29 @@ export default function Home() {
   }, []);
 
   const direct = Boolean(latest && isAndroid);
-  const ctaHref = direct && latest ? latest.downloadUrl : "#download";
-  const ctaMain = isAndroid ? "Download the app" : "Get the Android app";
+  const ctaMain = isAndroid ? t.hero.ctaDownload : t.hero.ctaGet;
   const ctaSub = latest
     ? isAndroid
       ? `${latest.version} · ${latest.sizeLabel}`
-      : "Scan a QR code with your phone"
-    : "Download link on this page";
+      : t.hero.ctaScan
+    : t.hero.ctaFallback;
 
-  const ctaProps = direct
-    ? { href: ctaHref, target: "_blank", rel: "noopener noreferrer" }
-    : { href: ctaHref };
+  const ctaProps =
+    direct && latest
+      ? { href: latest.downloadUrl, target: "_blank", rel: "noopener noreferrer" }
+      : { href: "#download" };
 
-  const seoTitle = "QuickBill POS: Billing App for Indian Shops | Works Offline";
-  const seoDescription =
-    "Bill in seconds with GST invoices, a UPI QR on every bill and Bluetooth printing. Works offline on Android phones and tablets. From ₹99 a month.";
+  const alternates = Object.fromEntries(LANGS.map((l) => [l.code, homePath(l.code)]));
 
   return (
-    <div className="qb">
+    <div className="qb" lang={info.htmlLang} data-indic={lang !== "en" ? "" : undefined}>
       <SEO
-        title={seoTitle}
-        description={seoDescription}
-        canonicalPath="/"
-        schemaData={homeGraph(HOME_FAQS, HOME_STEPS, seoTitle, seoDescription)}
+        title={t.meta.title}
+        description={t.meta.description}
+        canonicalPath={homePath(lang)}
+        lang={lang}
+        alternates={alternates}
+        schemaData={homeGraph(t.faq.items, t.how.steps, t.meta.title, t.meta.description, lang, t.how.h2)}
       />
       <SiteHeader />
 
@@ -145,24 +129,23 @@ export default function Home() {
         <section className="qb-hero">
           <div className="qb-wrap qb-hero__grid">
             <div className="qb-hero__copy">
-              <p className="qb-eyebrow">For kirana, café &amp; bakery</p>
+              <p className="qb-eyebrow">{t.hero.eyebrow}</p>
               <h1>
-                Bill in{" "}
+                {t.hero.before}
                 <span className="qb-ul">
-                  two seconds
+                  {t.hero.em}
                   <svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
                     <path d="M2 8 C 38 2, 72 11, 108 5 S 172 3, 198 7" pathLength="1" />
                   </svg>
                 </span>
-                . Even when the internet is down.
+                {t.hero.after}
               </h1>
-              <p className="qb-lede">
-                QuickBill POS is a billing app that runs on the Android phone or tablet you already own. Type the
-                amount, take cash or UPI, print the bill. Your counter never waits on the network.
-              </p>
-              <p className="qb-hi" lang="hi">
-                इंटरनेट बंद हो, तब भी बिलिंग चलती रहती है।
-              </p>
+              <p className="qb-lede">{t.hero.lede}</p>
+              {t.hero.altLine && (
+                <p className="qb-hi" lang={lang === "en" ? "hi" : undefined}>
+                  {t.hero.altLine}
+                </p>
+              )}
 
               <div className="qb-cta-row" id="hero-cta">
                 <a className="qb-btn qb-btn--primary qb-btn--lg" {...ctaProps}>
@@ -180,32 +163,30 @@ export default function Home() {
                 >
                   <Icon name="chat" />
                   <span className="qb-btn__text">
-                    <span className="qb-btn__main">Ask us on WhatsApp</span>
-                    <span className="qb-btn__sub">Chat with a real person</span>
+                    <span className="qb-btn__main">{t.hero.waMain}</span>
+                    <span className="qb-btn__sub">{t.hero.waSub}</span>
                   </span>
                 </a>
               </div>
 
               <ul className="qb-micro">
-                <li>
-                  <Icon name="check" size={18} /> No sign-up to install
-                </li>
-                <li>
-                  <Icon name="check" size={18} /> Android 7.0+
-                </li>
-                <li>
-                  <Icon name="check" size={18} /> Works offline
-                </li>
+                {t.hero.micro.map((m) => (
+                  <li key={m}>
+                    <Icon name="check" size={18} /> {m}
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div className="qb-stage">
               <figure className="qb-device qb-device--tilt">
                 <img
-                  src="/mockups/mobile-pos.png"
+                  src="/mockups/mobile-pos.webp"
                   width={1024}
                   height={550}
-                  alt="The QuickBill POS billing screen: a big amount field, a number keypad, and Hold, Print and Pay buttons"
+                  alt={t.hero.deviceAlt}
+                  decoding="async"
+                  {...({ fetchpriority: "high" } as Record<string, string>)}
                 />
               </figure>
               <div className="qb-stage__receipt">
@@ -216,24 +197,14 @@ export default function Home() {
         </section>
 
         {/* FACTS */}
-        <section className="qb-facts" aria-label="At a glance">
+        <section className="qb-facts" aria-label={t.facts.aria}>
           <div className="qb-wrap qb-facts__grid">
-            <div>
-              <strong>No internet needed</strong>
-              <span>Bills are saved on your device</span>
-            </div>
-            <div>
-              <strong>GST ready</strong>
-              <span>CGST and SGST on every bill</span>
-            </div>
-            <div>
-              <strong>UPI QR on the bill</strong>
-              <span>Google Pay, PhonePe, Paytm, BHIM</span>
-            </div>
-            <div>
-              <strong>58 mm and 80 mm</strong>
-              <span>Bluetooth printers</span>
-            </div>
+            {t.facts.items.map((f) => (
+              <div key={f.title}>
+                <strong>{f.title}</strong>
+                <span>{f.text}</span>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -241,12 +212,12 @@ export default function Home() {
         <section className="qb-sec" id="how">
           <div className="qb-wrap">
             <div className="qb-head">
-              <p className="qb-eyebrow">How it works</p>
-              <h2 className="qb-h2">Ready to bill in about two minutes.</h2>
-              <p className="qb-sub">No hardware to wire up and no account to create. Three steps and you&rsquo;re at the counter.</p>
+              <p className="qb-eyebrow">{t.how.eyebrow}</p>
+              <h2 className="qb-h2">{t.how.h2}</h2>
+              <p className="qb-sub">{t.how.sub}</p>
             </div>
             <ol className="qb-steps">
-              {HOME_STEPS.map((s, i) => (
+              {t.how.steps.map((s, i) => (
                 <li key={s.name}>
                   <span className="qb-steps__n" aria-hidden="true">
                     {i + 1}
@@ -263,13 +234,13 @@ export default function Home() {
         <section className="qb-sec qb-sec--alt" id="features">
           <div className="qb-wrap">
             <div className="qb-head">
-              <p className="qb-eyebrow">What&rsquo;s inside</p>
-              <h2 className="qb-h2">Built around how a busy counter actually works.</h2>
+              <p className="qb-eyebrow">{t.features.eyebrow}</p>
+              <h2 className="qb-h2">{t.features.h2}</h2>
             </div>
             <ul className="qb-features">
-              {FEATURES.map((f) => (
+              {t.features.items.map((f, i) => (
                 <li key={f.title}>
-                  <Icon name={f.icon} size={28} />
+                  <Icon name={FEATURE_ICONS[i]} size={28} />
                   <div>
                     <h3>{f.title}</h3>
                     <p>{f.body}</p>
@@ -284,34 +255,25 @@ export default function Home() {
         <section className="qb-sec" id="history">
           <div className="qb-wrap qb-split">
             <div>
-              <p className="qb-eyebrow">Know your day</p>
-              <h2 className="qb-h2">At closing time, you already know what you sold.</h2>
-              <p className="qb-sub">
-                Every bill goes into your history. See the day&rsquo;s total, how many bills you made, and the average
-                bill, without opening a notebook.
-              </p>
+              <p className="qb-eyebrow">{t.history.eyebrow}</p>
+              <h2 className="qb-h2">{t.history.h2}</h2>
+              <p className="qb-sub">{t.history.sub}</p>
               <ul className="qb-ticks">
-                <li>
-                  <Icon name="check" size={20} /> Total sales, bill count and average bill
-                </li>
-                <li>
-                  <Icon name="check" size={20} /> Filter by Cash, UPI, Card or Split
-                </li>
-                <li>
-                  <Icon name="check" size={20} /> Search by invoice number or customer
-                </li>
-                <li>
-                  <Icon name="check" size={20} /> Reprint any bill in one tap
-                </li>
+                {t.history.ticks.map((tick) => (
+                  <li key={tick}>
+                    <Icon name="check" size={20} /> {tick}
+                  </li>
+                ))}
               </ul>
             </div>
             <figure className="qb-device">
               <img
-                src="/mockups/history.png"
+                src="/mockups/history.webp"
                 width={1024}
                 height={541}
                 loading="lazy"
-                alt="QuickBill POS sales history showing total revenue, bill count, average bill and a list of invoices with a reprint button"
+                decoding="async"
+                alt={t.history.alt}
               />
             </figure>
           </div>
@@ -324,32 +286,21 @@ export default function Home() {
               <Receipt />
             </div>
             <div>
-              <p className="qb-eyebrow">Printing</p>
-              <h2 className="qb-h2">Use the Bluetooth printer you already own.</h2>
-              <p className="qb-sub">
-                QuickBill POS speaks standard ESC/POS, the language most thermal printers understand, so pairing takes
-                a minute and there is nothing to install.
-              </p>
+              <p className="qb-eyebrow">{t.printers.eyebrow}</p>
+              <h2 className="qb-h2">{t.printers.h2}</h2>
+              <p className="qb-sub">{t.printers.sub}</p>
               <dl className="qb-specs">
-                <div>
-                  <dt>Paper</dt>
-                  <dd>58 mm (2-inch) and 80 mm (3-inch) rolls</dd>
-                </div>
-                <div>
-                  <dt>Connection</dt>
-                  <dd>Bluetooth</dd>
-                </div>
-                <div>
-                  <dt>Protocol</dt>
-                  <dd>ESC/POS, no drivers needed</dd>
-                </div>
-                <div>
-                  <dt>Good for</dt>
-                  <dd>Counters, home delivery and van sales</dd>
-                </div>
+                {t.printers.specs.map((s) => (
+                  <div key={s.k}>
+                    <dt>{s.k}</dt>
+                    <dd>{s.v}</dd>
+                  </div>
+                ))}
               </dl>
               <p className="qb-printers__aside">
-                Don&rsquo;t have a printer yet? The <a href="#pricing">annual kit</a> includes one.
+                {t.printers.asidePre}
+                <a href="#pricing">{t.printers.asideLink}</a>
+                {t.printers.asidePost}
               </p>
             </div>
           </div>
@@ -359,39 +310,37 @@ export default function Home() {
 
         <DownloadSection release={latest} loaded={loaded} olderReleases={allReleases.slice(1)} />
 
-        {/* GUIDES */}
-        <section className="qb-sec qb-sec--alt" id="guides">
-          <div className="qb-wrap">
-            <div className="qb-head">
-              <p className="qb-eyebrow">Guides</p>
-              <h2 className="qb-h2">See how it fits your kind of shop.</h2>
-              <p className="qb-sub">
-                Short, plain guides on GST, UPI, printing and working offline, and how QuickBill POS handles each one.
-              </p>
+        {/* GUIDES (only for languages that have guide pages) */}
+        {guides.length > 0 && (
+          <section className="qb-sec qb-sec--alt" id="guides">
+            <div className="qb-wrap">
+              <div className="qb-head">
+                <p className="qb-eyebrow">{t.guides.eyebrow}</p>
+                <h2 className="qb-h2">{t.guides.h2}</h2>
+                <p className="qb-sub">{t.guides.sub}</p>
+              </div>
+              <ul className="qb-cards">
+                {guides.map((p) => (
+                  <li key={p.slug}>
+                    <Link to={pagePath(lang, p.slug)}>
+                      <strong>{p.navTitle}</strong>
+                      <span>{p.cardBlurb}</span>
+                      <Icon name="arrow" size={20} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="qb-cards">
-              {LANDING_PAGES.map((p) => (
-                <li key={p.slug}>
-                  <Link to={`/${p.slug}`}>
-                    <strong>{p.navTitle}</strong>
-                    <span>{p.cardBlurb}</span>
-                    <Icon name="arrow" size={20} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* FAQ */}
         <section className="qb-sec" id="faq">
           <div className="qb-wrap qb-faq">
             <div className="qb-head">
-              <p className="qb-eyebrow">Questions</p>
-              <h2 className="qb-h2">Things shop owners ask before they start.</h2>
-              <p className="qb-sub">
-                Still unsure? Message us on WhatsApp and a real person will answer.
-              </p>
+              <p className="qb-eyebrow">{t.faq.eyebrow}</p>
+              <h2 className="qb-h2">{t.faq.h2}</h2>
+              <p className="qb-sub">{t.faq.sub}</p>
               <a
                 className="qb-btn qb-btn--wa"
                 href={waLink("Hi QuickBill POS team, I have a question.")}
@@ -399,11 +348,11 @@ export default function Home() {
                 rel="noopener noreferrer"
               >
                 <Icon name="chat" />
-                <span>Ask on WhatsApp</span>
+                <span>{t.faq.ask}</span>
               </a>
             </div>
             <div className="qb-faq__list">
-              {HOME_FAQS.map((f) => (
+              {t.faq.items.map((f) => (
                 <details key={f.q} name="faq">
                   <summary>{f.q}</summary>
                   <p>{f.a}</p>
@@ -417,8 +366,8 @@ export default function Home() {
         <section className="qb-final" id="final-cta">
           <div className="qb-wrap qb-final__in">
             <div>
-              <h2>Try it at your counter today.</h2>
-              <p>Install it, make one bill, print it. You&rsquo;ll know in five minutes whether it fits your shop.</p>
+              <h2>{t.final.h2}</h2>
+              <p>{t.final.p}</p>
             </div>
             <div className="qb-cta-row">
               <a className="qb-btn qb-btn--paper qb-btn--lg" {...ctaProps}>
@@ -435,7 +384,7 @@ export default function Home() {
                 rel="noopener noreferrer"
               >
                 <Icon name="chat" />
-                <span>WhatsApp us</span>
+                <span>{t.final.wa}</span>
               </a>
             </div>
           </div>
@@ -449,18 +398,26 @@ export default function Home() {
       <div className={`qb-bar ${showBar ? "is-on" : ""}`}>
         <a className="qb-btn qb-btn--primary" {...ctaProps}>
           <Icon name="download" />
-          <span>{isAndroid && latest ? `Download · ${latest.sizeLabel}` : "Get the Android app"}</span>
+          <span>{isAndroid && latest ? fmt(t.bar.download, { size: latest.sizeLabel }) : t.bar.get}</span>
         </a>
         <a
           className="qb-btn qb-btn--wa qb-btn--icon"
           href={waLink("Hi QuickBill POS team, I have a question.")}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Chat on WhatsApp"
+          aria-label={t.bar.waAria}
         >
           <Icon name="chat" />
         </a>
       </div>
     </div>
+  );
+}
+
+export default function Home({ lang = "en" }: { lang?: LangCode }) {
+  return (
+    <I18nProvider lang={lang}>
+      <HomeContent />
+    </I18nProvider>
   );
 }

@@ -1,3 +1,5 @@
+import { useI18n } from "../i18n/context";
+
 const QR_SIZE = 21;
 
 function buildQrCells(): Array<[number, number]> {
@@ -29,6 +31,9 @@ function Finder({ x, y }: { x: number; y: number }) {
   );
 }
 
+// One path instead of hundreds of <rect> nodes: much less HTML and DOM.
+const QR_PATH = QR_CELLS.map(([x, y]) => `M${x} ${y}h1v1h-1z`).join("");
+
 function SampleQr() {
   return (
     <svg
@@ -38,9 +43,7 @@ function SampleQr() {
       aria-hidden="true"
     >
       <rect width={QR_SIZE} height={QR_SIZE} fill="#fff" />
-      {QR_CELLS.map(([x, y]) => (
-        <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="#1d1a16" />
-      ))}
+      <path d={QR_PATH} fill="#1d1a16" />
       <Finder x={0} y={0} />
       <Finder x={QR_SIZE - 7} y={0} />
       <Finder x={0} y={QR_SIZE - 7} />
@@ -52,55 +55,54 @@ type Props = {
   tilt?: boolean;
 };
 
+/** A sample thermal bill. Item names and labels follow the page language, like a real shop's printout. */
 export default function Receipt({ tilt = false }: Props) {
+  const { t } = useI18n();
+  const r = t.receipt;
+  const sum = (n: number) => n.toFixed(2);
+
   return (
     <figure className={`qb-receipt ${tilt ? "qb-receipt--tilt" : ""}`}>
       <div className="qb-receipt__paper">
-        <p className="qb-receipt__shop">YOUR SHOP NAME</p>
-        <p className="qb-receipt__center">GSTIN 29XXXXX0000X1ZX</p>
+        <p className="qb-receipt__shop">{r.shop}</p>
+        <p className="qb-receipt__center">{r.gstin}</p>
 
         <div className="qb-receipt__rule" />
         <div className="qb-receipt__row">
-          <span>Bill #0042</span>
-          <span>12:20 PM</span>
+          <span>{r.bill}</span>
+          <span>{r.time}</span>
         </div>
         <div className="qb-receipt__rule" />
 
-        <div className="qb-receipt__row">
-          <span>Tea powder 250g</span>
-          <span>120.00</span>
-        </div>
-        <div className="qb-receipt__row">
-          <span>Sugar 2 kg</span>
-          <span>90.00</span>
-        </div>
-        <div className="qb-receipt__row">
-          <span>Atta 5 kg</span>
-          <span>190.00</span>
-        </div>
+        {r.items.map((it) => (
+          <div className="qb-receipt__row" key={it.name}>
+            <span>{it.name}</span>
+            <span>{it.price}</span>
+          </div>
+        ))}
 
         <div className="qb-receipt__rule" />
         <div className="qb-receipt__row">
-          <span>Subtotal</span>
-          <span>400.00</span>
+          <span>{r.subtotal}</span>
+          <span>{sum(400)}</span>
         </div>
         <div className="qb-receipt__row">
-          <span>CGST 2.5%</span>
-          <span>10.00</span>
+          <span>{r.cgst}</span>
+          <span>{sum(10)}</span>
         </div>
         <div className="qb-receipt__row">
-          <span>SGST 2.5%</span>
-          <span>10.00</span>
+          <span>{r.sgst}</span>
+          <span>{sum(10)}</span>
         </div>
         <div className="qb-receipt__row qb-receipt__total">
-          <span>TOTAL</span>
-          <span>₹420.00</span>
+          <span>{r.total}</span>
+          <span>₹{sum(420)}</span>
         </div>
         <div className="qb-receipt__rule" />
 
-        <p className="qb-receipt__center">Scan to pay by UPI</p>
+        <p className="qb-receipt__center">{r.scan}</p>
         <SampleQr />
-        <p className="qb-receipt__center qb-receipt__sample">Thank you · sample bill</p>
+        <p className="qb-receipt__center qb-receipt__sample">{r.thanks}</p>
       </div>
     </figure>
   );

@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-const LINKS: Array<[string, string]> = [
-  ["how", "How it works"],
-  ["features", "Features"],
-  ["pricing", "Pricing"],
-  ["faq", "FAQ"],
-];
+import LangSwitcher from "./LangSwitcher";
+import { homePath } from "../i18n/config";
+import { useI18n } from "../i18n/context";
 
 export default function SiteHeader() {
+  const { lang, t } = useI18n();
   const [open, setOpen] = useState(false);
+
+  const links: Array<[string, string]> = [
+    ["how", t.nav.how],
+    ["features", t.nav.features],
+    ["pricing", t.nav.pricing],
+    ["faq", t.nav.faq],
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -21,34 +25,37 @@ export default function SiteHeader() {
   }, [open]);
 
   const close = () => setOpen(false);
+  const home = homePath(lang);
 
   return (
     <header className="qb-nav">
       <a className="qb-skip" href="#main-content">
-        Skip to content
+        {t.nav.skip}
       </a>
       <div className="qb-wrap qb-nav__in">
-        <Link className="qb-brand" to="/" onClick={close} aria-label="QuickBill POS home">
+        <Link className="qb-brand" to={home} onClick={close} aria-label={t.nav.homeAria}>
           <img src="/logo.svg" width={34} height={34} alt="" />
           <span>QuickBill POS</span>
         </Link>
 
-        <nav className="qb-nav__links" aria-label="Main">
-          {LINKS.map(([id, label]) => (
-            <Link key={id} to={{ pathname: "/", hash: `#${id}` }}>
+        <nav className="qb-nav__links" aria-label={t.nav.mainAria}>
+          {links.map(([id, label]) => (
+            <Link key={id} to={{ pathname: home, hash: `#${id}` }}>
               {label}
             </Link>
           ))}
         </nav>
 
         <div className="qb-nav__actions">
+          <LangSwitcher />
           <Link
             className="qb-btn qb-btn--primary qb-btn--sm"
-            to={{ pathname: "/", hash: "#download" }}
+            to={{ pathname: home, hash: "#download" }}
             onClick={close}
           >
             <span>
-              Download<span className="qb-hide-xs"> app</span>
+              {t.nav.download}
+              <span className="qb-hide-xs">{t.nav.downloadSuffix}</span>
             </span>
           </Link>
           <button
@@ -56,7 +63,7 @@ export default function SiteHeader() {
             className="qb-burger"
             aria-expanded={open}
             aria-controls="qb-drawer"
-            aria-label={open ? "Close menu" : "Open menu"}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
             onClick={() => setOpen((v) => !v)}
           >
             <span />
@@ -69,16 +76,16 @@ export default function SiteHeader() {
       {open && (
         <nav id="qb-drawer" className="qb-drawer" aria-label="Mobile">
           <div className="qb-wrap">
-            {LINKS.map(([id, label]) => (
-              <Link key={id} to={{ pathname: "/", hash: `#${id}` }} onClick={close}>
+            {links.map(([id, label]) => (
+              <Link key={id} to={{ pathname: home, hash: `#${id}` }} onClick={close}>
                 {label}
               </Link>
             ))}
             <Link to="/privacy-policy" onClick={close}>
-              Privacy Policy
+              {t.nav.privacy}
             </Link>
             <Link to="/terms-and-conditions" onClick={close}>
-              Terms &amp; Conditions
+              {t.nav.terms}
             </Link>
           </div>
         </nav>

@@ -1,4 +1,5 @@
 import { SITE, absoluteUrl } from "./site";
+import { DEFAULT_LANG, langInfo, LANGS, type LangCode } from "../i18n/config";
 
 export type SeoProps = {
   title: string;
@@ -9,8 +10,10 @@ export type SeoProps = {
   imageAlt?: string;
   noindex?: boolean;
   schemaData?: unknown;
-  /** Kept for backwards compatibility; search engines ignore the keywords meta tag. */
-  keywords?: string[];
+  /** Page language. Defaults to English (India). */
+  lang?: LangCode;
+  /** Equivalent pages in other languages (path per language), emitted as hreflang links. */
+  alternates?: Partial<Record<LangCode, string>>;
 };
 
 type MetaTag = { name?: string; property?: string; content: string };
@@ -18,6 +21,7 @@ type LinkTag = { rel: string; href: string; hreflang?: string };
 
 export type HeadModel = {
   title: string;
+  htmlLang: string;
   metas: MetaTag[];
   links: LinkTag[];
   jsonLd?: string;
@@ -27,6 +31,8 @@ const ROBOTS_INDEX = "index, follow, max-image-preview:large, max-snippet:-1, ma
 const ROBOTS_NOINDEX = "noindex, nofollow";
 
 export function buildHeadModel(p: SeoProps): HeadModel {
+  const lang = p.lang ?? DEFAULT_LANG;
+  const info = langInfo(lang);
   const canonical = absoluteUrl(p.canonicalPath);
   const image = absoluteUrl(p.image ?? SITE.ogImage);
   const imageAlt = p.imageAlt ?? SITE.ogImageAlt;
@@ -36,7 +42,7 @@ export function buildHeadModel(p: SeoProps): HeadModel {
     { name: "description", content: p.description },
     { name: "robots", content: p.noindex ? ROBOTS_NOINDEX : ROBOTS_INDEX },
     { property: "og:site_name", content: SITE.name },
-    { property: "og:locale", content: SITE.locale },
+    { property: "og:locale", content: info.ogLocale },
     { property: "og:type", content: p.type ?? "website" },
     { property: "og:url", content: canonical },
     { property: "og:title", content: p.title },
@@ -60,15 +66,25 @@ export function buildHeadModel(p: SeoProps): HeadModel {
 
   const links: LinkTag[] = [];
   if (!p.noindex) {
-    links.push(
-      { rel: "canonical", href: canonical },
-      { rel: "alternate", href: canonical, hreflang: "en-IN" },
-      { rel: "alternate", href: canonical, hreflang: "x-default" }
-    );
+    links.push({ rel: "canonical", href: canonical });
+    if (p.alternates && Object.keys(p.alternates).length > 0) {
+      for (const l of LANGS) {
+        const path = p.alternates[l.code];
+        if (path) links.push({ rel: "alternate", href: absoluteUrl(path), hreflang: l.htmlLang });
+      }
+      const xDefault = p.alternates[DEFAULT_LANG] ?? p.canonicalPath;
+      links.push({ rel: "alternate", href: absoluteUrl(xDefault), hreflang: "x-default" });
+    } else {
+      links.push(
+        { rel: "alternate", href: canonical, hreflang: info.htmlLang },
+        { rel: "alternate", href: canonical, hreflang: "x-default" }
+      );
+    }
   }
 
   return {
     title: p.title,
+    htmlLang: info.htmlLang,
     metas,
     links,
     jsonLd: p.schemaData ? JSON.stringify(p.schemaData) : undefined,
@@ -79,7 +95,7 @@ const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Server-side: the exact tags the client SEO component would create. */
-export function renderHeadHtml(p: SeoProps): { title: string; tags: string } {
+export function renderHeadHtml(p: SeoProps): { title: string; htmlLang: string; tags: string } {
   const m = buildHeadModel(p);
   const parts: string[] = [];
   for (const meta of m.metas) {
@@ -94,5 +110,5 @@ export function renderHeadHtml(p: SeoProps): { title: string; tags: string } {
     const safe = m.jsonLd.replace(/</g, "\\u003c");
     parts.push(`<script type="application/ld+json" id="seo-schema-jsonld">${safe}</script>`);
   }
-  return { title: m.title, tags: parts.join("\n    ") };
+  return { title: m.title, htmlLang: m.htmlLang, tags: parts.join("\n    ") };
 }

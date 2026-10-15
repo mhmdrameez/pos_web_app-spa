@@ -16,6 +16,7 @@ export default function SEO(props: SeoProps) {
     const p: SeoProps = JSON.parse(serialized);
     const model = buildHeadModel(p);
     document.title = model.title;
+    document.documentElement.lang = model.htmlLang;
 
     for (const meta of model.metas) {
       const attr = meta.name ? "name" : "property";
@@ -30,9 +31,11 @@ export default function SEO(props: SeoProps) {
     }
 
     const wanted = new Set(model.links.map((l) => `${l.rel}|${l.hreflang ?? ""}`));
-    document.head.querySelectorAll<HTMLLinkElement>('link[rel="canonical"], link[rel="alternate"][hreflang]').forEach((el) => {
-      if (!wanted.has(`${el.rel}|${el.getAttribute("hreflang") ?? ""}`)) el.remove();
-    });
+    document.head
+      .querySelectorAll<HTMLLinkElement>('link[rel="canonical"], link[rel="alternate"][hreflang]')
+      .forEach((el) => {
+        if (!wanted.has(`${el.rel}|${el.getAttribute("hreflang") ?? ""}`)) el.remove();
+      });
     for (const link of model.links) {
       const selector = link.hreflang
         ? `link[rel="${link.rel}"][hreflang="${link.hreflang}"]`

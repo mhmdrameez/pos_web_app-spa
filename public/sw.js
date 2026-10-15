@@ -6,8 +6,8 @@ const PRECACHE_ASSETS = [
   '/favicon.svg',
   '/logo.svg',
   '/icon-192.png',
-  '/mockups/mobile-pos.png',
-  '/mockups/history.png'
+  '/mockups/mobile-pos.webp',
+  '/mockups/history.webp'
 ];
 
 self.addEventListener('install', (event) => {

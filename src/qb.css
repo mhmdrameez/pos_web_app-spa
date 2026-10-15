@@ -10,6 +10,15 @@ body,
   overflow-x: clip; /* keeps position:sticky working, unlike overflow:hidden */
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  margin: 0;
+}
+
 body:has(.qb) {
   background: #fbf6ee;
 }
@@ -30,9 +39,10 @@ body:has(.qb) {
   --wa: #0e7c3a;
   --wa-dark: #0a5c2b;
 
-  --serif: "Fraunces", Georgia, "Times New Roman", serif;
-  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* Figtree is second so glyphs the small Fraunces/Plex files lack (like the rupee sign) stay consistent */
+  --serif: "Fraunces", "Figtree", Georgia, "Times New Roman", serif;
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --mono: "IBM Plex Mono", "Figtree", ui-monospace, Menlo, Consolas, monospace;
 
   font-family: var(--sans);
   font-size: 16px;
@@ -326,7 +336,7 @@ body:has(.qb) {
   gap: 10px;
   font-family: var(--serif);
   font-size: 21px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
@@ -343,11 +353,6 @@ body:has(.qb) {
   white-space: nowrap;
 }
 
-@media (max-width: 350px) {
-  .qb-nav .qb-btn--sm {
-    display: none;
-  }
-}
 
 @media (max-width: 440px) {
   .qb-hide-xs {
@@ -2521,4 +2526,265 @@ body:has(.qb) {
 
 .qb-cards--404 {
   margin-top: 48px;
+}
+
+/* Sections far below the first screen are laid out and painted only when they get near the viewport. */
+#history,
+#printers,
+#guides,
+#faq,
+.qb-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
+/* ---------- language switcher ---------- */
+
+.qb-lang {
+  position: relative;
+}
+
+.qb-lang__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  background: transparent;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.qb-lang__btn:hover {
+  background: var(--accent-soft);
+}
+
+.qb-lang__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 70;
+  min-width: 210px;
+  max-height: min(70vh, 460px);
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 var(--accent);
+}
+
+.qb-lang__menu a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.qb-lang__menu a small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.qb-lang__menu a:hover {
+  background: var(--paper-2);
+}
+
+.qb-lang__menu a[aria-current="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+@media (max-width: 599px) {
+  .qb-lang__btn span {
+    display: none;
+  }
+
+  .qb-lang__btn {
+    padding: 0 10px;
+  }
+
+  .qb-lang__menu {
+    right: -52px;
+  }
+}
+
+@media (max-width: 430px) {
+  .qb-nav .qb-btn--sm {
+    display: none;
+  }
+}
+
+.qb-footer__langs {
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.qb-footer__langs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+
+.qb-footer__langs li {
+  margin: 0;
+}
+
+/* ---------- Indian-language typography ---------- */
+
+.qb[lang="hi-IN"],
+.qb[lang="mr-IN"] {
+  --indic: "Noto Sans Devanagari", "Nirmala UI", "Mangal";
+}
+.qb[lang="bn-IN"] {
+  --indic: "Noto Sans Bengali", "Nirmala UI", "Vrinda";
+}
+.qb[lang="gu-IN"] {
+  --indic: "Noto Sans Gujarati", "Nirmala UI", "Shruti";
+}
+.qb[lang="pa-IN"] {
+  --indic: "Noto Sans Gurmukhi", "Nirmala UI", "Raavi";
+}
+.qb[lang="ta-IN"] {
+  --indic: "Noto Sans Tamil", "Nirmala UI", "Latha";
+}
+.qb[lang="te-IN"] {
+  --indic: "Noto Sans Telugu", "Nirmala UI", "Gautami";
+}
+.qb[lang="kn-IN"] {
+  --indic: "Noto Sans Kannada", "Nirmala UI", "Tunga";
+}
+.qb[lang="ml-IN"] {
+  --indic: "Noto Sans Malayalam", "Nirmala UI", "Kartika";
+}
+
+/* Latin glyphs (brand, GST, UPI, numbers) keep the site fonts; Indic glyphs fall back to the script font. */
+.qb[data-indic] {
+  --serif: "Fraunces", var(--indic), Georgia, serif;
+  --sans: "Figtree", var(--indic), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", var(--indic), ui-monospace, Menlo, Consolas, monospace;
+  line-height: 1.75;
+}
+
+.qb[data-indic] h1,
+.qb[data-indic] .qb-h2,
+.qb[data-indic] .qb-sect h2,
+.qb[data-indic] .qb-final h2,
+.qb[data-indic] .qb-plan h3,
+.qb[data-indic] .qb-sidecard__title,
+.qb[data-indic] .qb-glance__title {
+  letter-spacing: 0;
+  line-height: 1.32;
+}
+
+.qb[data-indic] h1 {
+  font-size: clamp(32px, 5.4vw, 54px);
+}
+
+.qb[data-indic] .qb-h2 {
+  font-size: clamp(26px, 4vw, 38px);
+}
+
+/* Dravidian scripts have wide, tall glyphs, so the same point size reads much larger */
+.qb[lang="ta-IN"] h1,
+.qb[lang="ml-IN"] h1,
+.qb[lang="te-IN"] h1,
+.qb[lang="kn-IN"] h1 {
+  font-size: clamp(27px, 4.4vw, 44px);
+}
+
+.qb[lang="ta-IN"] .qb-h2,
+.qb[lang="ml-IN"] .qb-h2,
+.qb[lang="te-IN"] .qb-h2,
+.qb[lang="kn-IN"] .qb-h2 {
+  font-size: clamp(24px, 3.4vw, 33px);
+}
+
+.qb[lang="ta-IN"] .qb-sect h2,
+.qb[lang="ml-IN"] .qb-sect h2 {
+  font-size: clamp(22px, 3vw, 28px);
+}
+
+.qb[data-indic] h3,
+.qb[data-indic] .qb-facts strong,
+.qb[data-indic] .qb-cards strong {
+  line-height: 1.4;
+}
+
+.qb[data-indic] .qb-eyebrow,
+.qb[data-indic] .qb-plan__tag,
+.qb[data-indic] .qb-footer h2,
+.qb[data-indic] .qb-dl__meta dt,
+.qb[data-indic] .qb-toc__title {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.qb[data-indic] .qb-btn {
+  line-height: 1.45;
+}
+
+.qb[data-indic] .qb-btn__sub {
+  line-height: 1.4;
+}
+
+/* Hand-drawn underline needs a single line; use a normal underline when the phrase may wrap. */
+.qb[data-indic] .qb-ul {
+  white-space: normal;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 4px;
+  text-underline-offset: 0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.qb[data-indic] .qb-ul svg {
+  display: none;
+}
+
+.qb[data-indic] .qb-brand,
+.qb[data-indic] .qb-price,
+.qb[data-indic] .qb-steps__n {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+.qb-receipt__row span:first-child {
+  min-width: 0;
+}
+
+.qb-nav__links a {
+  white-space: nowrap;
+}
+
+/* Indic nav labels are long: switch to the menu button a little later so nothing wraps */
+@media (min-width: 900px) and (max-width: 1139px) {
+  .qb[data-indic] .qb-nav__links {
+    display: none;
+  }
+
+  .qb[data-indic] .qb-burger {
+    display: inline-flex;
+  }
+
+  .qb[data-indic] .qb-drawer {
+    display: block;
+  }
+}
+
+@media (min-width: 1140px) {
+  .qb[data-indic] .qb-nav__links {
+    gap: 22px;
+  }
 }

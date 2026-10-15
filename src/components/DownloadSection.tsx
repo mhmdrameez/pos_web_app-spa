@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { Release } from "../api";
 import Icon from "./Icon";
 import { waLink } from "../lib/contact";
+import { langInfo } from "../i18n/config";
+import { Rich, useI18n } from "../i18n/context";
 
 type Props = {
   release: Release | null;
@@ -9,14 +11,20 @@ type Props = {
   olderReleases: Release[];
 };
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export default function DownloadSection({ release, loaded, olderReleases }: Props) {
+  const { lang, t } = useI18n();
+  const d = t.download;
   const [copied, setCopied] = useState(false);
+
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(`${langInfo(lang).htmlLang}-u-nu-latn`, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   const copyLink = async () => {
     if (!release) return;
@@ -39,32 +47,30 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
     <section className="qb-sec qb-dl" id="download">
       <div className="qb-wrap qb-dl__grid">
         <div>
-          <p className="qb-eyebrow">Download</p>
-          <h2 className="qb-h2">Get QuickBill POS on your Android phone</h2>
-          <p className="qb-sub">
-            Direct download. You don&rsquo;t need a Play Store account, and you don&rsquo;t have to sign up to install.
-          </p>
+          <p className="qb-eyebrow">{d.eyebrow}</p>
+          <h2 className="qb-h2">{d.h2}</h2>
+          <p className="qb-sub">{d.sub}</p>
 
           {release ? (
             <>
               <dl className="qb-dl__meta">
                 <div>
-                  <dt>Version</dt>
+                  <dt>{d.version}</dt>
                   <dd>{release.version}</dd>
                 </div>
                 <div>
-                  <dt>Size</dt>
+                  <dt>{d.size}</dt>
                   <dd>{release.sizeLabel}</dd>
                 </div>
                 {formatDate(release.uploadedAt) && (
                   <div>
-                    <dt>Released</dt>
+                    <dt>{d.released}</dt>
                     <dd>{formatDate(release.uploadedAt)}</dd>
                   </div>
                 )}
                 <div>
-                  <dt>Needs</dt>
-                  <dd>Android 7.0+, 64-bit</dd>
+                  <dt>{d.needs}</dt>
+                  <dd>{d.needsVal}</dd>
                 </div>
               </dl>
 
@@ -77,7 +83,7 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
                 >
                   <Icon name="download" />
                   <span className="qb-btn__text">
-                    <span className="qb-btn__main">Download for Android</span>
+                    <span className="qb-btn__main">{d.btnMain}</span>
                     <span className="qb-btn__sub">
                       {release.version} · {release.sizeLabel}
                     </span>
@@ -85,17 +91,13 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
                 </a>
                 <button type="button" className="qb-btn qb-btn--ghost-light" onClick={copyLink}>
                   <Icon name={copied ? "check" : "copy"} />
-                  <span>{copied ? "Link copied" : "Copy link"}</span>
+                  <span>{copied ? d.copied : d.copy}</span>
                 </button>
               </div>
             </>
           ) : (
             <div className="qb-dl__empty">
-              <p>
-                {loaded
-                  ? "The latest build is being updated right now. Message us on WhatsApp and we will send you the app directly."
-                  : "The latest version number and file size appear here in a moment. If they don't, message us on WhatsApp and we will send you the app."}
-              </p>
+              <p>{loaded ? d.emptyLoaded : d.emptyLoading}</p>
               <a
                 className="qb-btn qb-btn--wa"
                 href={waLink("Hi QuickBill POS team, please send me the Android app (APK).")}
@@ -103,30 +105,28 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
                 rel="noopener noreferrer"
               >
                 <Icon name="chat" />
-                <span>Ask for the app on WhatsApp</span>
+                <span>{d.askApp}</span>
               </a>
             </div>
           )}
 
           <div className="qb-install">
-            <h3>Installing for the first time?</h3>
+            <h3>{d.installTitle}</h3>
             <ol>
-              <li>Tap download and open the file when it finishes.</li>
-              <li>
-                If Android says it can&rsquo;t install from this source, tap <strong>Settings</strong> and switch on{" "}
-                <strong>Allow from this source</strong>. This is a normal Android prompt for apps outside the Play
-                Store.
-              </li>
-              <li>Open QuickBill POS, add your shop details, and make your first bill.</li>
+              {d.install.map((step) => (
+                <li key={step}>
+                  <Rich text={step} />
+                </li>
+              ))}
             </ol>
           </div>
         </div>
 
         {release && (
-          <aside className="qb-dl__qr" aria-label="Scan to download on your phone">
-            <img src={qrUrl} width={200} height={200} alt={`QR code to download QuickBill POS ${release.version}`} loading="lazy" />
-            <p className="qb-dl__qr-title">On a computer?</p>
-            <p>Point your phone camera at this code to download the app on your phone.</p>
+          <aside className="qb-dl__qr" aria-label={d.qrAria}>
+            <img src={qrUrl} width={200} height={200} alt={`QR code: QuickBill POS ${release.version}`} loading="lazy" />
+            <p className="qb-dl__qr-title">{d.qrTitle}</p>
+            <p>{d.qrText}</p>
           </aside>
         )}
       </div>
@@ -134,7 +134,9 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
       {release && olderReleases.length > 0 && (
         <div className="qb-wrap">
           <details className="qb-older">
-            <summary>Earlier versions ({olderReleases.length})</summary>
+            <summary>
+              {d.older} ({olderReleases.length})
+            </summary>
             <ul>
               {olderReleases.map((rel) => (
                 <li key={rel.id}>
@@ -146,7 +148,7 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
                     </small>
                   </span>
                   <a href={rel.downloadUrl} target="_blank" rel="noopener noreferrer">
-                    Download
+                    {d.dl}
                   </a>
                 </li>
               ))}

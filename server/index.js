@@ -246,8 +246,20 @@ app.delete("/api/releases/:id", requireAuth, (req, res) => {
 });
 
 if (fs.existsSync(DIST_DIR)) {
-  // Prerendered pages are written as <route>.html, so /privacy-policy serves privacy-policy.html
-  app.use(express.static(DIST_DIR, { extensions: ["html"] }));
+  // Prerendered pages: /privacy-policy -> privacy-policy.html, /hi -> hi/index.html, /hi/x -> hi/x.html
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.path.startsWith("/api") || path.extname(req.path)) return next();
+    const clean = req.path.replace(/\/+$/, "");
+    if (!clean) return next();
+    for (const candidate of [`${clean}.html`, `${clean}/index.html`]) {
+      const file = path.join(DIST_DIR, candidate);
+      if (file.startsWith(DIST_DIR) && fs.existsSync(file) && fs.statSync(file).isFile()) {
+        return res.sendFile(file);
+      }
+    }
+    next();
+  });
+  app.use(express.static(DIST_DIR));
   app.get("/apk-upload", (_req, res) => {
     res.set("X-Robots-Tag", "noindex, nofollow");
     res.sendFile(path.join(DIST_DIR, "app.html"));

@@ -6,8 +6,8 @@ export const SITE = {
   ogImage: "/og-image.png",
   ogImageAlt:
     "QuickBill POS: offline billing app for Indian shops with GST bills, UPI QR and Bluetooth printing",
-  phone: "+91-9446960834",
-  whatsapp: "https://wa.me/919446960834",
+  phone: "+91-7907858474",
+  whatsapp: "https://wa.me/917907858474",
   /** Bump when page content materially changes. Used for sitemap lastmod and schema dateModified. */
   updated: "2026-10-15",
 };

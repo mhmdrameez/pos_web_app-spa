@@ -2,6 +2,7 @@ import { PRICES, SITE, absoluteUrl } from "./site";
 import type { Faq, Step } from "./content";
 import { HOME_FEATURE_LIST } from "./content";
 import type { LandingPageData } from "./pages";
+import { homePath, langInfo, pagePath, type LangCode } from "../i18n/config";
 
 const id = (hash: string) => `${SITE.origin}/#${hash}`;
 const ORG = { "@id": id("organization") };
@@ -56,7 +57,7 @@ const app = () => ({
   inLanguage: "en-IN",
   countriesSupported: "IN",
   image: absoluteUrl(SITE.ogImage),
-  screenshot: [absoluteUrl("/mockups/mobile-pos.png"), absoluteUrl("/mockups/history.png")],
+  screenshot: [absoluteUrl("/mockups/mobile-pos.webp"), absoluteUrl("/mockups/history.webp")],
   featureList: HOME_FEATURE_LIST,
   publisher: ORG,
   offers: [
@@ -131,13 +132,20 @@ export const breadcrumb = (items: Array<{ name: string; path: string }>) => ({
   })),
 });
 
-const webPage = (opts: { path: string; name: string; description: string; type?: string; breadcrumb?: unknown }) => ({
+const webPage = (opts: {
+  path: string;
+  name: string;
+  description: string;
+  type?: string;
+  breadcrumb?: unknown;
+  lang?: LangCode;
+}) => ({
   "@type": opts.type ?? "WebPage",
   "@id": `${absoluteUrl(opts.path)}#webpage`,
   url: absoluteUrl(opts.path),
   name: opts.name,
   description: opts.description,
-  inLanguage: SITE.lang,
+  inLanguage: opts.lang ? langInfo(opts.lang).htmlLang : SITE.lang,
   isPartOf: WEBSITE,
   about: APP,
   primaryImageOfPage: { "@type": "ImageObject", url: absoluteUrl(SITE.ogImage) },
@@ -146,7 +154,8 @@ const webPage = (opts: { path: string; name: string; description: string; type?:
   ...(opts.breadcrumb ? { breadcrumb: opts.breadcrumb } : {}),
 });
 
-export function homeGraph(faqs: Faq[], steps: Step[], title: string, description: string) {
+export function homeGraph(faqs: Faq[], steps: Step[], title: string, description: string, lang: LangCode = "en", howToName = "How to start billing with QuickBill POS") {
+  const path = homePath(lang);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -154,30 +163,29 @@ export function homeGraph(faqs: Faq[], steps: Step[], title: string, description
       website(),
       app(),
       kitProduct(),
-      webPage({ path: "/", name: title, description }),
-      faqPage(faqs, "/"),
-      howTo("How to start billing with QuickBill POS", steps, "/"),
+      webPage({ path, name: title, description, lang }),
+      faqPage(faqs, path),
+      howTo(howToName, steps, path),
     ],
   };
 }
 
-export function landingGraph(page: LandingPageData) {
-  const path = `/${page.slug}`;
+export function landingGraph(page: LandingPageData, lang: LangCode = "en", homeLabel = "Home") {
+  const path = pagePath(lang, page.slug);
   const crumbs = breadcrumb([
-    { name: "Home", path: "/" },
+    { name: homeLabel, path: homePath(lang) },
     { name: page.navTitle, path },
   ]);
   const graph: unknown[] = [
     organization(),
     website(),
     app(),
-    webPage({ path, name: page.seoTitle, description: page.description, breadcrumb: crumbs }),
+    webPage({ path, name: page.seoTitle, description: page.description, breadcrumb: crumbs, lang }),
     faqPage(page.faqs, path),
   ];
   if (page.howTo) graph.push(howTo(page.howTo.name, page.howTo.steps, path));
   return { "@context": "https://schema.org", "@graph": graph };
 }
-
 export function legalGraph(opts: { path: string; name: string; description: string }) {
   return {
     "@context": "https://schema.org",

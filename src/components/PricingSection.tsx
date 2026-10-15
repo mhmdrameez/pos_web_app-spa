@@ -1,108 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { WA_DISPLAY, waLink } from "../lib/contact";
+import { useI18n } from "../i18n/context";
+import type { Plan } from "../i18n/types";
 
-type Plan = {
-  id: string;
-  tag: string;
-  name: string;
-  price: string;
-  unit: string;
-  blurb: string;
-  was?: string;
-  save?: string;
-  features: string[];
-  cta: string;
-  note: string;
-  best?: boolean;
-  order: { name: string; amount: number; period: string; includes: string[] };
-};
-
-const PLANS: Plan[] = [
-  {
-    id: "monthly",
-    tag: "Flexible",
-    name: "Monthly",
-    price: "99",
-    unit: "per month",
-    blurb: "For small shops, tea stalls and seasonal counters. Stop whenever you like.",
-    features: [
-      "Unlimited bills and customers",
-      "Works with no internet",
-      "UPI QR on screen and on the bill",
-      "GST with CGST and SGST, or 0%",
-      "Bluetooth printer support",
-    ],
-    cta: "Start monthly · ₹99",
-    note: "Cancel anytime",
-    order: {
-      name: "Monthly license",
-      amount: 99,
-      period: "per month",
-      includes: ["Unlimited bills", "Offline billing", "UPI QR codes", "Android app"],
-    },
-  },
-  {
-    id: "yearly",
-    tag: "Best value",
-    name: "Yearly",
-    price: "999",
-    unit: "per year",
-    blurb: "For shops that are here to stay. About ₹83 a month.",
-    was: "₹1,188",
-    save: "Save ₹189",
-    features: [
-      "Everything in Monthly",
-      "365 days, no renewal in between",
-      "Priority WhatsApp support",
-      "Help setting up your items or menu",
-      "Renewal price locked",
-    ],
-    cta: "Get yearly · ₹999",
-    note: "7-day money-back guarantee",
-    best: true,
-    order: {
-      name: "Yearly license",
-      amount: 999,
-      period: "per year",
-      includes: ["365 days of billing", "Priority WhatsApp support", "Item / menu setup help"],
-    },
-  },
-  {
-    id: "kit",
-    tag: "Printer included",
-    name: "Annual kit",
-    price: "3,199",
-    unit: "one payment",
-    blurb: "A Bluetooth printer and a year of the app. Plug in, pair, and bill.",
-    was: "₹3,499",
-    save: "Save ₹300",
-    features: [
-      "Wireless Bluetooth thermal printer (₹2,500 value)",
-      "1 year of QuickBill POS (₹999 value)",
-      "5 paper rolls free",
-      "WhatsApp help to get set up",
-      "Free courier delivery across India",
-      "1 year hardware replacement support",
-    ],
-    cta: "Order the kit · ₹3,199",
-    note: "Ready to bill about 2 minutes after delivery",
-    order: {
-      name: "Annual kit (printer + 1 year)",
-      amount: 3199,
-      period: "one payment",
-      includes: [
-        "Wireless Bluetooth thermal printer",
-        "1 year of QuickBill POS",
-        "5 paper rolls",
-        "Free courier delivery across India",
-      ],
-    },
-  },
+/** Numbers and the English order text the team reads on WhatsApp. The visible text comes from the dictionary. */
+const PLAN_META = [
+  { id: "monthly", price: "99", amount: 99, orderName: "Monthly license", period: "per month", best: false },
+  { id: "yearly", price: "999", amount: 999, orderName: "Yearly license", period: "per year", best: true },
+  { id: "kit", price: "3,199", amount: 3199, orderName: "Annual kit (printer + 1 year)", period: "one payment", best: false },
 ];
 
 export default function PricingSection() {
-  const [selected, setSelected] = useState<Plan | null>(null);
+  const { lang, t } = useI18n();
+  const p = t.pricing;
+  const [selected, setSelected] = useState<number | null>(null);
   const [shop, setShop] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
@@ -110,7 +22,7 @@ export default function PricingSection() {
   const opener = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!selected) return;
+    if (selected === null) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     firstField.current?.focus();
@@ -125,10 +37,14 @@ export default function PricingSection() {
     };
   }, [selected]);
 
-  const message = selected
+  const meta = selected !== null ? PLAN_META[selected] : null;
+  const plan: Plan | null = selected !== null ? p.plans[selected] : null;
+
+  const message = meta
     ? [
         "Hello QuickBill POS team,",
-        `I'd like to order: ${selected.order.name} (₹${selected.order.amount.toLocaleString("en-IN")}, ${selected.order.period}).`,
+        `I'd like to order: ${meta.orderName} (₹${meta.amount.toLocaleString("en-IN")}, ${meta.period}).`,
+        `Page language: ${lang}`,
         "",
         `Shop: ${shop.trim() || "-"}`,
         `Phone: ${phone.trim() || "-"}`,
@@ -142,70 +58,70 @@ export default function PricingSection() {
     <section className="qb-sec qb-sec--alt" id="pricing">
       <div className="qb-wrap">
         <div className="qb-head">
-          <p className="qb-eyebrow">Pricing</p>
-          <h2 className="qb-h2">One price. Unlimited bills.</h2>
-          <p className="qb-sub">
-            We don&rsquo;t charge per bill or per device. Pick monthly, yearly, or get the kit with a printer in the
-            box.
-          </p>
+          <p className="qb-eyebrow">{p.eyebrow}</p>
+          <h2 className="qb-h2">{p.h2}</h2>
+          <p className="qb-sub">{p.sub}</p>
         </div>
 
         <div className="qb-plans">
-          {PLANS.map((plan) => (
-            <article key={plan.id} className={`qb-plan ${plan.best ? "qb-plan--best" : ""}`}>
-              <p className="qb-plan__tag">{plan.tag}</p>
-              <h3>{plan.name}</h3>
-              <p className="qb-plan__blurb">{plan.blurb}</p>
+          {PLAN_META.map((m, i) => {
+            const pl = p.plans[i];
+            return (
+              <article key={m.id} className={`qb-plan ${m.best ? "qb-plan--best" : ""}`}>
+                <p className="qb-plan__tag">{pl.tag}</p>
+                <h3>{pl.name}</h3>
+                <p className="qb-plan__blurb">{pl.blurb}</p>
 
-              <p className="qb-price">
-                <span className="qb-price__cur">₹</span>
-                {plan.price}
-                <small>{plan.unit}</small>
-              </p>
-              <p className="qb-plan__was">
-                {plan.was ? (
-                  <>
-                    <s>{plan.was}</s> <strong>{plan.save}</strong>
-                  </>
-                ) : (
-                  <>&nbsp;</>
-                )}
-              </p>
+                <p className="qb-price">
+                  <span className="qb-price__cur">₹</span>
+                  {m.price}
+                  <small>{pl.unit}</small>
+                </p>
+                <p className="qb-plan__was">
+                  {pl.was ? (
+                    <>
+                      <s>{pl.was}</s> <strong>{pl.save}</strong>
+                    </>
+                  ) : (
+                    <>&nbsp;</>
+                  )}
+                </p>
 
-              <ul className="qb-plan__list">
-                {plan.features.map((f) => (
-                  <li key={f}>
-                    <Icon name="check" size={20} />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
+                <ul className="qb-plan__list">
+                  {pl.features.map((f) => (
+                    <li key={f}>
+                      <Icon name="check" size={20} />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
 
-              <button
-                type="button"
-                className={`qb-btn ${plan.best ? "qb-btn--primary" : "qb-btn--ghost"}`}
-                onClick={(e) => {
-                  opener.current = e.currentTarget;
-                  setSelected(plan);
-                }}
-              >
-                {plan.cta}
-              </button>
-              <p className="qb-plan__note">{plan.note}</p>
-            </article>
-          ))}
+                <button
+                  type="button"
+                  className={`qb-btn ${m.best ? "qb-btn--primary" : "qb-btn--ghost"}`}
+                  onClick={(e) => {
+                    opener.current = e.currentTarget;
+                    setSelected(i);
+                  }}
+                >
+                  {pl.cta}
+                </button>
+                <p className="qb-plan__note">{pl.note}</p>
+              </article>
+            );
+          })}
         </div>
 
         <p className="qb-pay-line">
-          Pay by UPI, card, net banking or cash on delivery. Questions before you buy? WhatsApp{" "}
+          {p.payPre}{" "}
           <a href={waLink("Hi QuickBill POS team, I have a question before buying.")} target="_blank" rel="noopener noreferrer">
             {WA_DISPLAY}
           </a>
-          .
+          {p.payPost}
         </p>
       </div>
 
-      {selected && (
+      {meta && plan && (
         <div className="qb-modal" onClick={() => setSelected(null)}>
           <div
             className="qb-modal__box"
@@ -216,57 +132,57 @@ export default function PricingSection() {
           >
             <div className="qb-modal__top">
               <div>
-                <p className="qb-eyebrow">Order</p>
-                <h3 id="qb-order-title">{selected.order.name}</h3>
+                <p className="qb-eyebrow">{p.modal.order}</p>
+                <h3 id="qb-order-title">{plan.name}</h3>
               </div>
-              <button type="button" className="qb-modal__close" onClick={() => setSelected(null)} aria-label="Close">
+              <button type="button" className="qb-modal__close" onClick={() => setSelected(null)} aria-label={p.modal.close}>
                 <span />
                 <span />
               </button>
             </div>
 
             <p className="qb-modal__price">
-              ₹{selected.order.amount.toLocaleString("en-IN")} <small>{selected.order.period}</small>
+              ₹{meta.amount.toLocaleString("en-IN")} <small>{plan.unit}</small>
             </p>
             <ul className="qb-modal__list">
-              {selected.order.includes.map((i) => (
-                <li key={i}>
+              {plan.includes.map((inc) => (
+                <li key={inc}>
                   <Icon name="check" size={18} />
-                  <span>{i}</span>
+                  <span>{inc}</span>
                 </li>
               ))}
             </ul>
 
             <div className="qb-form">
-              <label htmlFor="qb-shop">Shop name</label>
+              <label htmlFor="qb-shop">{p.modal.shop}</label>
               <input
                 id="qb-shop"
                 ref={firstField}
                 value={shop}
                 onChange={(e) => setShop(e.target.value)}
-                placeholder="Ramesh Kirana Store"
+                placeholder={p.modal.shopPh}
                 autoComplete="organization"
               />
               <div className="qb-form__two">
                 <div>
-                  <label htmlFor="qb-phone">WhatsApp number</label>
+                  <label htmlFor="qb-phone">{p.modal.phone}</label>
                   <input
                     id="qb-phone"
                     type="tel"
                     inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="98765 43210"
+                    placeholder={p.modal.phonePh}
                     autoComplete="tel"
                   />
                 </div>
                 <div>
-                  <label htmlFor="qb-city">City</label>
+                  <label htmlFor="qb-city">{p.modal.city}</label>
                   <input
                     id="qb-city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="Kochi"
+                    placeholder={p.modal.cityPh}
                     autoComplete="address-level2"
                   />
                 </div>
@@ -275,11 +191,9 @@ export default function PricingSection() {
 
             <a className="qb-btn qb-btn--wa qb-btn--block" href={waLink(message)} target="_blank" rel="noopener noreferrer">
               <Icon name="chat" />
-              <span>Continue on WhatsApp</span>
+              <span>{p.modal.cont}</span>
             </a>
-            <p className="qb-modal__fine">
-              This opens WhatsApp with your order already written. Nothing is charged until we confirm with you.
-            </p>
+            <p className="qb-modal__fine">{p.modal.fine}</p>
           </div>
         </div>
       )}

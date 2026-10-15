@@ -1249,14 +1249,7 @@ body:has(.qb) {
 .qb-dl__grid {
   display: grid;
   gap: 40px;
-}
-
-@media (min-width: 900px) {
-  .qb-dl__grid {
-    grid-template-columns: 1.2fr 0.8fr;
-    align-items: start;
-    gap: 64px;
-  }
+  max-width: 820px;
 }
 
 .qb-dl__meta {
@@ -1341,40 +1334,6 @@ body:has(.qb) {
 
 .qb-install strong {
   color: #fff;
-}
-
-.qb-dl__qr {
-  display: none;
-  padding: 26px;
-  background: var(--card);
-  color: var(--ink);
-  border-radius: 16px;
-  text-align: center;
-  box-shadow: 8px 8px 0 #fb923c;
-}
-
-@media (min-width: 720px) {
-  .qb-dl__qr {
-    display: block;
-    max-width: 320px;
-    margin-inline: auto;
-  }
-}
-
-.qb-dl__qr img {
-  margin: 0 auto 16px;
-}
-
-.qb-dl__qr-title {
-  font-family: var(--serif);
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.qb-dl__qr p:last-child {
-  margin-top: 4px;
-  font-size: 15px;
-  color: var(--ink-2);
 }
 
 .qb-older {

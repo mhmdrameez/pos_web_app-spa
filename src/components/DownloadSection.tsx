@@ -37,12 +37,6 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
     }
   };
 
-  const qrUrl = release
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=0&data=${encodeURIComponent(
-        release.downloadUrl
-      )}`
-    : "";
-
   return (
     <section className="qb-sec qb-dl" id="download">
       <div className="qb-wrap qb-dl__grid">
@@ -121,14 +115,6 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
             </ol>
           </div>
         </div>
-
-        {release && (
-          <aside className="qb-dl__qr" aria-label={d.qrAria}>
-            <img src={qrUrl} width={200} height={200} alt={`QR code: QuickBill POS ${release.version}`} loading="lazy" />
-            <p className="qb-dl__qr-title">{d.qrTitle}</p>
-            <p>{d.qrText}</p>
-          </aside>
-        )}
       </div>
 
       {release && olderReleases.length > 0 && (

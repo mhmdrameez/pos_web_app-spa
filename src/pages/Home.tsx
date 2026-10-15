@@ -99,11 +99,7 @@ function HomeContent() {
 
   const direct = Boolean(latest && isAndroid);
   const ctaMain = isAndroid ? t.hero.ctaDownload : t.hero.ctaGet;
-  const ctaSub = latest
-    ? isAndroid
-      ? `${latest.version} · ${latest.sizeLabel}`
-      : t.hero.ctaScan
-    : t.hero.ctaFallback;
+  const ctaSub = latest ? `${latest.version} · ${latest.sizeLabel}` : t.hero.ctaFallback;
 
   const ctaProps =
     direct && latest

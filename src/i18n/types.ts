@@ -82,7 +82,6 @@ export interface Dict {
     deviceAlt: string;
     ctaDownload: string;
     ctaGet: string;
-    ctaScan: string;
     ctaFallback: string;
     waMain: string;
     waSub: string;
@@ -143,9 +142,6 @@ export interface Dict {
     askApp: string;
     installTitle: string;
     install: string[];
-    qrAria: string;
-    qrTitle: string;
-    qrText: string;
     older: string;
     dl: string;
   };

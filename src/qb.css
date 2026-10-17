@@ -1279,6 +1279,14 @@ body:has(.qb) {
   color: #fff;
 }
 
+.qb-dl__hint {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #d6cbb7;
+  max-width: 560px;
+}
+
 .qb-dl__empty {
   margin-top: 26px;
   padding: 22px;

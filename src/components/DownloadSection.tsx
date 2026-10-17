@@ -1,20 +1,28 @@
 import { useState } from "react";
-import type { Release } from "../api";
+import { detectVariant, type Release } from "../api";
 import Icon from "./Icon";
 import { waLink } from "../lib/contact";
 import { langInfo } from "../i18n/config";
 import { Rich, useI18n } from "../i18n/context";
 
 type Props = {
+  /** Latest 64-bit (arm64-v8a) build. */
   release: Release | null;
+  /** Latest Universal build (all devices), when one has been published. */
+  universalRelease?: Release | null;
   loaded: boolean;
   olderReleases: Release[];
 };
 
-export default function DownloadSection({ release, loaded, olderReleases }: Props) {
+export default function DownloadSection({ release, universalRelease = null, loaded, olderReleases }: Props) {
   const { lang, t } = useI18n();
   const d = t.download;
   const [copied, setCopied] = useState(false);
+
+  // The 64-bit build leads; if only a Universal build exists, it takes the primary spot.
+  const primary = release || universalRelease;
+  const secondary = universalRelease && universalRelease.id !== primary?.id ? universalRelease : null;
+  const primaryIsUniversal = !release && Boolean(universalRelease);
 
   const formatDate = (iso: string) => {
     const date = new Date(iso);
@@ -27,9 +35,9 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
   };
 
   const copyLink = async () => {
-    if (!release) return;
+    if (!primary) return;
     try {
-      await navigator.clipboard.writeText(release.downloadUrl);
+      await navigator.clipboard.writeText(primary.downloadUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2200);
     } catch {
@@ -45,49 +53,67 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
           <h2 className="qb-h2">{d.h2}</h2>
           <p className="qb-sub">{d.sub}</p>
 
-          {release ? (
+          {primary ? (
             <>
               <dl className="qb-dl__meta">
                 <div>
                   <dt>{d.version}</dt>
-                  <dd>{release.version}</dd>
+                  <dd>{primary.version}</dd>
                 </div>
                 <div>
                   <dt>{d.size}</dt>
-                  <dd>{release.sizeLabel}</dd>
+                  <dd>{primary.sizeLabel}</dd>
                 </div>
-                {formatDate(release.uploadedAt) && (
+                {formatDate(primary.uploadedAt) && (
                   <div>
                     <dt>{d.released}</dt>
-                    <dd>{formatDate(release.uploadedAt)}</dd>
+                    <dd>{formatDate(primary.uploadedAt)}</dd>
                   </div>
                 )}
                 <div>
                   <dt>{d.needs}</dt>
-                  <dd>{d.needsVal}</dd>
+                  <dd>{primaryIsUniversal ? d.tagUni : d.needsVal}</dd>
                 </div>
               </dl>
 
               <div className="qb-cta-row">
                 <a
                   className="qb-btn qb-btn--primary"
-                  href={release.downloadUrl}
+                  href={primary.downloadUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <Icon name="download" />
                   <span className="qb-btn__text">
-                    <span className="qb-btn__main">{d.btnMain}</span>
+                    <span className="qb-btn__main">{primaryIsUniversal ? d.btnUni : d.btnMain}</span>
                     <span className="qb-btn__sub">
-                      {release.version} · {release.sizeLabel}
+                      {primary.version} · {primary.sizeLabel} · {primaryIsUniversal ? d.tagUni : d.tag64}
                     </span>
                   </span>
                 </a>
+                {secondary && (
+                  <a
+                    className="qb-btn qb-btn--ghost-light"
+                    href={secondary.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Icon name="download" />
+                    <span className="qb-btn__text">
+                      <span className="qb-btn__main">{d.btnUni}</span>
+                      <span className="qb-btn__sub">
+                        {secondary.version} · {secondary.sizeLabel} · {d.tagUni}
+                      </span>
+                    </span>
+                  </a>
+                )}
                 <button type="button" className="qb-btn qb-btn--ghost-light" onClick={copyLink}>
                   <Icon name={copied ? "check" : "copy"} />
                   <span>{copied ? d.copied : d.copy}</span>
                 </button>
               </div>
+
+              {secondary && <p className="qb-dl__hint">{d.uniHint}</p>}
             </>
           ) : (
             <div className="qb-dl__empty">
@@ -117,27 +143,31 @@ export default function DownloadSection({ release, loaded, olderReleases }: Prop
         </div>
       </div>
 
-      {release && olderReleases.length > 0 && (
+      {primary && olderReleases.length > 0 && (
         <div className="qb-wrap">
           <details className="qb-older">
             <summary>
               {d.older} ({olderReleases.length})
             </summary>
             <ul>
-              {olderReleases.map((rel) => (
-                <li key={rel.id}>
-                  <span>
-                    {rel.title || rel.version}
-                    <small>
-                      {rel.sizeLabel}
-                      {formatDate(rel.uploadedAt) ? ` · ${formatDate(rel.uploadedAt)}` : ""}
-                    </small>
-                  </span>
-                  <a href={rel.downloadUrl} target="_blank" rel="noopener noreferrer">
-                    {d.dl}
-                  </a>
-                </li>
-              ))}
+              {olderReleases.map((rel) => {
+                const relVariant = rel.variant || detectVariant(rel.fileName, rel.version, rel.title);
+                return (
+                  <li key={rel.id}>
+                    <span>
+                      {rel.title || rel.version}
+                      <small>
+                        {relVariant === "universal" ? d.tagUni : d.tag64}
+                        {` · ${rel.sizeLabel}`}
+                        {formatDate(rel.uploadedAt) ? ` · ${formatDate(rel.uploadedAt)}` : ""}
+                      </small>
+                    </span>
+                    <a href={rel.downloadUrl} target="_blank" rel="noopener noreferrer">
+                      {d.dl}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </details>
         </div>

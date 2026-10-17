@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { fetchReleases, type Release } from "../api";
+import { fetchReleases, pickLatestVariants, type Release } from "../api";
 import SEO from "../components/SEO";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter, { WhatsAppFloat } from "../components/SiteFooter";
@@ -96,6 +96,10 @@ function HomeContent() {
     });
     return () => io.disconnect();
   }, []);
+
+  const { arm64: latest64, universal: latestUniversal } = pickLatestVariants(allReleases);
+  const featuredIds = new Set([latest64?.id, latestUniversal?.id].filter(Boolean));
+  const olderReleases = allReleases.filter((r) => !featuredIds.has(r.id));
 
   const direct = Boolean(latest && isAndroid);
   const ctaMain = isAndroid ? t.hero.ctaDownload : t.hero.ctaGet;
@@ -304,7 +308,12 @@ function HomeContent() {
 
         <PricingSection />
 
-        <DownloadSection release={latest} loaded={loaded} olderReleases={allReleases.slice(1)} />
+        <DownloadSection
+          release={latest64}
+          universalRelease={latestUniversal}
+          loaded={loaded}
+          olderReleases={olderReleases}
+        />
 
         {/* GUIDES (only for languages that have guide pages) */}
         {guides.length > 0 && (

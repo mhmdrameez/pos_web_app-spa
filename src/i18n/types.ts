@@ -135,6 +135,14 @@ export interface Dict {
     needs: string;
     needsVal: string;
     btnMain: string;
+    /** Main label of the Universal APK download button. */
+    btnUni: string;
+    /** Short variant tag shown next to the 64-bit build. */
+    tag64: string;
+    /** Short variant tag shown next to the Universal build. */
+    tagUni: string;
+    /** One-line hint explaining when to pick the Universal build. */
+    uniHint: string;
     copy: string;
     copied: string;
     emptyLoaded: string;

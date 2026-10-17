@@ -15,6 +15,8 @@ import {
   setSessionAuthed,
   setStoredToken,
   uploadApkToGitHubRepo,
+  detectVariant,
+  type ApkVariant,
   type Release,
   type UploadProgress,
 } from "../api";
@@ -39,6 +41,7 @@ export default function ApkUpload() {
   // Release form state
   const [version, setVersion] = useState("");
   const [title, setTitle] = useState("");
+  const [variant, setVariant] = useState<ApkVariant>("arm64");
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -162,6 +165,7 @@ export default function ApkUpload() {
         version,
         title,
         "",
+        variant,
         (progressInfo) => {
           setUploadProgress(progressInfo);
         }
@@ -560,6 +564,51 @@ export default function ApkUpload() {
               </div>
             </div>
 
+            <label style={{ margin: "0 0 6px" }}>Build Variant *</label>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+              {([
+                {
+                  value: "arm64" as ApkVariant,
+                  name: "64-bit (arm64-v8a)",
+                  desc: "Android 7.0+ · most current phones",
+                },
+                {
+                  value: "universal" as ApkVariant,
+                  name: "Universal",
+                  desc: "All devices · includes 32-bit",
+                },
+              ]).map((opt) => (
+                <label
+                  key={opt.value}
+                  style={{
+                    flex: "1 1 220px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    padding: "12px 14px",
+                    border: variant === opt.value ? "2px solid var(--primary)" : "1px solid var(--line)",
+                    background: variant === opt.value ? "var(--primary-subtle)" : "#ffffff",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    margin: 0,
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="apk-variant"
+                    value={opt.value}
+                    checked={variant === opt.value}
+                    onChange={() => setVariant(opt.value)}
+                    style={{ marginTop: 3, width: "auto" }}
+                  />
+                  <span>
+                    <span style={{ display: "block", fontWeight: 800, fontSize: 14 }}>{opt.name}</span>
+                    <span style={{ display: "block", fontSize: 12.5, color: "var(--muted)" }}>{opt.desc}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
             <label style={{ margin: "0 0 6px" }}>APK Build File *</label>
             <div
               className={`drop ${isDragOver ? "drop-highlight" : ""}`}
@@ -575,6 +624,7 @@ export default function ApkUpload() {
                 const droppedFile = e.dataTransfer.files[0];
                 if (droppedFile) {
                   setFile(droppedFile);
+                  if (/universal/i.test(droppedFile.name)) setVariant("universal");
                   if (!version) {
                     const m = droppedFile.name.match(/(\d+\.\d+(\.\d+)?)/);
                     if (m) setVersion(m[1]);
@@ -588,6 +638,7 @@ export default function ApkUpload() {
                 onChange={(e) => {
                   const f = e.target.files?.[0] || null;
                   setFile(f);
+                  if (f && /universal/i.test(f.name)) setVariant("universal");
                   if (f && !version) {
                     const m = f.name.match(/(\d+\.\d+(\.\d+)?)/);
                     if (m) setVersion(m[1]);
@@ -675,7 +726,13 @@ export default function ApkUpload() {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {releases.map((r, i) => (
+              {releases.map((r, i) => {
+                const rVariant = r.variant || detectVariant(r.fileName, r.version, r.title);
+                const isLatestOfVariant =
+                  releases.findIndex(
+                    (x) => (x.variant || detectVariant(x.fileName, x.version, x.title)) === rVariant
+                  ) === i;
+                return (
                 <div
                   key={r.id}
                   style={{
@@ -696,7 +753,19 @@ export default function ApkUpload() {
                       <span style={{ fontSize: 17, fontWeight: 800, color: "var(--navy)" }}>
                         {r.version}
                       </span>
-                      {i === 0 && (
+                      <span
+                        style={{
+                          background: rVariant === "universal" ? "#ede9fe" : "#dbeafe",
+                          color: rVariant === "universal" ? "#6d28d9" : "#1d4ed8",
+                          fontSize: 11,
+                          fontWeight: 800,
+                          padding: "3px 8px",
+                          borderRadius: 999,
+                        }}
+                      >
+                        {rVariant === "universal" ? "UNIVERSAL" : "64-BIT"}
+                      </span>
+                      {isLatestOfVariant && (
                         <span
                           style={{
                             background: "#dcfce7",
@@ -707,7 +776,7 @@ export default function ApkUpload() {
                             borderRadius: 999,
                           }}
                         >
-                          LATEST ACTIVE
+                          {rVariant === "universal" ? "LATEST UNIVERSAL" : "LATEST 64-BIT"}
                         </span>
                       )}
                       <span style={{ color: "var(--muted)", fontSize: 13 }}>
@@ -752,7 +821,8 @@ export default function ApkUpload() {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -221,6 +221,11 @@ const en: Dict = {
     needs: "Needs",
     needsVal: "Android 7.0+, 64-bit",
     btnMain: "Download for Android",
+    btnUni: "Download Universal APK",
+    tag64: "64-bit",
+    tagUni: "Universal · all devices",
+    uniHint:
+      "The 64-bit build works on most current phones. If it won’t install on your device, use the Universal version — it runs on every Android phone, including older 32-bit ones.",
     copy: "Copy link",
     copied: "Link copied",
     emptyLoaded:

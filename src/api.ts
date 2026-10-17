@@ -1,3 +1,5 @@
+export type ApkVariant = "arm64" | "universal";
+
 export type Release = {
   id: string;
   version: string;
@@ -11,8 +13,33 @@ export type Release = {
   htmlUrl: string;
   author: string;
   isLatest?: boolean;
+  variant?: ApkVariant;
   source?: "github-release" | "repo-folder" | "local-cache" | "manifest";
 };
+
+/** Universal builds are tagged/named with "universal"; everything else is the 64-bit (arm64-v8a) build. */
+export function detectVariant(...parts: Array<string | undefined | null>): ApkVariant {
+  return parts.some((p) => p && /universal/i.test(p)) ? "universal" : "arm64";
+}
+
+/** Latest release of each APK variant (lists are already sorted newest-first). */
+export function pickLatestVariants(releases: Release[]): {
+  arm64: Release | null;
+  universal: Release | null;
+} {
+  let arm64: Release | null = null;
+  let universal: Release | null = null;
+  for (const r of releases) {
+    const v = r.variant || detectVariant(r.fileName, r.version, r.title);
+    if (v === "universal") {
+      if (!universal) universal = r;
+    } else if (!arm64) {
+      arm64 = r;
+    }
+    if (arm64 && universal) break;
+  }
+  return { arm64, universal };
+}
 
 export const DEFAULT_REPO = "mhmdrameez/pos_web_app-spa";
 export const DEFAULT_GITHUB_TOKEN = (import.meta.env.VITE_GITHUB_TOKEN || "").trim();
@@ -121,7 +148,14 @@ export function saveOptimisticRelease(release: Release, repo: string = getStored
   }
 
   const filtered = existing.filter(
-    (r) => r.id !== release.id && r.fileName !== release.fileName && r.version !== release.version
+    (r) =>
+      r.id !== release.id &&
+      r.fileName !== release.fileName &&
+      !(
+        r.version === release.version &&
+        (r.variant || detectVariant(r.fileName, r.version, r.title)) ===
+          (release.variant || detectVariant(release.fileName, release.version, release.title))
+      )
   );
   const updated: Release[] = [
     { ...release, isLatest: true },
@@ -341,6 +375,7 @@ export async function fetchReleases(forceRefresh = false): Promise<{
         htmlUrl: r.html_url,
         author: r.author?.login || "",
         isLatest: releases.length === 0,
+        variant: detectVariant(r.tag_name, r.name, fileName, r.body),
         source: "github-release",
       });
     }
@@ -374,6 +409,7 @@ export async function fetchReleases(forceRefresh = false): Promise<{
         htmlUrl: `https://github.com/${repo}/blob/main/releases/${name}`,
         author: repo.split("/")[0] || "developer",
         isLatest: releases.length === 0,
+        variant: detectVariant(name),
         source: "repo-folder",
       });
     }
@@ -384,6 +420,7 @@ export async function fetchReleases(forceRefresh = false): Promise<{
     for (const item of staticManifest) {
       releases.push({
         ...item,
+        variant: item.variant || detectVariant(item.fileName, item.version, item.title),
         source: "manifest",
       });
     }
@@ -582,6 +619,7 @@ export async function uploadApkToGitHubRepo(
   version: string,
   title: string,
   notes: string = "",
+  variant: ApkVariant = "arm64",
   onProgress?: (info: UploadProgress) => void
 ): Promise<{ release: Release; rawUrl: string }> {
   const repo = getStoredRepo();
@@ -599,8 +637,19 @@ export async function uploadApkToGitHubRepo(
   }
 
   const cleanVer = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  let safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  // Keep the two variants of the same version side by side in releases/ without overwriting
+  // each other, and make the variant detectable from the file name everywhere.
+  if (variant === "universal" && !/universal/i.test(safeName)) {
+    safeName = safeName.replace(/\.apk$/i, "") + "-universal.apk";
+  }
   const filePath = `releases/${safeName}`;
+  // Each variant gets its own GitHub tag so both can exist for one version.
+  const tagName = variant === "universal" ? `${cleanVer}-universal` : cleanVer;
+  const variantLabel =
+    variant === "universal"
+      ? "Universal — works on all Android devices (32-bit & 64-bit)"
+      : "64-bit (arm64-v8a) — Android 7.0+";
 
   onProgress?.({
     percent: 0,
@@ -657,7 +706,7 @@ export async function uploadApkToGitHubRepo(
     `https://api.github.com/repos/${repo}/contents/${filePath}`,
     token,
     {
-      message: `Release ${cleanVer}: ${title || cleanVer}`,
+      message: `Release ${tagName}: ${title || tagName}`,
       content: base64Content,
       sha: existingSha,
     },
@@ -675,9 +724,11 @@ export async function uploadApkToGitHubRepo(
     stage: "releasing",
   });
 
+  const variantLine = `🧩 **Variant:** ${variantLabel}`;
+  const downloadLine = `📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})`;
   const releaseBody = notes?.trim()
-    ? `${notes.trim()}\n\n---\n📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS*`
-    : `📦 **APK Download:** [${safeName}](${rawDownloadUrl}) (${formatBytes(file.size)})\n*Build uploaded via QuickBill POS*`;
+    ? `${notes.trim()}\n\n---\n${variantLine}\n${downloadLine}\n*Build uploaded via QuickBill POS*`
+    : `${variantLine}\n${downloadLine}\n*Build uploaded via QuickBill POS*`;
 
   let ghReleaseData: any = {};
   try {
@@ -689,8 +740,12 @@ export async function uploadApkToGitHubRepo(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        tag_name: cleanVer,
-        name: title.trim() || `QuickBillPoss ${cleanVer}`,
+        tag_name: tagName,
+        name:
+          title.trim() ||
+          (variant === "universal"
+            ? `QuickBillPoss ${cleanVer} (Universal)`
+            : `QuickBillPoss ${cleanVer}`),
         body: releaseBody,
         draft: false,
         prerelease: false,
@@ -714,7 +769,11 @@ export async function uploadApkToGitHubRepo(
   const createdRelease: Release = {
     id: String(ghReleaseData.id || Date.now()),
     version: cleanVer,
-    title: title || `QuickBillPoss ${cleanVer}`,
+    title:
+      title ||
+      (variant === "universal"
+        ? `QuickBillPoss ${cleanVer} (Universal)`
+        : `QuickBillPoss ${cleanVer}`),
     notes,
     fileName: safeName,
     sizeBytes: file.size,
@@ -724,6 +783,7 @@ export async function uploadApkToGitHubRepo(
     htmlUrl: ghReleaseData.html_url || `https://github.com/${repo}/releases`,
     author: ghReleaseData.author?.login || "developer",
     isLatest: true,
+    variant,
     source: "github-release",
   };
 

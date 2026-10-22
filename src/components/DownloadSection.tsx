@@ -2,6 +2,7 @@ import { useState } from "react";
 import { detectVariant, type Release } from "../api";
 import Icon from "./Icon";
 import { waLink } from "../lib/contact";
+import { trackDownload } from "../lib/track";
 import { langInfo } from "../i18n/config";
 import { Rich, useI18n } from "../i18n/context";
 
@@ -82,6 +83,7 @@ export default function DownloadSection({ release, universalRelease = null, load
                   href={primary.downloadUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackDownload(primary.fileName)}
                 >
                   <Icon name="download" />
                   <span className="qb-btn__text">
@@ -97,6 +99,7 @@ export default function DownloadSection({ release, universalRelease = null, load
                     href={secondary.downloadUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackDownload(secondary.fileName)}
                   >
                     <Icon name="download" />
                     <span className="qb-btn__text">
@@ -162,7 +165,12 @@ export default function DownloadSection({ release, universalRelease = null, load
                         {formatDate(rel.uploadedAt) ? ` · ${formatDate(rel.uploadedAt)}` : ""}
                       </small>
                     </span>
-                    <a href={rel.downloadUrl} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={rel.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackDownload(rel.fileName)}
+                    >
                       {d.dl}
                     </a>
                   </li>

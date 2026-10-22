@@ -21,6 +21,7 @@ import {
   type UploadProgress,
 } from "../api";
 import SEO from "../components/SEO";
+import VisitorStats, { serverLogin } from "../components/VisitorStats";
 
 export default function ApkUpload() {
   const [authed, setAuthed] = useState(isSessionAuthed());
@@ -89,6 +90,8 @@ export default function ApkUpload() {
     if (checkStaticLogin(userId, password)) {
       setSessionAuthed(true);
       setAuthed(true);
+      // Also open a cookie session on the release server so analytics load.
+      serverLogin(userId, password);
       setPassword("");
     } else {
       setError("Invalid User Name or Password. Default username is 'developer'.");
@@ -826,6 +829,9 @@ export default function ApkUpload() {
             </div>
           )}
         </div>
+
+        {/* Visitor & download analytics from the release server */}
+        <VisitorStats />
       </div>
     </div>
   );

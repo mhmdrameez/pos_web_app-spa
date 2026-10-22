@@ -5,6 +5,9 @@ uploads/apks/*
 !uploads/apks/.gitkeep
 data/releases.json
 data/sessions.json
+data/visitors.json
+data/downloads.json
+data/geo-cache.json
 *.log
 .DS_Store
 .env

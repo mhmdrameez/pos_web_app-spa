@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { langFromPathname } from "./i18n/config";
 import { ensureDict } from "./i18n/registry";
+import { trackVisit } from "./lib/track";
 import "./fonts.css";
 import "./qb.css";
 
@@ -41,6 +42,9 @@ async function start() {
   } else {
     ReactDOM.createRoot(root).render(app);
   }
+
+  // Count the visit (IP + location resolved server-side); never blocks rendering.
+  trackVisit();
 }
 
 start();

@@ -131,8 +131,21 @@ export default function ApkUpload() {
     setCustomToken("");
   }
 
+  // While an upload is running, warn before the page is closed or refreshed:
+  // interrupting leaves a half-finished commit on GitHub and duplicate attempts.
+  useEffect(() => {
+    if (!busy) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "An APK upload is still in progress. Leaving now will interrupt it.";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [busy]);
+
   async function onDirectUpload(e: FormEvent) {
     e.preventDefault();
+    if (busy) return; // ignore double-clicks while an upload is running
     setError("");
     setNotice("");
 
@@ -150,6 +163,23 @@ export default function ApkUpload() {
 
     if (!version.trim()) {
       setError("Please specify a release version (e.g. 1.0.2).");
+      return;
+    }
+
+    // Same version + variant already published (e.g. after an interrupted
+    // earlier attempt)? Ask before replacing instead of silently duplicating.
+    const cleanVer = version.trim().startsWith("v") ? version.trim() : `v${version.trim()}`;
+    const dup = releases.find(
+      (r) =>
+        r.version.toLowerCase() === cleanVer.toLowerCase() &&
+        (r.variant || detectVariant(r.fileName, r.version, r.title)) === variant
+    );
+    if (
+      dup &&
+      !confirm(
+        `${cleanVer} (${variant === "universal" ? "Universal" : "64-bit"}) already exists on GitHub.\n\nUpload again and replace it?`
+      )
+    ) {
       return;
     }
 

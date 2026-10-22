@@ -513,6 +513,9 @@ function putJsonWithProgress(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
+    // A stalled connection must fail with a clear message instead of hanging
+    // forever and tempting the user to refresh mid-upload.
+    xhr.timeout = 10 * 60 * 1000;
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.setRequestHeader("Accept", "application/vnd.github+json");
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -540,7 +543,7 @@ function putJsonWithProgress(
         percent: 100,
         loadedBytes: fileSize,
         totalBytes: fileSize,
-        status: "100% Uploaded! GitHub is writing and verifying build commit...",
+        status: "100% uploaded! GitHub is writing and verifying the commit — this can take a minute for big APKs. Please DON'T refresh the page.",
         stage: "committing",
       });
     };
@@ -659,30 +662,35 @@ export async function uploadApkToGitHubRepo(
     stage: "preparing",
   });
 
-  let existingSha: string | undefined;
-  try {
-    const checkRes = await fetch(
-      `https://api.github.com/repos/${repo}/contents/${filePath}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token.trim()}`,
-          Accept: "application/vnd.github+json",
-        },
-      }
-    );
-    if (checkRes.status === 401) {
-      localStorage.removeItem("qb_gh_token");
-      throw new Error(
-        "401 Unauthorized: Invalid or expired GitHub Personal Access Token. Please enter a valid token with 'repo' scope under Token Settings."
+  async function fetchExistingSha(): Promise<string | undefined> {
+    try {
+      const checkRes = await fetch(
+        `https://api.github.com/repos/${repo}/contents/${filePath}?t=${Date.now()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token.trim()}`,
+            Accept: "application/vnd.github+json",
+          },
+          cache: "no-store",
+        }
       );
-    } else if (checkRes.ok) {
-      const data = await checkRes.json();
-      existingSha = data.sha;
+      if (checkRes.status === 401) {
+        localStorage.removeItem("qb_gh_token");
+        throw new Error(
+          "401 Unauthorized: Invalid or expired GitHub Personal Access Token. Please enter a valid token with 'repo' scope under Token Settings."
+        );
+      } else if (checkRes.ok) {
+        const data = await checkRes.json();
+        return data.sha;
+      }
+    } catch (err: any) {
+      if (err.message?.includes("401")) throw err;
+      // ignore
     }
-  } catch (err: any) {
-    if (err.message?.includes("401")) throw err;
-    // ignore
+    return undefined;
   }
+
+  let existingSha = await fetchExistingSha();
 
   onProgress?.({
     percent: 0,
@@ -702,17 +710,37 @@ export async function uploadApkToGitHubRepo(
     stage: "uploading",
   });
 
-  await putJsonWithProgress(
-    `https://api.github.com/repos/${repo}/contents/${filePath}`,
-    token,
-    {
-      message: `Release ${tagName}: ${title || tagName}`,
-      content: base64Content,
-      sha: existingSha,
-    },
-    file.size,
-    onProgress
-  );
+  // A refresh mid-upload or a concurrent commit changes the file's SHA on
+  // GitHub, which used to fail with a 409/422 and force the user to upload
+  // again and again. Instead, re-read the latest SHA and retry automatically.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await putJsonWithProgress(
+        `https://api.github.com/repos/${repo}/contents/${filePath}`,
+        token,
+        {
+          message: `Release ${tagName}: ${title || tagName}`,
+          content: base64Content,
+          sha: existingSha,
+        },
+        file.size,
+        onProgress
+      );
+      break;
+    } catch (err: any) {
+      const msg = String(err?.message || "");
+      const shaConflict = msg.includes("409") || (msg.includes("422") && /sha/i.test(msg));
+      if (attempt >= 2 || !shaConflict) throw err;
+      onProgress?.({
+        percent: 1,
+        loadedBytes: 0,
+        totalBytes: file.size,
+        status: `A previous (interrupted) upload left a conflict on GitHub — resolving and retrying automatically (attempt ${attempt + 2})...`,
+        stage: "uploading",
+      });
+      existingSha = await fetchExistingSha();
+    }
+  }
 
   const rawDownloadUrl = `https://github.com/${repo}/raw/main/${filePath}`;
 

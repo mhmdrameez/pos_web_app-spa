@@ -1,11 +1,11 @@
 // GET /api/downloads/count — public aggregate download counters only.
 // No IPs or personal data are exposed here.
 
-import { getIp, NOT_CONFIGURED_MSG, rateLimited, redisConfigured, redisPipeline } from "../_lib.js";
+import { getIp, notConfiguredBody, rateLimited, redisConfigured, redisPipeline } from "../_lib.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  if (!redisConfigured()) return res.status(503).json({ error: NOT_CONFIGURED_MSG });
+  if (!redisConfigured()) return res.status(503).json(notConfiguredBody());
 
   try {
     if (await rateLimited(`dlcount:${getIp(req)}`, 30, 60)) {

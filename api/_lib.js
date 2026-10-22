@@ -138,3 +138,9 @@ export function isStatsAuthorized(req) {
 
 export const NOT_CONFIGURED_MSG =
   "Analytics storage is not set up yet: add the free Upstash Redis integration in your Vercel dashboard (Storage → Upstash → Redis), connect it to this project and redeploy.";
+
+/** Diagnostic payload for the setup-hint response: env var NAMES only, never values. */
+export function notConfiguredBody() {
+  const candidates = Object.keys(process.env).filter((k) => /REDIS|UPSTASH|KV_/i.test(k));
+  return { error: NOT_CONFIGURED_MSG, v: 2, envCandidates: candidates };
+}

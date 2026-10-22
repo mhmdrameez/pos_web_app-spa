@@ -4,8 +4,29 @@
 
 import crypto from "node:crypto";
 
-const REST_URL = (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || "").replace(/\/$/, "");
-const REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || "";
+// The Upstash/Vercel integration names its env vars differently depending on
+// how and when the store was connected (UPSTASH_REDIS_REST_*, KV_REST_API_*,
+// or a custom prefix chosen at connect time), so detect any matching pair.
+function findRestCreds() {
+  const direct = [
+    ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
+    ["KV_REST_API_URL", "KV_REST_API_TOKEN"],
+  ];
+  for (const [u, t] of direct) {
+    if (process.env[u] && process.env[t]) return { url: process.env[u], token: process.env[t] };
+  }
+  for (const [key, value] of Object.entries(process.env)) {
+    if (/_REST_API_URL$|_REST_URL$/.test(key) && /^https:\/\//.test(value || "")) {
+      const token = process.env[key.replace(/_URL$/, "_TOKEN")];
+      if (token) return { url: value, token };
+    }
+  }
+  return null;
+}
+
+const CREDS = findRestCreds();
+const REST_URL = (CREDS?.url || "").replace(/\/$/, "");
+const REST_TOKEN = CREDS?.token || "";
 
 export function redisConfigured() {
   return Boolean(REST_URL && REST_TOKEN);

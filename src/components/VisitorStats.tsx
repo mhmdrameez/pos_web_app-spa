@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { STATIC_ADMIN_PASSWORD } from "../api";
 
 const API_BASE = (import.meta.env.VITE_API_BASE || "").trim().replace(/\/$/, "");
 
@@ -123,11 +124,29 @@ export default function VisitorStats() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/stats`, { credentials: "include" });
+      const res = await fetch(`${API_BASE}/api/stats`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${STATIC_ADMIN_PASSWORD}` },
+      });
       if (res.status === 401) {
-        throw new Error("Analytics session expired. Sign out and sign in again to reconnect.");
+        throw new Error(
+          "Unauthorized: the admin password the site was built with doesn't match the analytics server's password."
+        );
       }
-      if (!res.ok) throw new Error(`Analytics server error (${res.status})`);
+      if (!res.ok) {
+        let serverMsg = "";
+        try {
+          serverMsg = (await res.json())?.error || "";
+        } catch {
+          /* non-JSON error page */
+        }
+        if (serverMsg) throw new Error(serverMsg);
+        throw new Error(
+          res.status === 404
+            ? "Analytics API not found on this host. Redeploy the site so the /api functions are included, and add the free Upstash Redis integration in Vercel."
+            : `Analytics server error (${res.status})`
+        );
+      }
       setStats(await res.json());
     } catch (err: any) {
       setError(

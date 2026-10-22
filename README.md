@@ -28,6 +28,26 @@ Set these in your local `.env` or in your **Vercel Project Settings → Environm
 > **Direct Upload Without Owner Permission**:
 > When you set `VITE_GITHUB_TOKEN` in your Vercel environment variables, anyone with the static login credentials can upload an APK directly from `/apk-upload` — the app will push the APK and publish the release directly to your GitHub repository automatically!
 
+## Visitor Analytics (free)
+
+The site records visits (IP, country/city, page) and APK download counts, shown in the
+📊 Visitor Analytics panel on `/apk-upload`. No third-party trackers.
+
+**On Vercel** the analytics run as serverless functions in [`api/`](api/) and store data in
+**Upstash Redis (free tier)**. One-time setup:
+
+1. Vercel dashboard → your project → **Storage** tab → **Create Database** → **Upstash → Redis** (free plan).
+2. Connect it to this project — Vercel adds the `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+   (or `KV_REST_API_URL` / `KV_REST_API_TOKEN`) environment variables automatically.
+3. **Redeploy** the site. Done — visits and download counts start recording immediately.
+
+Geolocation on Vercel comes free from Vercel's own `x-vercel-ip-*` headers (no external API).
+Until the integration is added, the panel shows a setup hint and the site itself is unaffected.
+
+**Self-hosted** (`npm start` / `npm run dev:all`): the Express server in [`server/`](server/)
+provides the same endpoints, stores data in `data/*.json` and uses the free [ipwho.is](https://ipwho.is)
+API for geolocation. No setup needed.
+
 ## Publishing APK Releases
 
 1. Navigate to `/apk-upload`.

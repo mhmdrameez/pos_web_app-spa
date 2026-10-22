@@ -75,6 +75,21 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// Stats also accept the admin password as a Bearer token, matching the Vercel
+// serverless /api/stats, so the admin panel works the same on both backends.
+function requireStatsAuth(req, res, next) {
+  const sid = readSession(req.cookies.qb_session);
+  if (sid) {
+    req.sessionId = sid;
+    return next();
+  }
+  const got = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  const a = Buffer.from(got);
+  const b = Buffer.from(ADMIN_PASSWORD);
+  if (a.length === b.length && crypto.timingSafeEqual(a, b)) return next();
+  return res.status(401).json({ error: "Unauthorized" });
+}
+
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   const units = ["KB", "MB", "GB"];
@@ -345,7 +360,7 @@ app.get("/api/downloads/count", (req, res) => {
 });
 
 // Full analytics (IPs, locations, recent visitors) — admin session required.
-app.get("/api/stats", requireAuth, (_req, res) => {
+app.get("/api/stats", requireStatsAuth, (_req, res) => {
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
   const visits = visitsDb.visits;

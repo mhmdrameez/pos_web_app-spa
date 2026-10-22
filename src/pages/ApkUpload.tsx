@@ -228,24 +228,30 @@ export default function ApkUpload() {
     }
   }
 
-  async function onDelete(id: string, ver: string) {
+  async function onDelete(release: Release) {
     const curToken = getStoredToken();
     if (!curToken) {
       alert("GitHub Token is required to delete releases.");
       setShowTokenConfig(true);
       return;
     }
-    if (!confirm(`Delete release ${ver}? This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Delete release ${release.version}?\n\nThis removes the GitHub release, its tag AND the APK file (${release.fileName}) from the repository. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
 
     setError("");
     try {
       setReleases((prev) => {
-        const remaining = prev.filter((r) => r.id !== id);
+        const remaining = prev.filter((r) => r.id !== release.id);
         if (remaining.length > 0) remaining[0].isLatest = true;
         return remaining;
       });
-      await deleteGitHubRelease(id, curToken, repo);
-      setNotice(`Deleted release ${ver}.`);
+      await deleteGitHubRelease(release, curToken, repo);
+      setNotice(`Deleted release ${release.version} and its APK file.`);
       await loadData(true);
     } catch (err: any) {
       setError(err.message || "Failed to delete release");
@@ -846,7 +852,7 @@ export default function ApkUpload() {
                       <button
                         type="button"
                         className="btn btn-danger"
-                        onClick={() => onDelete(r.id, r.version)}
+                        onClick={() => onDelete(r)}
                         style={{ padding: "8px 14px", fontSize: 13.5 }}
                       >
                         Delete

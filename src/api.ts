@@ -821,14 +821,26 @@ export async function uploadApkToGitHubRepo(
   return { release: createdRelease, rawUrl: rawDownloadUrl };
 }
 
-export async function deleteGitHubRelease(id: string, token: string, repo: string = getStoredRepo()) {
-  if (!id.startsWith("folder-") && !id.startsWith("file-")) {
-    const res = await fetch(`https://api.github.com/repos/${repo}/releases/${id}`, {
+/**
+ * Fully deletes a release: the GitHub Release entry, its git tag, AND the APK
+ * file in the repository's releases/ folder. Deleting only the release entry
+ * used to leave the file behind, so the row reappeared on the next refresh.
+ */
+export async function deleteGitHubRelease(release: Release, token: string, repo: string = getStoredRepo()) {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+  };
+
+  // 1. Delete the GitHub Release entry (when this row came from one).
+  if (
+    release.source !== "repo-folder" &&
+    !release.id.startsWith("folder-") &&
+    !release.id.startsWith("file-")
+  ) {
+    const res = await fetch(`https://api.github.com/repos/${repo}/releases/${release.id}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-      },
+      headers,
     });
     if (!res.ok && res.status !== 204 && res.status !== 404) {
       let detail = "";
@@ -840,8 +852,45 @@ export async function deleteGitHubRelease(id: string, token: string, repo: strin
       }
       throw new Error(`Failed to delete release on GitHub (${res.status}): ${detail || res.statusText}`);
     }
+    // 2. Also remove the git tag (best effort), so re-publishing the same
+    // version later creates a fresh release instead of silently failing.
+    await fetch(
+      `https://api.github.com/repos/${repo}/git/refs/tags/${encodeURIComponent(release.version)}`,
+      { method: "DELETE", headers }
+    ).catch(() => {});
   }
-  removeCachedRelease(id, repo);
+
+  // 3. Delete the APK file from the repository releases/ folder.
+  if (release.fileName) {
+    const fileUrl = `https://api.github.com/repos/${repo}/contents/releases/${encodeURIComponent(release.fileName)}`;
+    let sha = "";
+    try {
+      const check = await fetch(`${fileUrl}?t=${Date.now()}`, { headers, cache: "no-store" });
+      if (check.ok) sha = (await check.json()).sha || "";
+    } catch {
+      // network hiccup on the lookup: the release entry itself is already gone
+    }
+    if (sha) {
+      const del = await fetch(fileUrl, {
+        method: "DELETE",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ message: `Delete release file ${release.fileName}`, sha }),
+      });
+      if (!del.ok && del.status !== 404) {
+        let detail = "";
+        try {
+          detail = (await del.json()).message || "";
+        } catch {
+          // ignore
+        }
+        throw new Error(
+          `Release entry removed, but deleting ${release.fileName} from the repository failed (${del.status}): ${detail || del.statusText}`
+        );
+      }
+    }
+  }
+
+  removeCachedRelease(release.id, repo);
   return true;
 }
 

@@ -15,6 +15,7 @@ export const SITE = {
 export const PRICES = {
   monthly: 99,
   yearly: 999,
+  starter: 2599,
   kit: 3199,
 };
 

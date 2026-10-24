@@ -188,7 +188,7 @@ const summary =
   `QuickBill POS is an offline billing app for Indian shops such as kirana stores, cafés, bakeries and sweet shops. ` +
   `It makes GST bills with CGST and SGST, shows and prints a UPI QR code, and prints on Bluetooth thermal printers (58 mm and 80 mm). ` +
   `It runs on Android 7.0+ phones, tablets and POS handhelds and works without internet. ` +
-  `Plans: ${rupee(PRICES.monthly)} a month, ${rupee(PRICES.yearly)} a year, or the Annual Kit with a Bluetooth printer for ${rupee(PRICES.kit)}.`;
+  `Plans: ${rupee(PRICES.monthly)} a month, ${rupee(PRICES.yearly)} a year, Printer + 1 year (58mm printer) for ${rupee(PRICES.starter)}, or the Annual Kit with a Bluetooth printer for ${rupee(PRICES.kit)}.`;
 
 const langHomes = LANGS.filter((l) => l.code !== "en").map(
   (l) => `- [${l.english} (${l.native})](${SITE.origin}${homePath(l.code)}): The home page in ${l.english}.`
@@ -205,7 +205,7 @@ const llms = [
   "## Key facts",
   "",
   ...HOME_FEATURE_LIST.map((f) => `- ${f}`),
-  `- Pricing: ${rupee(PRICES.monthly)} per month, ${rupee(PRICES.yearly)} per year, Annual Kit ${rupee(PRICES.kit)} (printer + 1 year + 5 paper rolls). Unlimited bills on every plan.`,
+  `- Pricing: ${rupee(PRICES.monthly)} per month, ${rupee(PRICES.yearly)} per year, Printer + 1 year ${rupee(PRICES.starter)} (58mm printer + 1 year), Annual Kit ${rupee(PRICES.kit)} (printer + 1 year + 5 paper rolls). Unlimited bills on every plan.`,
   "- Platform: Android 7.0 or newer, 64-bit (arm64-v8a). Direct APK download.",
   "- Support: WhatsApp chat only, +91 79078 58474.",
   "",

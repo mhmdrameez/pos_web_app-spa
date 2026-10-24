@@ -906,8 +906,14 @@ body:has(.qb) {
 
 @media (min-width: 880px) {
   .qb-plans {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     align-items: stretch;
+  }
+}
+
+@media (min-width: 1180px) {
+  .qb-plans {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 

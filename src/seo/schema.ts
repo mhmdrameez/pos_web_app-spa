@@ -79,6 +79,15 @@ const app = () => ({
       url: `${SITE.origin}/#pricing`,
       availability: "https://schema.org/InStock",
     },
+    {
+      "@type": "Offer",
+      name: "Printer + 1 year",
+      price: String(PRICES.starter),
+      priceCurrency: "INR",
+      description: "A 58mm thermal printer and one year of QuickBill POS with all features and priority support.",
+      url: `${SITE.origin}/#pricing`,
+      availability: "https://schema.org/InStock",
+    },
   ],
 });
 

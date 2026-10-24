@@ -20,7 +20,7 @@ export const HOME_FAQS: Faq[] = [
   },
   {
     q: "How much does it cost?",
-    a: "₹99 a month, or ₹999 a year (that is about ₹83 a month). You can also buy the annual kit for ₹3,199, which includes a Bluetooth printer, a year of the app and five paper rolls. Bills are unlimited on every plan. Monthly and yearly plans renew automatically until you cancel.",
+    a: "₹99 a month, or ₹999 a year (that is about ₹83 a month). You can also get a 58mm thermal printer with a year of the app for ₹2,599, or the annual kit for ₹3,199, which includes a Bluetooth printer, a year of the app and five paper rolls. Bills are unlimited on every plan. Monthly and yearly plans renew automatically until you cancel.",
   },
   {
     q: "Is there a free trial, and how do I cancel?",

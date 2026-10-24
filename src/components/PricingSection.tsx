@@ -8,6 +8,7 @@ import type { Plan } from "../i18n/types";
 const PLAN_META = [
   { id: "monthly", price: "99", amount: 99, orderName: "Monthly license", period: "per month", best: false },
   { id: "yearly", price: "999", amount: 999, orderName: "Yearly license", period: "per year", best: true },
+  { id: "starter", price: "2,599", amount: 2599, orderName: "Printer + 1 year (58mm printer)", period: "one payment", best: false },
   { id: "kit", price: "3,199", amount: 3199, orderName: "Annual kit (printer + 1 year)", period: "one payment", best: false },
 ];
 
